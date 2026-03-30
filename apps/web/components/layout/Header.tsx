@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { Search, Moon, Sun, PanelLeftClose, PanelLeft, Menu } from 'lucide-react'
+import { Search, Moon, Sun, Menu } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Tooltip, Breadcrumb, BreadcrumbItem } from '@template/design-system'
@@ -10,20 +10,11 @@ import { NotificationCenter } from '@/components/common/NotificationCenter'
 import { useNotifications } from '@/hooks/useNotifications'
 
 interface HeaderProps {
-  showPanelToggle?: boolean
-  isPanelOpen?: boolean
-  onTogglePanel?: () => void
   onMobileMenuToggle?: () => void
   isMobile?: boolean
 }
 
-export function Header({
-  showPanelToggle,
-  isPanelOpen,
-  onTogglePanel,
-  onMobileMenuToggle,
-  isMobile = false,
-}: HeaderProps) {
+export function Header({ onMobileMenuToggle, isMobile = false }: HeaderProps) {
   const pathname = usePathname()
   const { t } = useTranslation()
   const notifs = useNotifications()
@@ -67,23 +58,6 @@ export function Header({
               aria-label="Abrir menu"
             >
               <Menu size={22} />
-            </button>
-          </Tooltip>
-        )}
-
-        {/* Panel toggle — desktop/tablet only */}
-        {showPanelToggle && !isMobile && (
-          <Tooltip content={isPanelOpen ? 'Fechar painel de funções' : 'Abrir painel de funções'}>
-            <button
-              onClick={onTogglePanel}
-              className="p-2 rounded-lg hover:bg-surface-muted transition-colors"
-              aria-label={isPanelOpen ? 'Fechar painel' : 'Abrir painel'}
-            >
-              {isPanelOpen ? (
-                <PanelLeftClose size={20} className="text-text-secondary" />
-              ) : (
-                <PanelLeft size={20} className="text-text-secondary" />
-              )}
             </button>
           </Tooltip>
         )}

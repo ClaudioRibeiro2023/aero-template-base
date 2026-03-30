@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@template/shared'
@@ -9,6 +9,7 @@ import {
   User,
   Settings,
   LogOut,
+  ChevronDown,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
@@ -92,6 +93,7 @@ interface NavItem {
   group: string
   badge?: string
   notificationCount?: number
+  children?: { label: string; path: string; icon?: LucideIcon }[]
 }
 
 /** SidebarLink — replaces react-router NavLink with Next.js Link + active detection */
@@ -196,9 +198,27 @@ export function AppSidebar({ collapsed = false, onToggle }: AppSidebarProps) {
           group: module.group || 'Módulos',
           badge: module.metadata?.badge as string | undefined,
           notificationCount: module.metadata?.notificationCount as number | undefined,
+          children: module.functions?.map(fn => ({
+            label: fn.name,
+            path: fn.path,
+            icon: fn.icon ? getIcon(fn.icon) : undefined,
+          })),
         })),
     [authorizedModules]
   )
+
+  // Expand/collapse state for modules with children
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set())
+
+  // Auto-expand the module whose path matches the current route
+  useEffect(() => {
+    const activeModule = navItems.find(item =>
+      item.children?.some(child => pathname === child.path || pathname.startsWith(child.path + '/'))
+    )
+    if (activeModule) {
+      setExpandedModules(prev => new Set(prev).add(activeModule.path))
+    }
+  }, [pathname, navItems])
 
   // Paths that are prefixes of other module paths need exact match
   // e.g. /admin is prefix of /admin/config, /admin/etl, etc.
@@ -353,7 +373,7 @@ export function AppSidebar({ collapsed = false, onToggle }: AppSidebarProps) {
               />
             )}
             {!collapsed ? (
-              <p className="px-2.5 mb-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-[var(--sidebar-group-label)] select-none">
+              <p className="px-2.5 mb-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--sidebar-text-muted)] opacity-60 select-none">
                 {groupName}
               </p>
             ) : (
@@ -363,7 +383,12 @@ export function AppSidebar({ collapsed = false, onToggle }: AppSidebarProps) {
             {/* Group items */}
             <ul className="space-y-0.5">
               {items.map(item => {
-                const Icon = item.icon
+                const ItemIcon = item.icon
+                const isActive = prefixPaths.has(item.path)
+                  ? pathname === item.path
+                  : (pathname?.startsWith(item.path) ?? false)
+                const hasChildren = item.children && item.children.length > 0
+
                 return (
                   <li
                     key={item.path}
@@ -371,19 +396,88 @@ export function AppSidebar({ collapsed = false, onToggle }: AppSidebarProps) {
                     onMouseEnter={() => (collapsed ? setTooltipItem(item.path) : undefined)}
                     onMouseLeave={() => setTooltipItem(null)}
                   >
-                    <SidebarLink
-                      href={item.path}
-                      isActive={
-                        prefixPaths.has(item.path)
-                          ? pathname === item.path
-                          : (pathname?.startsWith(item.path) ?? false)
-                      }
-                      collapsed={collapsed}
-                      icon={<Icon size={18} />}
-                      label={item.label}
-                      badge={item.badge}
-                      notificationCount={item.notificationCount}
-                    />
+                    {hasChildren ? (
+                      <div>
+                        <button
+                          onClick={() => {
+                            setExpandedModules(prev => {
+                              const next = new Set(prev)
+                              if (next.has(item.path)) next.delete(item.path)
+                              else next.add(item.path)
+                              return next
+                            })
+                          }}
+                          className={clsx(
+                            'w-full flex items-center gap-2.5 rounded-lg transition-all duration-150',
+                            'text-[var(--sidebar-text)] hover:text-[var(--sidebar-text-hover)]',
+                            'hover:bg-[var(--sidebar-item-hover)]',
+                            collapsed ? 'p-2 justify-center' : 'px-2.5 py-2',
+                            isActive && 'text-[var(--brand-primary)]'
+                          )}
+                        >
+                          <span className="flex-shrink-0">
+                            <ItemIcon size={18} />
+                          </span>
+                          {!collapsed && (
+                            <>
+                              <span className="text-[13px] font-medium flex-1 truncate text-left">
+                                {item.label}
+                              </span>
+                              {item.badge && (
+                                <span
+                                  className={clsx(
+                                    'text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full tracking-wide',
+                                    BADGE_COLORS[item.badge] || 'bg-white/10 text-white/50'
+                                  )}
+                                >
+                                  {item.badge}
+                                </span>
+                              )}
+                              <ChevronDown
+                                size={14}
+                                className={clsx(
+                                  'transition-transform duration-200 text-[var(--sidebar-text-muted)] flex-shrink-0',
+                                  !expandedModules.has(item.path) && '-rotate-90'
+                                )}
+                              />
+                            </>
+                          )}
+                        </button>
+                        {/* Children */}
+                        {!collapsed && expandedModules.has(item.path) && (
+                          <div className="ml-4 mt-0.5 space-y-0.5 border-l border-[var(--sidebar-border)] pl-2">
+                            {item.children!.map(child => {
+                              const childActive =
+                                pathname === child.path || pathname.startsWith(child.path + '/')
+                              return (
+                                <Link
+                                  key={child.path}
+                                  href={child.path}
+                                  className={clsx(
+                                    'flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] transition-colors',
+                                    childActive
+                                      ? 'text-[var(--brand-primary)] font-medium bg-[var(--brand-primary)]/10'
+                                      : 'text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text)] hover:bg-[var(--sidebar-item-hover)]'
+                                  )}
+                                >
+                                  {child.label}
+                                </Link>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <SidebarLink
+                        href={item.path}
+                        isActive={isActive}
+                        collapsed={collapsed}
+                        icon={<ItemIcon size={18} />}
+                        label={item.label}
+                        badge={item.badge}
+                        notificationCount={item.notificationCount}
+                      />
+                    )}
 
                     {/* Tooltip for collapsed mode */}
                     {collapsed && tooltipItem === item.path && (
