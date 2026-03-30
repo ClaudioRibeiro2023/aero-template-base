@@ -13,7 +13,10 @@ export async function middleware(request: NextRequest) {
 
   // Demo mode: skip auth (dev/testing, or explicitly allowed in production for showcasing)
   if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
-    if (process.env.NODE_ENV !== 'production' || process.env.ALLOW_DEMO_IN_PRODUCTION === 'true') {
+    if (
+      process.env.NODE_ENV !== 'production' ||
+      process.env.NEXT_PUBLIC_ALLOW_DEMO_PROD === 'true'
+    ) {
       return NextResponse.next()
     }
   }
