@@ -11,9 +11,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Demo mode: skip auth (dev/testing only)
-  if (process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
-    return NextResponse.next()
+  // Demo mode: skip auth (dev/testing, or explicitly allowed in production for showcasing)
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    if (process.env.NODE_ENV !== 'production' || process.env.ALLOW_DEMO_IN_PRODUCTION === 'true') {
+      return NextResponse.next()
+    }
   }
 
   // Check for Supabase session via cookie
