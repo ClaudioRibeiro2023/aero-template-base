@@ -66,3 +66,4 @@ logs/
 
 # Local Netlify folder
 .netlify
+.vercel
