@@ -7,6 +7,31 @@ aderindo a [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [2.0.2] — 2026-03-30
+
+### Resumo
+
+**Login Premium + Deploy Vercel + Documentacao.** Redesign completo da pagina de login com efeitos visuais cinematograficos extraidos do aero-survey. Deploy em producao na Vercel com dominio custom template.aeroeng.tech. Documentacao reescrita para refletir a stack atual.
+
+### Adicionado
+
+- Login page com 12 camadas de efeitos visuais: 30 particulas flutuantes, 5 drones SVG com rotores animados, 3 orbit rings, radar sweep, scan line, grid animado, noise texture, vignette, vector lines, corner brackets, drone telemetry overlay, logo glitch animation
+- Deploy Vercel configurado com custom domain template.aeroeng.tech
+- ARCHITECTURE.md na raiz com visao tecnica (decisoes, diagramas, fluxo de auth, seguranca, CI/CD)
+- Branch control no vercel.json (apenas master faz deploy)
+
+### Alterado
+
+- README.md reescrito completamente em PT-BR — reflete stack atual (Next.js 14 + Supabase), remove referencias a FastAPI, Vite, Keycloak e Playwright que nao existem mais na v2.0
+- Status ticker atualizado com "DRONE FLEET ACTIVE: 5 UNITS"
+- System overlay reposicionado para canto inferior direito
+
+### Corrigido
+
+- launch.json com path incorreto do projeto
+
+---
+
 ## [2.0.1] — 2026-03-29
 
 ### Resumo
