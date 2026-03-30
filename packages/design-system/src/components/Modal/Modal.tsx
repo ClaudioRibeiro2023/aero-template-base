@@ -1,10 +1,10 @@
 /**
  * Modal Component
- * 
+ *
  * Dialog modal com overlay, suporte a tamanhos e fechar com ESC/click outside.
  */
 
-import { useEffect, useRef, type ReactNode, type HTMLAttributes } from 'react'
+import { useEffect, useRef, useId, useCallback, type ReactNode, type HTMLAttributes } from 'react'
 import { X } from 'lucide-react'
 import clsx from 'clsx'
 import './Modal.css'
@@ -48,6 +48,9 @@ export function Modal({
   ...props
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
+  const reactId = useId()
+  const titleId = `modal-title-${reactId}`
+  const descId = `modal-desc-${reactId}`
 
   // Handle ESC key
   useEffect(() => {
@@ -73,12 +76,37 @@ export function Modal({
     }
   }, [isOpen])
 
-  // Focus trap
+  // Focus management: focus modal on open
   useEffect(() => {
     if (isOpen && modalRef.current) {
       modalRef.current.focus()
     }
   }, [isOpen])
+
+  // Real focus trap: keep Tab cycling inside the modal
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key !== 'Tab' || !modalRef.current) return
+
+    const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )
+    if (focusable.length === 0) return
+
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+  }, [])
 
   if (!isOpen) return null
 
@@ -89,17 +117,19 @@ export function Modal({
   }
 
   return (
-    <div 
+    <div
       className="ds-modal-overlay"
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
-      aria-labelledby={title ? 'modal-title' : undefined}
+      aria-labelledby={title ? titleId : undefined}
+      aria-describedby={description ? descId : undefined}
     >
       <div
         ref={modalRef}
         className={clsx('ds-modal', `ds-modal--${size}`, className)}
         tabIndex={-1}
+        onKeyDown={handleKeyDown}
         {...props}
       >
         {/* Header */}
@@ -107,10 +137,14 @@ export function Modal({
           <div className="ds-modal__header">
             <div className="ds-modal__header-content">
               {title && (
-                <h2 id="modal-title" className="ds-modal__title">{title}</h2>
+                <h2 id={titleId} className="ds-modal__title">
+                  {title}
+                </h2>
               )}
               {description && (
-                <p className="ds-modal__description">{description}</p>
+                <p id={descId} className="ds-modal__description">
+                  {description}
+                </p>
               )}
             </div>
             {showCloseButton && (
@@ -127,16 +161,10 @@ export function Modal({
         )}
 
         {/* Body */}
-        <div className="ds-modal__body">
-          {children}
-        </div>
+        <div className="ds-modal__body">{children}</div>
 
         {/* Footer */}
-        {footer && (
-          <div className="ds-modal__footer">
-            {footer}
-          </div>
-        )}
+        {footer && <div className="ds-modal__footer">{footer}</div>}
       </div>
     </div>
   )

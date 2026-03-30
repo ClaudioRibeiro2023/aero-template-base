@@ -1,0 +1,112 @@
+{
+  "app": {
+    "name": "Template Platform",
+    "loading": "Carregando...",
+    "error": "Ops! Algo deu errado",
+    "errorDescription": "Ocorreu um erro inesperado. Por favor, tente recarregar a página.",
+    "reload": "Recarregar",
+    "home": "Início",
+    "export": "Exportar",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "saved": "Salvo!",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "add": "Adicionar",
+    "close": "Fechar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "search": "Buscar...",
+    "noResults": "Nenhum resultado encontrado",
+    "clear": "Limpar",
+    "lightMode": "Modo claro",
+    "darkMode": "Modo escuro",
+    "version": "Versão"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "tasks": "Tarefas",
+    "users": "Usuários",
+    "config": "Configurações",
+    "analytics": "Analytics",
+    "skipToContent": "Pular para o conteúdo principal",
+    "documentation": "Documentação"
+  },
+  "auth": {
+    "login": "Entrar",
+    "logging": "Entrando...",
+    "logout": "Sair",
+    "profile": "Perfil",
+    "forgotPassword": "Esqueci minha senha",
+    "resetPassword": "Recuperar senha",
+    "sendInstructions": "Enviar instruções",
+    "sending": "Enviando...",
+    "backToLogin": "Voltar ao login",
+    "emailSentMessage": "Se este email estiver cadastrado, você receberá as instruções em breve.",
+    "invalidCredentials": "Email ou senha incorretos",
+    "roles": {
+      "admin": "Administrador",
+      "gestor": "Gestor",
+      "operador": "Operador",
+      "viewer": "Visualizador"
+    }
+  },
+  "notifications": {
+    "title": "Notificações",
+    "empty": "Nenhuma notificação",
+    "markAllRead": "Marcar todas como lidas",
+    "close": "Fechar notificação"
+  },
+  "tenant": {
+    "switch": "Trocar tenant",
+    "current": "Tenant atual",
+    "select": "Selecionar tenant"
+  },
+  "language": {
+    "label": "Idioma",
+    "pt": "Português",
+    "en": "English"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "overview": "Visão geral do sistema",
+    "monthlyActivity": "Atividade Mensal",
+    "lastMonths": "Últimos 6 meses",
+    "quickActions": "Ações Rápidas"
+  },
+  "users": {
+    "title": "Usuários",
+    "newUser": "Novo Usuário",
+    "editUser": "Editar Usuário",
+    "createUser": "Criar usuário",
+    "searchPlaceholder": "Buscar por nome ou email...",
+    "allRoles": "Todas as roles",
+    "allStatus": "Todos os status",
+    "active": "Ativo",
+    "inactive": "Inativo",
+    "name": "Nome",
+    "email": "Email",
+    "role": "Role",
+    "status": "Status",
+    "actions": "Ações",
+    "found_one": "{{count}} usuário encontrado",
+    "found_other": "{{count}} usuários encontrados",
+    "page": "Página {{current}} de {{total}}",
+    "noResults": "Nenhum usuário encontrado",
+    "activeUser": "Usuário ativo"
+  },
+  "profile": {
+    "title": "Meu Perfil",
+    "subtitle": "Gerencie suas informações pessoais",
+    "displayName": "Nome de exibição",
+    "emailReadonly": "O email não pode ser alterado aqui",
+    "bio": "Bio",
+    "bioOptional": "Bio (opcional)",
+    "bioPlaceholder": "Conte um pouco sobre você...",
+    "changePhoto": "Alterar foto",
+    "saveChanges": "Salvar alterações"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-python.python",
+    "ms-python.black-formatter",
+    "ms-python.pylint",
+    "ms-python.vscode-pylance",
+    "bradlc.vscode-tailwindcss",
+    "streetsidesoftware.code-spell-checker",
+    "eamodio.gitlens",
+    "vitest.explorer",
+    "ZixuanChen.vitest-explorer",
+    "ms-playwright.playwright",
+    "humao.rest-client",
+    "rangav.vscode-thunder-client",
+    "pkief.material-icon-theme",
+    "github.copilot",
+    "ms-azuretools.vscode-docker"
+  ],
+  "unwantedRecommendations": []
+}

@@ -1,33 +1,39 @@
 {
   "name": "@template/platform",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "packageManager": "pnpm@9.15.9",
   "private": true,
-  "description": "Template Platform - Monorepo Starter",
+  "description": "Template Platform v2.0 — Supabase-First Monorepo Starter",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
     "dev": "pnpm --filter @template/web run dev",
-    "dev:all": "pnpm -r --parallel run dev",
     "build": "pnpm run build:packages && pnpm run build:app",
     "build:packages": "pnpm --filter @template/types run build && pnpm --filter @template/shared run build && pnpm --filter @template/design-system run build",
     "build:app": "pnpm --filter @template/web run build",
-    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
-    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "lint": "pnpm --filter @template/web run lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
-    "test:e2e": "pnpm --filter @template/web run test:e2e",
-    "clean": "rimraf node_modules packages/*/node_modules apps/*/node_modules packages/*/dist apps/*/dist",
-    "setup": "node scripts/setup.js",
+    "test:run": "pnpm -r run test:run",
+    "storybook": "pnpm --filter @template/design-system run storybook",
+    "storybook:build": "pnpm --filter @template/design-system run storybook:build",
+    "db:migrate": "npx supabase db push",
+    "db:reset": "npx supabase db reset",
+    "db:types": "npx supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > packages/shared/src/supabase/types.ts",
+    "clean": "rimraf node_modules packages/*/node_modules apps/*/node_modules packages/*/dist apps/*/dist apps/web/.next",
+    "create-module": "node scripts/new-module.js",
+    "setup": "node scripts/setup.mjs",
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
+    "apps/web/**/*.{ts,tsx}": [
+      "prettier --write"
+    ],
+    "packages/**/*.{ts,tsx}": [
       "prettier --write"
     ],
     "*.{json,md,css,html}": [

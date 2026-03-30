@@ -1,0 +1,13 @@
+{
+  "projectName": "meu-projeto",
+  "namespace": "@minha-org",
+  "appName": "Meu Projeto",
+  "supabaseUrl": "https://xxxxxxxxxxxx.supabase.co",
+  "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "supabaseServiceKey": "",
+  "authProvider": "supabase",
+  "primaryColor": "#0087a8",
+  "secondaryColor": "#005f73",
+  "logoUrl": "/logo.svg",
+  "gitRemote": ""
+}

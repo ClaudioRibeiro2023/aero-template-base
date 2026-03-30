@@ -17,6 +17,11 @@
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@template/types": ["./packages/types/src/index.ts"],
+      "@template/shared": ["./packages/shared/src/index.ts"],
+      "@template/shared/*": ["./packages/shared/src/*/index.ts"]
+    }
   }
 }

@@ -26,19 +26,23 @@ data:
   RATE_LIMIT_AUTH: "10/minute"
 
 ---
-# Secret for sensitive data (base64 encoded)
+# Secret for sensitive data
+# IMPORTANT: Do NOT store real secrets here. Use one of:
+#   - Sealed Secrets: kubeseal < secret.yaml > sealed-secret.yaml
+#   - External Secrets Operator: reference from AWS SM / Vault
+#   - kubectl create secret generic template-platform-secrets --from-literal=...
 apiVersion: v1
 kind: Secret
 metadata:
   name: template-platform-secrets
   namespace: template-platform
 type: Opaque
-data:
-  # echo -n "your-secret" | base64
-  DATABASE_URL: cG9zdGdyZXNxbDovL3VzZXI6cGFzc0Bob3N0OjU0MzIvZGI=
-  REDIS_URL: cmVkaXM6Ly9yZWRpczozNjM3OS8w
-  JWT_SECRET: eW91ci1qd3Qtc2VjcmV0LWtleQ==
-  CSRF_SECRET_KEY: eW91ci1jc3JmLXNlY3JldC1rZXk=
+stringData:
+  DATABASE_URL: "[CONFIGURE_ME_SUPABASE_CONNECTION_STRING]"
+  REDIS_URL: "[CONFIGURE_ME_REDIS_URL]"
+  JWT_SECRET: "[CONFIGURE_ME_MIN_32_CHARS]"
+  CSRF_SECRET_KEY: "[CONFIGURE_ME_MIN_32_CHARS]"
+  SUPABASE_SERVICE_ROLE_KEY: "[CONFIGURE_ME_SUPABASE_SERVICE_KEY]"
 
 ---
 # API Deployment

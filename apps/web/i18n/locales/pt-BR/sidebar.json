@@ -1,0 +1,45 @@
+{
+  "header": {
+    "collapseSidebar": "Recolher menu",
+    "expandSidebar": "Expandir menu",
+    "search": "Buscar...",
+    "searchShortcut": "Buscar"
+  },
+  "groups": {
+    "principal": "Principal",
+    "modulos": "Módulos",
+    "administracao": "Administração",
+    "suporte": "Suporte",
+    "sistema": "Sistema",
+    "servicosTecnicos": "Serviços Técnicos"
+  },
+  "footer": {
+    "settings": "Configurações",
+    "logout": "Sair",
+    "user": "Usuário"
+  },
+  "panel": {
+    "close": "Fechar painel",
+    "searchPlaceholder": "Buscar...",
+    "favorites": "Mostrar favoritos",
+    "showAll": "Mostrar todas",
+    "recents": "Recentes",
+    "noFavorites": "Nenhum favorito",
+    "noResults": "Nenhum resultado",
+    "noFunctions": "Sem funções",
+    "noFunctionsDesc": "Módulo sem funções disponíveis",
+    "clickStarToFavorite": "Clique na estrela para favoritar",
+    "tryAnotherTerm": "Tente outro termo",
+    "shortcuts": "Atalhos",
+    "shortcutSearch": "Buscar",
+    "shortcutFavorites": "Favoritos",
+    "shortcutClear": "Limpar",
+    "openPanel": "Abrir painel de funções",
+    "openFunctions": "Abrir funções do módulo",
+    "addFavorite": "Adicionar aos favoritos",
+    "removeFavorite": "Remover dos favoritos"
+  },
+  "mobile": {
+    "openMenu": "Abrir menu"
+  }
+}

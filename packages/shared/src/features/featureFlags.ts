@@ -122,7 +122,7 @@ export const DEFAULT_FEATURE_FLAGS: FeatureFlagConfig[] = [
 // Feature Flags Manager
 // ============================================================================
 
-class FeatureFlagsManager {
+export class FeatureFlagsManager {
   private flags: Map<string, boolean> = new Map()
   private configs: Map<string, FeatureFlagConfig> = new Map()
   private environment: Environment

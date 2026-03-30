@@ -1,0 +1,95 @@
+.ds-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.ds-toggle--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ds-toggle__track {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background-color: #cbd5e1;
+  transition: background-color 200ms ease;
+}
+
+.ds-toggle__track--sm {
+  width: 2rem;
+  height: 1.125rem;
+}
+.ds-toggle__track--md {
+  width: 2.75rem;
+  height: 1.5rem;
+}
+.ds-toggle__track--lg {
+  width: 3.5rem;
+  height: 1.875rem;
+}
+
+.ds-toggle__track--checked {
+  background-color: #0087a8;
+}
+
+.ds-toggle__thumb {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 9999px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  transition: left 200ms ease;
+}
+
+.ds-toggle__track--sm .ds-toggle__thumb {
+  width: 0.875rem;
+  height: 0.875rem;
+  left: 0.125rem;
+}
+
+.ds-toggle__track--sm.ds-toggle__track--checked .ds-toggle__thumb {
+  left: calc(100% - 1rem);
+}
+
+.ds-toggle__track--md .ds-toggle__thumb {
+  width: 1.25rem;
+  height: 1.25rem;
+  left: 0.125rem;
+}
+
+.ds-toggle__track--md.ds-toggle__track--checked .ds-toggle__thumb {
+  left: calc(100% - 1.375rem);
+}
+
+.ds-toggle__track--lg .ds-toggle__thumb {
+  width: 1.625rem;
+  height: 1.625rem;
+  left: 0.125rem;
+}
+
+.ds-toggle__track--lg.ds-toggle__track--checked .ds-toggle__thumb {
+  left: calc(100% - 1.75rem);
+}
+
+.ds-toggle__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e293b;
+  user-select: none;
+}
+
+.ds-toggle__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

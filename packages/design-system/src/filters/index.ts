@@ -1,2 +1,6 @@
-// Placeholder - Add your filter components here
-export {}
+export {
+  SearchFilter,
+  FilterChip,
+  type SearchFilterProps,
+  type FilterChipProps,
+} from './SearchFilter'

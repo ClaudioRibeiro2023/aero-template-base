@@ -1,0 +1,85 @@
+.ds-progress {
+  width: 100%;
+}
+
+.ds-progress__label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.ds-progress__text {
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.ds-progress__value {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.ds-progress__track {
+  width: 100%;
+  border-radius: 9999px;
+  background-color: #e2e8f0;
+  overflow: hidden;
+}
+
+.ds-progress__track--sm {
+  height: 0.25rem;
+}
+.ds-progress__track--md {
+  height: 0.5rem;
+}
+.ds-progress__track--lg {
+  height: 0.75rem;
+}
+
+.ds-progress__bar {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 300ms ease;
+}
+
+.ds-progress__bar--primary {
+  background-color: #0087a8;
+}
+.ds-progress__bar--success {
+  background-color: #10b981;
+}
+.ds-progress__bar--warning {
+  background-color: #f59e0b;
+}
+.ds-progress__bar--error {
+  background-color: #ef4444;
+}
+
+.ds-progress__bar--striped {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 1rem 1rem;
+}
+
+.ds-progress__bar--animated {
+  animation: ds-progress-stripes 1s linear infinite;
+}
+
+@keyframes ds-progress-stripes {
+  from {
+    background-position: 1rem 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}

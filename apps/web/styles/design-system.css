@@ -1,0 +1,29 @@
+/**
+ * Design System Styles Import
+ * Importa todos os estilos dos componentes do Design System
+ */
+
+/* Tokens - Variables */
+:root {
+  /* Brand Colors */
+  --ds-brand-primary: #0087a8;
+  --ds-brand-secondary: #005f73;
+  --ds-brand-accent: #94d2bd;
+
+  /* Semantic Colors */
+  --ds-success: #22c55e;
+  --ds-warning: #f59e0b;
+  --ds-error: #ef4444;
+  --ds-info: #3b82f6;
+}
+
+/* Component Styles */
+@import '../../../packages/design-system/src/components/Button/Button.css';
+@import '../../../packages/design-system/src/components/Input/Input.css';
+@import '../../../packages/design-system/src/components/Card/Card.css';
+@import '../../../packages/design-system/src/components/Modal/Modal.css';
+@import '../../../packages/design-system/src/components/Toast/Toast.css';
+@import '../../../packages/design-system/src/components/Tabs/Tabs.css';
+@import '../../../packages/design-system/src/components/Table/Table.css';
+@import '../../../packages/design-system/src/components/Dropdown/Dropdown.css';
+@import '../../../packages/design-system/src/components/Skeleton/Skeleton.css';

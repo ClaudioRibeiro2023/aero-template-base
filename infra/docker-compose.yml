@@ -1,76 +1,56 @@
-services:
-  # PostgreSQL Database
-  db:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: template
-      POSTGRES_USER: template
-      POSTGRES_PASSWORD: template
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U template"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+# ============================================
+# Docker Compose — Template Platform v2.0
+# ============================================
+# Supabase-first: DB and Auth are in Supabase Cloud.
+# This compose provides only local dev services (Redis, optional Keycloak).
+# Run: docker compose --env-file .env up -d
 
-  # Redis (for caching/sessions)
+services:
+  # Redis (for caching/sessions) — password protected
   redis:
     image: redis:7-alpine
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
       interval: 10s
       timeout: 3s
       retries: 3
 
-  # Keycloak (OIDC Authentication)
+  # Keycloak (OIDC Authentication) — optional, only if NEXT_PUBLIC_AUTH_PROVIDER=keycloak
+  # Start with: docker compose --profile keycloak up -d
   keycloak:
     image: quay.io/keycloak/keycloak:23.0
     command: start-dev --import-realm
     ports:
-      - "8080:8080"
+      - '${KEYCLOAK_HTTP_PORT:-8080}:8080'
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
     volumes:
       - ./keycloak:/opt/keycloak/data/import
+    profiles:
+      - keycloak
 
-  # API (placeholder - replace with your API)
-  api:
-    build: ../api-template
-    ports:
-      - "8000:8000"
-    environment:
-      DATABASE_URL: postgresql://template:template@db:5432/template
-      REDIS_URL: redis://redis:6379
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  # Frontend
+  # Next.js Frontend (production build)
+  # For dev: use `pnpm dev` directly instead
   frontend:
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
-      args:
-        VITE_API_URL: http://localhost:8000/api
-        VITE_KEYCLOAK_URL: http://localhost:8080
-        VITE_KEYCLOAK_REALM: template
-        VITE_KEYCLOAK_CLIENT_ID: template-web
-        VITE_DEMO_MODE: "false"
     ports:
-      - "13000:80"
+      - '3000:3000'
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Template Platform}
+      NEXT_PUBLIC_AUTH_PROVIDER: ${NEXT_PUBLIC_AUTH_PROVIDER:-supabase}
     depends_on:
-      - api
-      - keycloak
+      redis:
+        condition: service_healthy
 
 volumes:
-  postgres_data:
   redis_data:

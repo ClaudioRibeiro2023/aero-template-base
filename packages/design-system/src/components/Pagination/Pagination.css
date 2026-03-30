@@ -1,0 +1,67 @@
+.ds-pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ds-pagination__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 150ms ease;
+  font-family: inherit;
+}
+
+.ds-pagination__button:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.ds-pagination__button--active {
+  background-color: #0087a8;
+  color: #fff;
+  border-color: #0087a8;
+}
+
+.ds-pagination__button--active:hover:not(:disabled) {
+  background-color: #006c86;
+  border-color: #006c86;
+}
+
+.ds-pagination__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ds-pagination__ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  user-select: none;
+}
+
+.ds-pagination--sm .ds-pagination__button {
+  min-width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.75rem;
+}
+
+.ds-pagination--lg .ds-pagination__button {
+  min-width: 2.5rem;
+  height: 2.5rem;
+  font-size: 1rem;
+}

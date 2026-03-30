@@ -1,0 +1,41 @@
+.ds-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.ds-breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ds-breadcrumb__link {
+  color: var(--text-muted, #64748b);
+  text-decoration: none;
+  transition: color 150ms ease;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+}
+
+.ds-breadcrumb__link:hover {
+  color: var(--text-primary, #0f172a);
+  text-decoration: underline;
+}
+
+.ds-breadcrumb__current {
+  color: var(--text-primary, #0f172a);
+  font-weight: 500;
+}
+
+.ds-breadcrumb__separator {
+  color: var(--text-muted, #cbd5e1);
+  display: inline-flex;
+  user-select: none;
+}

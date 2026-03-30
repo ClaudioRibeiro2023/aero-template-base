@@ -1,6 +1,6 @@
 # 🗺️ Mapa do Repositório
 
-> Documento gerado automaticamente. Última atualização: Dezembro 2024
+> Documento gerado automaticamente. Última atualização: Março 2026 (Release 1.0)
 
 Este documento mapeia a estrutura completa do repositório **Template Platform**, identificando arquivos centrais, dependências reais e pontos de integração.
 
@@ -53,6 +53,8 @@ template-platform/
 ├── 📁 api-template/                   # Backend FastAPI
 │   ├── app/
 │   │   ├── main.py                    # 🎯 Entry point da API
+│   │   ├── admin_config.py            # AdminConfigStore (white-label)
+│   │   ├── cache.py                   # Redis/Memory cache layer
 │   │   ├── rate_limit.py              # Rate limiting (slowapi)
 │   │   ├── csrf.py                    # CSRF protection
 │   │   ├── session.py                 # Redis session store
@@ -63,10 +65,16 @@ template-platform/
 │   │   ├── tenant.py                  # Multi-tenancy
 │   │   ├── websocket.py               # WebSocket support
 │   │   ├── middleware.py              # Custom middlewares
-│   │   └── logging_config.py          # Structlog config
+│   │   ├── logging_config.py          # Structlog config
+│   │   └── routers/                   # API routers
+│   │       ├── admin_config.py        # Admin config endpoints
+│   │       ├── tasks.py               # Tasks CRUD
+│   │       ├── users.py               # Users management
+│   │       ├── tenants.py             # Tenants CRUD
+│   │       └── dashboard.py           # Dashboard analytics
+│   ├── tests/                         # 617 testes pytest
+│   ├── scripts/seed.py                # db:seed script
 │   ├── alembic/                       # Database migrations
-│   │   ├── env.py
-│   │   └── versions/                  # Migration files
 │   ├── alembic.ini                    # Alembic config
 │   ├── requirements.txt               # Deps Python
 │   └── Dockerfile                     # Container image
@@ -83,18 +91,27 @@ template-platform/
 │   │   └── blue-green.yaml            # Blue-green deployment
 │   └── monitoring/                    # Observability (Prometheus, Grafana)
 │
-├── 📁 docs/                           # Documentação
-│   ├── INDEX.md                       # Índice da documentação
-│   ├── ARCHITECTURE.md                # Arquitetura geral
-│   ├── GETTING_STARTED.md             # Guia de início rápido
-│   ├── DEPLOY.md                      # Instruções de deploy
+├── 📁 docs/                           # Documentação (~25 páginas)
+│   ├── INDEX.md                       # Índice mestre
+│   ├── MEGAPLAN-EVOLUCAO.md           # Plano mestre v1.3 (24 sprints)
+│   ├── BACKLOG-V1.1.md                # Backlog consolidado v1.1
+│   ├── TECHNICAL-DEBT.md              # Technical Debt Register
+│   ├── SPRINT-LOG.md                  # Sprint logs 19–24
+│   ├── RETROSPECTIVA-RELEASE-1.0.md   # Retrospectiva Release 1.0
+│   ├── BOOK_OF_TESTS.md               # Matriz de testes
 │   ├── DESIGN_SYSTEM.md               # Design system
-│   ├── ROLES_E_ACESSO.md              # RBAC e permissões
 │   ├── TROUBLESHOOTING.md             # Resolução de problemas
-│   └── adr/                           # Architecture Decision Records
+│   ├── arquitetura/                   # C4 Model diagrams
+│   ├── contratos-integracao/           # Auth, API, OpenAPI
+│   ├── operacao/                      # Setup, deploy, env vars
+│   ├── seguranca/                     # RBAC, headers
+│   └── adr_v2/                        # Architecture Decision Records
 │
 ├── 📁 scripts/                        # Scripts de automação
-│   └── blue-green-deploy.ps1          # Script de deploy blue-green
+│   ├── blue-green-deploy.ps1          # Script de deploy blue-green
+│   ├── new-module.js                  # Scaffolding de módulos
+│   ├── check-env.js                   # Validação de env vars
+│   └── generate-analise-completa.py    # Gerador de DOCX
 │
 ├── 📁 .github/                        # GitHub config
 │   └── workflows/                     # CI/CD pipelines
@@ -219,16 +236,22 @@ itsdangerous>=2.1.0
 
 ### Endpoints da API
 
-| Endpoint        | Método | Propósito             |
-| --------------- | ------ | --------------------- |
-| `/`             | GET    | Health check básico   |
-| `/health`       | GET    | Health check          |
-| `/health/live`  | GET    | Liveness probe (K8s)  |
-| `/health/ready` | GET    | Readiness probe (K8s) |
-| `/docs`         | GET    | Swagger UI            |
-| `/redoc`        | GET    | ReDoc                 |
-| `/api/me`       | GET    | Usuário atual         |
-| `/api/config`   | GET    | Config do frontend    |
+| Endpoint                      | Método     | Propósito             |
+| ----------------------------- | ---------- | --------------------- |
+| `/`                           | GET        | Health check básico   |
+| `/health`                     | GET        | Health check          |
+| `/health/live`                | GET        | Liveness probe (K8s)  |
+| `/health/ready`               | GET        | Readiness probe (K8s) |
+| `/docs`                       | GET        | Swagger UI            |
+| `/redoc`                      | GET        | ReDoc                 |
+| `/api/me`                     | GET        | Usuário atual         |
+| `/api/config`                 | GET        | Config do frontend    |
+| `/api/tasks`                  | CRUD       | Tasks management      |
+| `/api/users`                  | CRUD       | Users management      |
+| `/api/tenants`                | CRUD       | Tenants management    |
+| `/api/dashboard`              | GET        | Dashboard analytics   |
+| `/api/platform/public-config` | GET        | Platform config       |
+| `/api/admin/platform-config`  | PATCH/POST | Admin config          |
 
 ### Endpoints OIDC (Keycloak)
 
@@ -307,10 +330,12 @@ docker-compose logs -f api                    # View API logs
 
 ### Cobertura Atual
 
-| Tipo               | Quantidade | Localização                   |
-| ------------------ | ---------- | ----------------------------- |
-| Unitários (Vitest) | 125        | `packages/*/src/**/*.test.ts` |
-| E2E (Playwright)   | 96         | `apps/web/e2e/*.spec.ts`      |
+| Tipo             | Quantidade | Localização                       |
+| ---------------- | ---------- | --------------------------------- |
+| API (pytest)     | 617        | `api-template/tests/`             |
+| Unit FE (Vitest) | 513        | `apps/web/src/**/*.test.{ts,tsx}` |
+| E2E (Playwright) | 96         | `apps/web/e2e/*.spec.ts`          |
+| **Total**        | **1130**   | **100% passing**                  |
 
 ### Categorias E2E
 
@@ -322,4 +347,4 @@ docker-compose logs -f api                    # View API logs
 
 ---
 
-_Documento gerado para servir como referência de integração._
+_Documento gerado para servir como referência de integração. Atualizado em 2026-03-25 (Release 1.0)._

@@ -37,6 +37,22 @@ __tests__
 **/__tests__
 playwright-report
 test-results
+*.db
+
+# Coverage
+htmlcov
+.coverage
+coverage.xml
+.nyc_output
+
+# Python
+__pycache__
+**/__pycache__
+*.py[cod]
+.venv
+venv
+.pytest_cache
+logs
 
 # Logs
 *.log
@@ -46,6 +62,9 @@ pnpm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Generated docs
+*.docx
 
 # Temp
 *.tmp

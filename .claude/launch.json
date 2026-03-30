@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "template-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["next", "dev", "--port", "3005"],
+      "port": 3005,
+      "cwd": "B:/aero-factory-h/projects/.bases/template.base/apps/web"
+    }
+  ]
+}

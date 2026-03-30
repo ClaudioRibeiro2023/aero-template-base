@@ -1,0 +1,31 @@
+.ds-confirm-dialog__actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+
+.ds-confirm-dialog__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  margin-bottom: 0.75rem;
+}
+
+.ds-confirm-dialog__icon--danger {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+
+.ds-confirm-dialog__icon--warning {
+  background-color: #fffbeb;
+  color: #f59e0b;
+}
+
+.ds-confirm-dialog__icon--info {
+  background-color: #eff6ff;
+  color: #3b82f6;
+}

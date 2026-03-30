@@ -1,6 +1,6 @@
 # Portal de Documentação - Template Platform
 
-> **Versão:** 1.0.0 | **Última atualização:** Dezembro 2024
+> **Versão:** 1.0.0 | **Última atualização:** Março 2026
 
 Índice mestre da documentação. Esta é a **source of truth** para o projeto.
 
@@ -82,6 +82,16 @@ Ver [adr_v2/README.md](./adr_v2/README.md) para template e como contribuir.
 | [BOOK_OF_TESTS.md](./BOOK_OF_TESTS.md)     | Matriz de testes e cobertura       |
 | [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Problemas comuns e soluções        |
 
+### 📊 Governança e Release
+
+| Documento                                                      | Descrição                                         |
+| -------------------------------------------------------------- | ------------------------------------------------- |
+| [TECHNICAL-DEBT.md](./TECHNICAL-DEBT.md)                       | Technical Debt Register (11 ativos, 2 resolvidos) |
+| [SPRINT-LOG.md](./SPRINT-LOG.md)                               | Log histórico de execução — Sprints 19–24         |
+| [RETROSPECTIVA-RELEASE-1.0.md](./RETROSPECTIVA-RELEASE-1.0.md) | Retrospectiva e lições aprendidas Release 1.0     |
+| [MEGAPLAN-EVOLUCAO.md](./MEGAPLAN-EVOLUCAO.md)                 | Plano mestre v1.3 — 24 sprints revisados          |
+| [BACKLOG-V1.1.md](./BACKLOG-V1.1.md)                           | Backlog consolidado v1.1 (Sprints 25–29)          |
+
 ---
 
 ## Estrutura de Pastas
@@ -123,7 +133,14 @@ docs/
 │
 ├── _archive/                   # Docs arquivados (histórico)
 ├── _backlog/                   # Ideias e backlog
-└── 00-auditoria/               # Relatórios de auditoria
+├── 00-auditoria/               # Relatórios de auditoria
+│
+└── (Release 1.0)
+    ├── TECHNICAL-DEBT.md       # Technical Debt Register
+    ├── SPRINT-LOG.md           # Sprint logs Sprints 19-24
+    ├── RETROSPECTIVA-RELEASE-1.0.md  # Retrospectiva Release 1.0
+    ├── MEGAPLAN-EVOLUCAO.md    # Plano mestre v1.3 (24 sprints)
+    └── BACKLOG-V1.1.md         # Backlog consolidado v1.1
 ```
 
 ---
@@ -158,4 +175,4 @@ docs/
 
 ---
 
-_Documentação consolidada em 2024-12-16_
+_Documentação consolidada em 2024-12-16 | Atualizada para Release 1.0 em 2026-03-25_

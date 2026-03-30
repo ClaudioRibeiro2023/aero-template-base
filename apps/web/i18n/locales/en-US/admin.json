@@ -1,0 +1,23 @@
+{
+  "navEditor": {
+    "title": "Navigation Editor",
+    "addItem": "+ Add item",
+    "cancel": "Cancel",
+    "add": "Add",
+    "labelPlaceholder": "Label",
+    "pathPlaceholder": "/path",
+    "labelField": "Item label",
+    "pathField": "Item path",
+    "empty": "No navigation items configured",
+    "enable": "Enable {{label}}",
+    "disable": "Disable {{label}}",
+    "remove": "Remove {{label}}"
+  },
+  "config": {
+    "title": "Platform Settings",
+    "branding": "Branding",
+    "theme": "Theme",
+    "navigation": "Navigation",
+    "reset": "Reset to defaults"
+  }
+}

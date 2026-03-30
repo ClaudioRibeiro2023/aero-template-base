@@ -1,28 +1,26 @@
 import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react-swc'
-import { resolve } from 'path'
+import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
   test: {
-    globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['node_modules', 'dist', 'e2e'],
-    setupFiles: ['./src/test/setup.ts'],
-    css: true,
+    globals: true,
+    setupFiles: ['./vitest.setup.ts'],
+    include: ['**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.{test,spec}.{ts,tsx}', 'src/**/index.ts', 'src/test/**'],
+      reporter: ['text', 'lcov'],
+      thresholds: { lines: 30 },
     },
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, './src'),
-      '@template/design-system': resolve(__dirname, '../../packages/design-system/src'),
-      '@template/shared': resolve(__dirname, '../../packages/shared/src'),
+      '@': path.resolve(__dirname, '.'),
+      '@template/design-system': path.resolve(__dirname, '../../packages/design-system/src'),
+      '@template/shared': path.resolve(__dirname, '../../packages/shared/src'),
+      '@template/types': path.resolve(__dirname, '../../packages/types/src'),
     },
   },
 })

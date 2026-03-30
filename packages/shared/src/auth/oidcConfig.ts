@@ -1,4 +1,4 @@
-import type { UserManagerSettings} from 'oidc-client-ts';
+import type { UserManagerSettings } from 'oidc-client-ts'
 import { WebStorageStateStore } from 'oidc-client-ts'
 
 type ImportMetaEnvAuth = {
@@ -16,7 +16,9 @@ const env: ImportMetaEnvAuth =
 const KEYCLOAK_URL = env.VITE_KEYCLOAK_URL || 'http://localhost:8080'
 const KEYCLOAK_REALM = env.VITE_KEYCLOAK_REALM || 'template'
 const KEYCLOAK_CLIENT_ID = env.VITE_KEYCLOAK_CLIENT_ID || 'template-web'
-const APP_URL = env.VITE_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:13000')
+const APP_URL =
+  env.VITE_APP_URL ||
+  (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:13000')
 
 export const oidcConfig: UserManagerSettings = {
   authority: `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}`,
@@ -31,8 +33,17 @@ export const oidcConfig: UserManagerSettings = {
   monitorSession: true,
   revokeTokensOnSignout: true,
   filterProtocolClaims: true,
-  userStore: typeof window !== 'undefined' ? new WebStorageStateStore({ store: window.localStorage }) : undefined,
-  stateStore: typeof window !== 'undefined' ? new WebStorageStateStore({ store: window.sessionStorage }) : undefined,
+  // Use sessionStorage (not localStorage) to reduce XSS token theft risk.
+  // Tokens are cleared when the browser tab closes.
+  // For httpOnly cookie-based storage, implement a BFF (backend-for-frontend) pattern.
+  userStore:
+    typeof window !== 'undefined'
+      ? new WebStorageStateStore({ store: window.sessionStorage })
+      : undefined,
+  stateStore:
+    typeof window !== 'undefined'
+      ? new WebStorageStateStore({ store: window.sessionStorage })
+      : undefined,
   // No client_secret = PKCE will be used automatically
   metadata: {
     issuer: `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}`,
@@ -41,5 +52,5 @@ export const oidcConfig: UserManagerSettings = {
     userinfo_endpoint: `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/userinfo`,
     end_session_endpoint: `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/logout`,
     jwks_uri: `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}/protocol/openid-connect/certs`,
-  }
+  },
 }

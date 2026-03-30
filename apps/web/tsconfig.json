@@ -1,14 +1,35 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": ".",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@design-system/*": ["../../packages/design-system/src/*"]
-    }
+      "@/*": ["./*"],
+      "@template/design-system": ["../../packages/design-system/src"],
+      "@template/design-system/*": ["../../packages/design-system/src/*"],
+      "@template/shared": ["../../packages/shared/src"],
+      "@template/shared/*": ["../../packages/shared/src/*"],
+      "@template/types": ["../../packages/types/src"],
+      "@template/types/*": ["../../packages/types/src/*"]
+    },
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "jsx": "preserve"
   },
-  "include": ["src"],
-  "references": [
-    { "path": "./tsconfig.node.json" }
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "**/*.stories.tsx",
+    "**/*.stories.ts",
+    "**/*.test.tsx",
+    "**/*.test.ts",
+    "vitest.config.ts",
+    "vitest.setup.ts"
   ]
 }

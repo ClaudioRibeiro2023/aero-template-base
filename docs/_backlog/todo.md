@@ -995,6 +995,25 @@ Este arquivo acompanha o plano de melhorias faseado descrito em `docs/PROPOSTA_A
 
 <!-- Adicione notas conforme implementa os itens -->
 
+- ✅ **[2026-03-26] Sprint 42 - Security Middleware Refactoring**:
+  - `api-template/app/setup_security.py` — `SecurityConfig` Pydantic model centralizado, `setup_all_security(app)` como entry point único
+  - `api-template/app/main.py` — Substituídas 3 chamadas separadas + `SecurityHeadersMiddleware` por `setup_all_security(app)`
+  - `api-template/app/middleware.py` — `SecurityHeadersMiddleware` marcado como DEPRECATED (headers agora em `setup_security`)
+  - `api-template/app/security.py`, `csrf.py`, `audit.py` — Deprecation notices nas funções `setup_*()` standalone
+  - Eliminados headers de segurança duplicados (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection)
+  - Adicionados Referrer-Policy, Permissions-Policy, HSTS configurável via env vars
+  - Corrigido env var inconsistente: `ENABLE_AUDIT_LOGGING` → `ENABLE_AUDIT`
+  - Env vars centralizadas: `ENABLE_SECURITY_HEADERS`, `ENABLE_CSP`, `ENABLE_AUDIT`, `ENABLE_CSRF`, `ENABLE_HSTS`, `HSTS_MAX_AGE`
+  - Validação: 133 testes de segurança passando ✅, cobertura 42%
+
+- ✅ **[2026-03-25] Sprint 41 - API Versioning (`/api/v1/`)**:
+  - `api-template/app/api_version.py` — constants, middleware, deprecation, version negotiation
+  - ALL routers padronizados para `/api/v1/` (teams, boards, files, feature-flags, admin_config, me, config, security/config)
+  - `APIVersionHeaderMiddleware` (X-API-Version, X-API-Semver, X-API-Supported-Versions)
+  - FE services atualizados para paths relativos (teams, boards, fileUpload)
+  - 7+ BE test files + 3 FE test files atualizados
+  - Validação: 916 BE + 860 FE = 1776 testes passando + build ✅
+
 - ✅ Validações executadas:
   - `pnpm lint`
   - `pnpm typecheck`

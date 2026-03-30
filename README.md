@@ -1,8 +1,8 @@
-# 🚀 Template Platform
+# Template Platform v2.0
 
-> **Versão:** 1.0.0 | **Última atualização:** Dezembro 2024
+> **Factory H Starter Template** | Supabase-First | Next.js 14 | TypeScript
 
-Um template moderno e robusto para criar aplicações web corporativas com React, TypeScript, TailwindCSS e autenticação via Keycloak.
+Template base para todos os projetos do Factory H. Clone, configure e comece a desenvolver.
 
 ## ✨ Características
 
@@ -18,7 +18,7 @@ Um template moderno e robusto para criar aplicações web corporativas com React
 - **Playwright** para testes E2E (96 testes)
 - **Dark Mode** suportado
 
-### Produção & Escalabilidade (Fase 10)
+### Produção & Escalabilidade
 
 - **Rate Limiting** com slowapi
 - **CSRF Protection** com double-submit cookie
@@ -28,6 +28,15 @@ Um template moderno e robusto para criar aplicações web corporativas com React
 - **Kubernetes Manifests** com HPA e blue-green deploy
 - **Analytics** privacy-first com event tracking
 - **CDN Integration** com cache otimizado
+
+### Release 1.0 — Sprints 19–24
+
+- **Performance**: Vite chunk splitting + Redis cache backend + hooks de prefetch/debounce/throttle
+- **Acessibilidade**: WCAG 2.1 AA — `useA11y`, focus trap, anúncios aria-live, contraste
+- **Segurança Hardening**: CSRF + CSP headers + X-Frame-Options + Permissions-Policy + HSTS
+- **DX Polish**: `.vscode` launch/settings/extensions, scripts `db:migrate`, `test:all`, `e2e`
+- **Admin & White-Label**: `adminConfig` service + store multi-tenant + branding/theme/navigation
+- **Testes**: **617 backend** + **513 frontend** = **1130 testes totais** (100% passando)
 
 ## 📁 Estrutura do Projeto
 
@@ -212,17 +221,25 @@ pnpm test:e2e:ui
 
 ## 📝 Scripts Disponíveis
 
-| Comando          | Descrição                                   |
-| ---------------- | ------------------------------------------- |
-| `pnpm dev`       | Inicia dev server em http://localhost:13000 |
-| `pnpm build`     | Build de produção (packages + app)          |
-| `pnpm lint`      | Executa ESLint                              |
-| `pnpm lint:fix`  | Corrige problemas de lint                   |
-| `pnpm format`    | Formata código com Prettier                 |
-| `pnpm typecheck` | Verifica tipos TypeScript                   |
-| `pnpm test`      | Testes unitários (Vitest)                   |
-| `pnpm test:e2e`  | Testes E2E (Playwright)                     |
-| `pnpm clean`     | Limpa node_modules e dist                   |
+| Comando                | Descrição                                     |
+| ---------------------- | --------------------------------------------- |
+| `pnpm dev`             | Inicia dev server em http://localhost:13000   |
+| `pnpm build`           | Build de produção (packages + app)            |
+| `pnpm lint`            | Executa ESLint                                |
+| `pnpm lint:fix`        | Corrige problemas de lint                     |
+| `pnpm format`          | Formata código com Prettier                   |
+| `pnpm typecheck`       | Verifica tipos TypeScript                     |
+| `pnpm test:run`        | Testes unitários frontend (Vitest, sem watch) |
+| `pnpm test:backend`    | Testes backend (pytest)                       |
+| `pnpm test:all`        | Todos os testes (frontend + backend)          |
+| `pnpm test:e2e`        | Testes E2E (Playwright)                       |
+| `pnpm db:migrate`      | Aplica migrations Alembic (`upgrade head`)    |
+| `pnpm db:migrate:down` | Reverte última migration                      |
+| `pnpm db:seed`         | Popula banco com dados de exemplo             |
+| `pnpm db:reset`        | Reset completo do banco (downgrade + upgrade) |
+| `pnpm storybook`       | Inicia Storybook do design system             |
+| `pnpm e2e`             | Alias para test:e2e                           |
+| `pnpm clean`           | Limpa node_modules e dist                     |
 
 ## 📖 Documentação
 

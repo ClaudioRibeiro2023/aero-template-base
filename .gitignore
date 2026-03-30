@@ -18,7 +18,10 @@ out/
 
 # IDE
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
 *.swp
 *.swo
 
@@ -33,9 +36,13 @@ pnpm-debug.log*
 
 # Testing
 coverage/
+htmlcov/
+.coverage
+coverage.xml
 .nyc_output/
 playwright-report/
 test-results/
+*.db
 
 # Cache
 .cache/
@@ -49,6 +56,13 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+logs/
+
+# Generated docs
+*.docx
 
 # Docker
 *.pid
+
+# Local Netlify folder
+.netlify
