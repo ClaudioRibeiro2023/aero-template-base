@@ -28,43 +28,47 @@ export default function ForgotPasswordPage() {
     const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/login/reset-password`,
     })
-
     if (authError) setError(authError.message)
     else setSent(true)
     setLoading(false)
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#1B365D] to-[#142847] flex items-center justify-center p-4 relative overflow-hidden">
+    <main className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+      {/* Animated mesh background */}
+      <div className="absolute inset-0 animated-mesh" />
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none opacity-[0.03]"
         style={{
-          background: `
-            radial-gradient(ellipse at 20% 50%, rgba(14, 124, 123, 0.12) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 20%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
-            radial-gradient(ellipse at 50% 90%, rgba(99, 102, 241, 0.05) 0%, transparent 50%)
-          `,
+          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+          backgroundSize: '60px 60px',
         }}
       />
 
-      <div className="relative z-10 w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white">{appName}</h1>
-          <p className="text-white/50 text-sm mt-1">Recuperar senha</p>
+      <div className="relative z-20 w-full max-w-sm">
+        <div className="text-center mb-6 animate-fade-in-up">
+          <h1 className="text-xl font-bold text-white">{appName}</h1>
+          <p className="text-white/40 text-sm mt-1">Recuperar senha</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl shadow-black/30 p-6">
+        <div
+          className="rounded-2xl backdrop-blur-2xl luminous-border animate-fade-in-up p-8"
+          style={{ backgroundColor: 'rgba(5, 15, 35, 0.85)', animationDelay: '0.15s' }}
+        >
           {sent ? (
             <div className="text-center space-y-4 py-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mx-auto">
-                <CheckCircle className="w-7 h-7 text-emerald-500" />
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
+                style={{ backgroundColor: 'rgba(14,140,107,0.15)' }}
+              >
+                <CheckCircle className="w-7 h-7 text-emerald-400" />
               </div>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-white/60">
                 Se este email estiver cadastrado, você receberá as instruções em breve.
               </p>
               <Link
                 href="/login"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-[#1B365D] hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-[#2980B9] hover:text-[#2980B9]/80 transition-colors"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 Voltar ao login
@@ -72,23 +76,30 @@ export default function ForgotPasswordPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                  Email
-                </label>
+              <div className="relative">
                 <input
                   id="email"
                   type="email"
                   required
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="seu@empresa.com"
-                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm placeholder-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D]"
+                  placeholder=" "
+                  className="peer w-full px-3 pt-5 pb-2 bg-white/[0.06] border border-white/10 rounded-lg text-white text-sm placeholder-transparent transition-all focus:outline-none focus:ring-2 focus:ring-[#2980B9]/40 focus:border-[#2980B9]/60 backdrop-blur-sm"
                 />
+                <label
+                  htmlFor="email"
+                  className={`absolute left-3 transition-all duration-200 pointer-events-none text-slate-400 ${
+                    email.length > 0
+                      ? 'top-1.5 text-[10px] text-[#2980B9]'
+                      : 'top-1/2 -translate-y-1/2 text-sm peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:translate-y-0 peer-focus:text-[#2980B9]'
+                  }`}
+                >
+                  Email
+                </label>
               </div>
 
               {error && (
-                <p className="text-sm text-red-500 text-center" role="alert">
+                <p className="text-sm text-red-400 text-center" role="alert">
                   {error}
                 </p>
               )}
@@ -96,10 +107,11 @@ export default function ForgotPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#1B365D] hover:bg-[#142847] text-white text-sm font-medium shadow-sm disabled:opacity-50 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#1B365D]/40 focus:ring-offset-2"
+                className="w-full h-12 rounded-lg text-white text-base font-semibold shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg, #2980B9, #0E8C6B)' }}
               >
                 {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <Mail className="w-4 h-4" />
                 )}
@@ -109,7 +121,7 @@ export default function ForgotPasswordPage() {
               <div className="text-center pt-1">
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs text-white/30 hover:text-white/50 transition-colors"
                 >
                   <ArrowLeft className="w-3 h-3" />
                   Voltar ao login
@@ -119,10 +131,61 @@ export default function ForgotPasswordPage() {
           )}
         </div>
 
-        <p className="text-center text-white/25 text-xs mt-6">
+        <p
+          className="text-center text-white/15 text-xs mt-6 animate-fade-in-up"
+          style={{ animationDelay: '0.3s' }}
+        >
           {appName} &copy; {new Date().getFullYear()}
         </p>
       </div>
+
+      <style jsx>{`
+        .animated-mesh {
+          background: linear-gradient(-45deg, #0c2340, #163b5c, #0e8c6b, #0c2340, #1a4a73);
+          background-size: 400% 400%;
+          animation: meshShift 15s ease infinite;
+        }
+        @keyframes meshShift {
+          0% {
+            background-position: 0% 50%;
+          }
+          50% {
+            background-position: 100% 50%;
+          }
+          100% {
+            background-position: 0% 50%;
+          }
+        }
+        .animate-fade-in-up {
+          animation: fadeInUp 0.6s ease-out forwards;
+          opacity: 0;
+        }
+        @keyframes fadeInUp {
+          0% {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .luminous-border {
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition:
+            border-color 0.3s,
+            box-shadow 0.3s;
+          box-shadow:
+            0 8px 40px rgba(0, 0, 0, 0.3),
+            0 0 40px rgba(41, 128, 185, 0.1);
+        }
+        .luminous-border:hover {
+          border-color: rgba(41, 128, 185, 0.4);
+          box-shadow:
+            0 8px 40px rgba(0, 0, 0, 0.3),
+            0 0 20px rgba(41, 128, 185, 0.15);
+        }
+      `}</style>
     </main>
   )
 }
