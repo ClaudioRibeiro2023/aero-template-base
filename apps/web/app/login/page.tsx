@@ -2,11 +2,12 @@
 
 import { supabase } from '@template/shared/supabase'
 import { useState } from 'react'
+import { Mail, Lock, Loader2 } from 'lucide-react'
 
 // Google "G" SVG icon — inline para zero dependências
-function GoogleIcon({ className }: { className?: string }) {
+function GoogleIcon() {
   return (
-    <svg className={className} viewBox="0 0 24 24" width="18" height="18">
+    <svg viewBox="0 0 24 24" width="18" height="18">
       <path
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
         fill="#4285F4"
@@ -27,149 +28,247 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
+type AuthMode = 'password' | 'magic'
+
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [socialLoading, setSocialLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
+  const [mode, setMode] = useState<AuthMode>('password')
+
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Template Platform'
   const logoUrl = process.env.NEXT_PUBLIC_LOGO_URL
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handlePasswordLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    setError(null)
+    setMessage(null)
 
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
-    if (authError) {
-      const msg =
-        authError.message === 'Invalid login credentials'
-          ? 'Email ou senha incorretos'
-          : authError.message
-      setError(msg)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      setMessage({
+        text:
+          error.message === 'Invalid login credentials'
+            ? 'Email ou senha incorretos'
+            : error.message,
+        type: 'error',
+      })
     } else {
       window.location.href = '/dashboard'
     }
     setLoading(false)
   }
 
-  async function handleGoogleLogin() {
-    setSocialLoading(true)
-    setError(null)
+  async function handleMagicLink(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setMessage(null)
 
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     })
 
-    if (authError) {
-      setError(authError.message)
-      setSocialLoading(false)
+    if (error) {
+      setMessage({ text: error.message, type: 'error' })
+    } else {
+      setMessage({ text: 'Link de acesso enviado! Verifique seu email.', type: 'success' })
     }
-    // Se não houver erro, o browser será redirecionado automaticamente pelo Supabase
+    setLoading(false)
   }
 
+  async function handleGoogleLogin() {
+    setSocialLoading(true)
+    setMessage(null)
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    })
+
+    if (error) {
+      setMessage({ text: error.message, type: 'error' })
+      setSocialLoading(false)
+    }
+  }
+
+  const isLoading = loading || socialLoading
+
   return (
-    <div
-      className="min-h-screen flex items-center justify-center relative overflow-hidden"
-      style={{ backgroundColor: '#0f172a' }}
-    >
-      {/* Gradient mesh background */}
+    <main className="min-h-screen bg-gradient-to-br from-[#1B365D] to-[#142847] flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Subtle gradient mesh */}
       <div
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-          radial-gradient(ellipse at 20% 50%, rgba(20, 184, 166, 0.15) 0%, transparent 50%),
-          radial-gradient(ellipse at 80% 20%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
-          radial-gradient(ellipse at 50% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%)
-        `,
+            radial-gradient(ellipse at 20% 50%, rgba(14, 124, 123, 0.12) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 20%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
+            radial-gradient(ellipse at 50% 90%, rgba(99, 102, 241, 0.05) 0%, transparent 50%)
+          `,
         }}
       />
-      <div className="relative z-10 w-full max-w-md p-8 rounded-xl bg-[#1e293b] border border-slate-700/50 shadow-xl shadow-black/20">
-        <div className="flex flex-col items-center mb-6 gap-2">
+
+      <div className="relative z-10 w-full max-w-sm">
+        {/* Logo & Title */}
+        <div className="text-center mb-8">
           {logoUrl ? (
-            <img src={logoUrl} alt={appName} className="h-10 w-auto object-contain" />
+            <img src={logoUrl} alt={appName} className="h-10 w-auto object-contain mx-auto" />
           ) : (
-            <div className="w-10 h-10 rounded-xl bg-[var(--brand-primary)] flex items-center justify-center text-white font-bold text-lg">
+            <div className="w-12 h-12 rounded-xl bg-[var(--brand-primary,#0E7C7B)] flex items-center justify-center text-white font-bold text-xl mx-auto shadow-lg shadow-[var(--brand-primary,#0E7C7B)]/30">
               {appName.charAt(0).toUpperCase()}
             </div>
           )}
-          <h1 className="text-2xl font-bold text-center text-white">{appName}</h1>
+          <h1 className="text-2xl font-bold text-white mt-4">{appName}</h1>
+          <p className="text-white/50 text-sm mt-1">Entre com seu email corporativo</p>
         </div>
 
-        {/* Google OAuth */}
-        <button
-          onClick={handleGoogleLogin}
-          disabled={socialLoading || loading}
-          className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-lg border border-slate-600 bg-slate-700/50 text-sm font-medium text-slate-200 hover:bg-slate-600/50 hover:border-slate-500 disabled:opacity-50 transition-colors"
-        >
-          <GoogleIcon />
-          {socialLoading ? 'Conectando...' : 'Entrar com Google'}
-        </button>
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-2xl shadow-black/30 p-6 space-y-5">
+          {/* Google OAuth */}
+          <button
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-50 transition-all duration-150 shadow-sm"
+          >
+            <GoogleIcon />
+            {socialLoading ? 'Conectando...' : 'Entrar com Google'}
+          </button>
 
-        {/* Divider */}
-        <div className="flex items-center gap-3 my-5">
-          <div className="flex-1 h-px bg-slate-600/50" />
-          <span className="text-xs text-slate-400">ou</span>
-          <div className="flex-1 h-px bg-slate-600/50" />
-        </div>
-
-        {/* Email/Password form */}
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-1 text-slate-200">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:border-[var(--brand-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary)]"
-            />
+          {/* Divider */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-slate-200" />
+            <span className="text-xs text-slate-400 font-medium">ou</span>
+            <div className="flex-1 h-px bg-slate-200" />
           </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1 text-slate-200">
+
+          {/* Auth Mode Tabs */}
+          <div className="flex border-b border-slate-200">
+            <button
+              onClick={() => setMode('password')}
+              className={`flex-1 pb-2.5 text-sm font-medium border-b-2 transition-colors ${
+                mode === 'password'
+                  ? 'border-[#1B365D] text-[#1B365D]'
+                  : 'border-transparent text-slate-400 hover:text-slate-600'
+              }`}
+            >
               Senha
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:border-[var(--brand-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-primary)]"
-            />
+            </button>
+            <button
+              onClick={() => setMode('magic')}
+              className={`flex-1 pb-2.5 text-sm font-medium border-b-2 transition-colors ${
+                mode === 'magic'
+                  ? 'border-[#1B365D] text-[#1B365D]'
+                  : 'border-transparent text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              Link Mágico
+            </button>
           </div>
 
-          {error && (
-            <p className="text-sm text-red-400" role="alert">
-              {error}
-            </p>
+          {/* Password Form */}
+          {mode === 'password' && (
+            <form onSubmit={handlePasswordLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="seu@empresa.com"
+                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm placeholder-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D]"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+                  Senha
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Sua senha"
+                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm placeholder-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D]"
+                />
+              </div>
+              <div className="flex justify-end">
+                <a
+                  href="/login/forgot-password"
+                  className="text-xs text-[#1B365D] hover:underline font-medium"
+                >
+                  Esqueci minha senha
+                </a>
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#1B365D] hover:bg-[#142847] text-white text-sm font-medium shadow-sm disabled:opacity-50 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#1B365D]/40 focus:ring-offset-2"
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Lock className="w-4 h-4" />
+                )}
+                {loading ? 'Entrando...' : 'Entrar'}
+              </button>
+            </form>
           )}
 
-          <div className="flex justify-end">
-            <a
-              href="/login/forgot-password"
-              className="text-xs text-[var(--brand-primary)] hover:underline"
-            >
-              Esqueci minha senha
-            </a>
-          </div>
+          {/* Magic Link Form */}
+          {mode === 'magic' && (
+            <form onSubmit={handleMagicLink} className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="magic-email" className="block text-sm font-medium text-slate-700">
+                  Email
+                </label>
+                <input
+                  id="magic-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="seu@empresa.com"
+                  className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-900 text-sm placeholder-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1B365D]/30 focus:border-[#1B365D]"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#1B365D] hover:bg-[#142847] text-white text-sm font-medium shadow-sm disabled:opacity-50 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#1B365D]/40 focus:ring-offset-2"
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Mail className="w-4 h-4" />
+                )}
+                {loading ? 'Enviando...' : 'Enviar link de acesso'}
+              </button>
+            </form>
+          )}
 
-          <button
-            type="submit"
-            disabled={loading || socialLoading}
-            className="w-full py-2 px-4 rounded-lg bg-[var(--brand-primary)] text-white font-medium hover:opacity-90 disabled:opacity-50"
-          >
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
+          {/* Messages */}
+          {message && (
+            <p
+              className={`text-sm text-center ${message.type === 'error' ? 'text-red-500' : 'text-emerald-600'}`}
+              role="alert"
+            >
+              {message.text}
+            </p>
+          )}
+        </div>
+
+        {/* Footer */}
+        <p className="text-center text-white/25 text-xs mt-6">
+          {appName} &copy; {new Date().getFullYear()}
+        </p>
       </div>
-    </div>
+    </main>
   )
 }
