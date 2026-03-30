@@ -35,6 +35,9 @@ importers:
       lint-staged:
         specifier: ^16.2.7
         version: 16.2.7
+      next:
+        specifier: 14.2.35
+        version: 14.2.35(@playwright/test@1.57.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       prettier:
         specifier: ^3.7.4
         version: 3.7.4
@@ -12978,7 +12981,7 @@ snapshots:
   caniuse-api@3.0.0:
     dependencies:
       browserslist: 4.28.1
-      caniuse-lite: 1.0.30001759
+      caniuse-lite: 1.0.30001781
       lodash.memoize: 4.1.2
       lodash.uniq: 4.5.0
 
@@ -16074,7 +16077,7 @@ snapshots:
       '@next/env': 14.2.35
       '@swc/helpers': 0.5.5
       busboy: 1.6.0
-      caniuse-lite: 1.0.30001759
+      caniuse-lite: 1.0.30001781
       graceful-fs: 4.2.11
       postcss: 8.4.31
       react: 18.3.1
