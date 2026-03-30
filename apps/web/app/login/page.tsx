@@ -6,7 +6,7 @@ import { Mail, Lock, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 
 // ============================================================================
-// Subcomponents
+// Subcomponents — Background Effects (matching aero-survey production)
 // ============================================================================
 
 function GoogleIcon() {
@@ -66,12 +66,57 @@ function TypingText({ text }: { text: string }) {
   )
 }
 
-/** Floating status ticker bar */
+/** Noise texture overlay */
+function NoiseOverlay() {
+  return (
+    <div
+      className="absolute inset-0 pointer-events-none z-[3]"
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
+        opacity: 0.03,
+      }}
+    />
+  )
+}
+
+/** Vignette overlay */
+function VignetteOverlay() {
+  return (
+    <div
+      className="absolute inset-0 pointer-events-none z-[3]"
+      style={{
+        background: 'radial-gradient(transparent 50%, rgba(0,0,0,0.55) 100%)',
+      }}
+    />
+  )
+}
+
+/** Animated scrolling grid */
+function AnimatedGrid() {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(41, 128, 185, 0.15) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(41, 128, 185, 0.15) 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px',
+          animation: 'gridScroll 4s linear infinite',
+        }}
+      />
+    </div>
+  )
+}
+
+/** Status ticker bar */
 function StatusTicker() {
   const items = [
     '◈ SISTEMA ONLINE',
     'CONEXÃO SEGURA',
     'CRIPTOGRAFIA AES-256-GCM',
+    'DRONE FLEET ACTIVE: 5 UNITS',
     `ÚLTIMA SYNC: ${new Date().toISOString().slice(0, 19).replace('T', ' ')}UTC`,
     `© ${new Date().getFullYear()}`,
     'TLS 1.3 VERIFIED',
@@ -79,67 +124,339 @@ function StatusTicker() {
   ]
   const text = items.join(' · ')
   return (
-    <div className="absolute top-0 left-0 right-0 h-6 overflow-hidden z-20 bg-black/30 backdrop-blur-sm border-b border-white/5">
-      <div className="flex items-center h-full animate-ticker whitespace-nowrap">
+    <div className="absolute top-0 left-0 right-0 h-6 overflow-hidden pointer-events-none z-[4] bg-black/30 backdrop-blur-sm border-b border-white/5">
+      <div className="flex items-center h-full status-bar-scroll whitespace-nowrap">
         <span className="text-[10px] tracking-[0.15em] text-emerald-400/70 font-mono uppercase px-4">
-          {text} · {text}
+          {text} · {text} · {text}
         </span>
       </div>
     </div>
   )
 }
 
-/** Floating dots (simulated drone/node indicators) */
-function FloatingDots() {
-  const dots = [
-    { top: '12%', left: '8%', delay: '0s', duration: '25s', color: '#0E8C6B' },
-    { top: '72%', left: '82%', delay: '3s', duration: '30s', color: '#2980B9' },
-    { top: '10%', left: '75%', delay: '6s', duration: '22s', color: '#0E8C6B' },
-    { top: '78%', left: '5%', delay: '2s', duration: '28s', color: '#2980B9' },
-    { top: '50%', left: '90%', delay: '4s', duration: '20s', color: '#0E8C6B' },
+/** 30 floating particles */
+function Particles() {
+  const particleData = [
+    { size: 2, left: '13%', top: '7%', bg: '#2980B9', dur: 8, delay: 0 },
+    { size: 4, left: '50%', top: '60%', bg: '#0E8C6B', dur: 10, delay: -0.7 },
+    { size: 6, left: '87%', top: '13%', bg: 'rgba(255,255,255,0.4)', dur: 12, delay: -1.4 },
+    { size: 2, left: '24%', top: '66%', bg: '#2980B9', dur: 14, delay: -2.1 },
+    { size: 4, left: '61%', top: '19%', bg: '#0E8C6B', dur: 16, delay: -2.8 },
+    { size: 6, left: '98%', top: '72%', bg: 'rgba(255,255,255,0.4)', dur: 8, delay: -3.5 },
+    { size: 2, left: '35%', top: '25%', bg: '#2980B9', dur: 10, delay: -4.2 },
+    { size: 4, left: '72%', top: '78%', bg: '#0E8C6B', dur: 12, delay: -4.9 },
+    { size: 6, left: '9%', top: '31%', bg: 'rgba(255,255,255,0.4)', dur: 14, delay: -5.6 },
+    { size: 2, left: '46%', top: '84%', bg: '#2980B9', dur: 16, delay: -6.3 },
+    { size: 4, left: '83%', top: '37%', bg: '#0E8C6B', dur: 8, delay: -7 },
+    { size: 6, left: '20%', top: '90%', bg: 'rgba(255,255,255,0.4)', dur: 10, delay: -7.7 },
+    { size: 2, left: '57%', top: '43%', bg: '#2980B9', dur: 12, delay: -8.4 },
+    { size: 4, left: '94%', top: '96%', bg: '#0E8C6B', dur: 14, delay: -9.1 },
+    { size: 6, left: '31%', top: '49%', bg: 'rgba(255,255,255,0.4)', dur: 16, delay: -9.8 },
+    { size: 2, left: '68%', top: '2%', bg: '#2980B9', dur: 8, delay: -10.5 },
+    { size: 4, left: '5%', top: '55%', bg: '#0E8C6B', dur: 10, delay: -11.2 },
+    { size: 6, left: '42%', top: '8%', bg: 'rgba(255,255,255,0.4)', dur: 12, delay: -11.9 },
+    { size: 2, left: '79%', top: '61%', bg: '#2980B9', dur: 14, delay: -12.6 },
+    { size: 4, left: '16%', top: '14%', bg: '#0E8C6B', dur: 16, delay: -13.3 },
+    { size: 6, left: '53%', top: '67%', bg: 'rgba(255,255,255,0.4)', dur: 8, delay: -14 },
+    { size: 2, left: '90%', top: '20%', bg: '#2980B9', dur: 10, delay: -14.7 },
+    { size: 4, left: '27%', top: '73%', bg: '#0E8C6B', dur: 12, delay: -15.4 },
+    { size: 6, left: '64%', top: '26%', bg: 'rgba(255,255,255,0.4)', dur: 14, delay: -16.1 },
+    { size: 2, left: '1%', top: '79%', bg: '#2980B9', dur: 16, delay: -16.8 },
+    { size: 4, left: '38%', top: '32%', bg: '#0E8C6B', dur: 8, delay: -17.5 },
+    { size: 6, left: '75%', top: '85%', bg: 'rgba(255,255,255,0.4)', dur: 10, delay: -18.2 },
+    { size: 2, left: '12%', top: '38%', bg: '#2980B9', dur: 12, delay: -18.9 },
+    { size: 4, left: '49%', top: '91%', bg: '#0E8C6B', dur: 14, delay: -19.6 },
+    { size: 6, left: '86%', top: '44%', bg: 'rgba(255,255,255,0.4)', dur: 16, delay: -20.3 },
   ]
   return (
-    <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden">
-      {dots.map((dot, i) => (
+    <>
+      {particleData.map((p, i) => (
         <div
           key={i}
-          className="absolute animate-float"
+          className="absolute rounded-full"
           style={{
-            top: dot.top,
-            left: dot.left,
-            animationDelay: dot.delay,
-            animationDuration: dot.duration,
+            width: p.size,
+            height: p.size,
+            left: p.left,
+            top: p.top,
+            background: p.bg,
+            boxShadow: `${p.bg} 0px 0px ${6 + i * 0.3}px`,
+            animation: `particleFloat ${p.dur}s ease-in-out ${p.delay}s infinite`,
           }}
-        >
-          <div
-            className="w-2 h-2 rounded-full animate-pulse shadow-lg"
-            style={{
-              backgroundColor: dot.color,
-              boxShadow: `0 0 8px ${dot.color}60`,
-            }}
-          />
-          {/* Connecting line */}
-          <div
-            className="absolute top-1/2 left-1/2 w-16 h-px opacity-20"
-            style={{
-              background: `linear-gradient(90deg, ${dot.color}, transparent)`,
-              transform: `rotate(${i * 72}deg)`,
-            }}
-          />
-        </div>
+        />
       ))}
+    </>
+  )
+}
+
+/** Orbit rings (3 concentric spinning rings + orbital dots) */
+function OrbitRings() {
+  return (
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+      {/* Outer ring */}
+      <div
+        className="w-[600px] h-[600px] rounded-full border border-white/[0.03]"
+        style={{ animation: 'orbitSpin 30s linear infinite' }}
+      />
+      {/* Middle ring */}
+      <div
+        className="absolute inset-8 rounded-full border border-[#2980B9]/[0.06]"
+        style={{ animation: 'orbitSpin 25s linear infinite reverse' }}
+      />
+      {/* Inner ring */}
+      <div
+        className="absolute inset-16 rounded-full border border-[#0E8C6B]/[0.05]"
+        style={{ animation: 'orbitSpin 20s linear infinite' }}
+      />
+      {/* Orbital dot 1 */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-[#2980B9] shadow-[0_0_10px_#2980B9]"
+        style={{ animation: 'orbitSpin 30s linear infinite' }}
+      />
+      {/* Orbital dot 2 */}
+      <div
+        className="absolute bottom-8 right-8 w-1.5 h-1.5 rounded-full bg-[#0E8C6B] shadow-[0_0_8px_#0E8C6B]"
+        style={{ animation: 'orbitSpin 25s linear infinite reverse' }}
+      />
     </div>
   )
 }
 
-/** System info overlay (telemetry-style) */
+/** Scan line effect */
+function ScanLine() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div
+        className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#2980B9]/20 to-transparent"
+        style={{ animation: 'scanLine 6s ease-in-out infinite' }}
+      />
+    </div>
+  )
+}
+
+/** Radar sweep effect */
+function RadarSweep() {
+  return (
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] pointer-events-none">
+      <div
+        className="absolute inset-0 rounded-full"
+        style={{
+          background:
+            'conic-gradient(transparent 0deg, rgba(41,128,185,0.06) 30deg, transparent 60deg)',
+          animation: 'radarSweep 4s linear infinite',
+        }}
+      />
+    </div>
+  )
+}
+
+/** SVG vector lines (geometric circuit pattern) */
+function VectorLines() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.04]"
+    >
+      <line x1="0" y1="30%" x2="15%" y2="30%" stroke="#2980B9" strokeWidth="1" />
+      <line x1="15%" y1="30%" x2="15%" y2="50%" stroke="#2980B9" strokeWidth="1" />
+      <line x1="15%" y1="50%" x2="25%" y2="50%" stroke="#2980B9" strokeWidth="1" />
+      <circle cx="25%" cy="50%" r="3" fill="#2980B9" />
+      <line x1="100%" y1="70%" x2="85%" y2="70%" stroke="#0E8C6B" strokeWidth="1" />
+      <line x1="85%" y1="70%" x2="85%" y2="45%" stroke="#0E8C6B" strokeWidth="1" />
+      <line x1="85%" y1="45%" x2="75%" y2="45%" stroke="#0E8C6B" strokeWidth="1" />
+      <circle cx="75%" cy="45%" r="3" fill="#0E8C6B" />
+      <line x1="50%" y1="0" x2="50%" y2="15%" stroke="#2980B9" strokeWidth="0.5" />
+      <line x1="50%" y1="15%" x2="65%" y2="15%" stroke="#2980B9" strokeWidth="0.5" />
+      <circle cx="65%" cy="15%" r="2" fill="#2980B9" />
+      <line x1="30%" y1="100%" x2="30%" y2="85%" stroke="#0E8C6B" strokeWidth="0.5" />
+      <line x1="30%" y1="85%" x2="45%" y2="85%" stroke="#0E8C6B" strokeWidth="0.5" />
+      <circle cx="45%" cy="85%" r="2" fill="#0E8C6B" />
+    </svg>
+  )
+}
+
+/** Corner bracket decorations */
+function CornerBrackets() {
+  return (
+    <>
+      <svg viewBox="0 0 64 64" fill="none" className="absolute top-6 left-6 w-16 h-16 opacity-20">
+        <path d="M0 16V0H16" stroke="#2980B9" strokeWidth="1.5" />
+        <circle cx="0" cy="0" r="3" fill="#2980B9" opacity="0.5" />
+      </svg>
+      <svg viewBox="0 0 64 64" fill="none" className="absolute top-6 right-6 w-16 h-16 opacity-20">
+        <path d="M64 16V0H48" stroke="#2980B9" strokeWidth="1.5" />
+        <circle cx="64" cy="0" r="3" fill="#2980B9" opacity="0.5" />
+      </svg>
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        className="absolute bottom-6 left-6 w-16 h-16 opacity-20"
+      >
+        <path d="M0 48V64H16" stroke="#0E8C6B" strokeWidth="1.5" />
+        <circle cx="0" cy="64" r="3" fill="#0E8C6B" opacity="0.5" />
+      </svg>
+      <svg
+        viewBox="0 0 64 64"
+        fill="none"
+        className="absolute bottom-6 right-6 w-16 h-16 opacity-20"
+      >
+        <path d="M64 48V64H48" stroke="#0E8C6B" strokeWidth="1.5" />
+        <circle cx="64" cy="64" r="3" fill="#0E8C6B" opacity="0.5" />
+      </svg>
+    </>
+  )
+}
+
+/** Drone SVG icon (real quadcopter with spinning rotors) */
+function DroneSVG() {
+  return (
+    <svg
+      width="100"
+      height="100"
+      viewBox="0 0 200 200"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Body */}
+      <ellipse cx="100" cy="110" rx="22" ry="10" fill="white" fillOpacity="0.9" />
+      <ellipse cx="100" cy="108" rx="18" ry="7" fill="white" fillOpacity="0.5" />
+      <circle cx="100" cy="118" r="4" fill="white" fillOpacity="0.7" />
+      <circle cx="100" cy="118" r="2" fill="#2980B9" fillOpacity="0.8" />
+      {/* Arms */}
+      <line
+        x1="78"
+        y1="106"
+        x2="45"
+        y2="85"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        opacity="0.8"
+      />
+      <line
+        x1="122"
+        y1="106"
+        x2="155"
+        y2="85"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        opacity="0.8"
+      />
+      <line
+        x1="78"
+        y1="112"
+        x2="50"
+        y2="130"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        opacity="0.8"
+      />
+      <line
+        x1="122"
+        y1="112"
+        x2="150"
+        y2="130"
+        stroke="white"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        opacity="0.8"
+      />
+      {/* Rotors */}
+      <g className="drone-rotor-1">
+        <ellipse cx="42" cy="82" rx="22" ry="4" fill="white" fillOpacity="0.3" />
+        <circle cx="42" cy="82" r="3" fill="white" fillOpacity="0.6" />
+      </g>
+      <g className="drone-rotor-2">
+        <ellipse cx="158" cy="82" rx="22" ry="4" fill="white" fillOpacity="0.3" />
+        <circle cx="158" cy="82" r="3" fill="white" fillOpacity="0.6" />
+      </g>
+      <g className="drone-rotor-3">
+        <ellipse cx="47" cy="133" rx="20" ry="3.5" fill="white" fillOpacity="0.25" />
+        <circle cx="47" cy="133" r="2.5" fill="white" fillOpacity="0.5" />
+      </g>
+      <g className="drone-rotor-4">
+        <ellipse cx="153" cy="133" rx="20" ry="3.5" fill="white" fillOpacity="0.25" />
+        <circle cx="153" cy="133" r="2.5" fill="white" fillOpacity="0.5" />
+      </g>
+    </svg>
+  )
+}
+
+/** 5 animated drones with SVG icons flying around the screen */
+function DronePaths() {
+  const drones = [
+    { id: 'd1', left: '8%', top: '12%', floatDur: '12s', pathDur: '20s', opacity: 0.06 },
+    { id: 'd2', left: '82%', top: '72%', floatDur: '10s', pathDur: '25s', opacity: 0.05 },
+    { id: 'd3', left: '75%', top: '10%', floatDur: '8s', pathDur: '15s', opacity: 0.04 },
+    { id: 'd4', left: '5%', top: '78%', floatDur: '16s', pathDur: '32s', opacity: 0.05 },
+    { id: 'd5', left: '52%', top: '82%', floatDur: '14s', pathDur: '22s', opacity: 0.04 },
+  ]
+  return (
+    <>
+      {drones.map(drone => (
+        <div
+          key={drone.id}
+          className="absolute pointer-events-none z-[1]"
+          style={{
+            left: drone.left,
+            top: drone.top,
+            animation: `float-login-${drone.id} ${drone.floatDur} ease-in-out infinite, path-login-${drone.id} ${drone.pathDur} ease-in-out infinite`,
+          }}
+        >
+          <div className="pointer-events-none" style={{ opacity: drone.opacity }}>
+            <DroneSVG />
+          </div>
+          <style jsx>{`
+            @keyframes float-login-${drone.id} {
+              0%,
+              100% {
+                transform: translateY(0);
+              }
+              50% {
+                transform: translateY(-15px);
+              }
+            }
+          `}</style>
+        </div>
+      ))}
+    </>
+  )
+}
+
+/** Drone telemetry overlay (left) */
+function DroneOverlay() {
+  return (
+    <div className="absolute top-5 left-24 pointer-events-none z-[2] hidden md:block">
+      <div className="font-mono text-[9px] text-white/25 space-y-0.5 leading-tight">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[#0E8C6B]/60">◉</span>
+          <span>DRONE-01</span>
+          <span className="text-[#0E8C6B]/80">●</span>
+          <span className="text-[#0E8C6B]/60">LIVE</span>
+        </div>
+        <div className="mt-1 space-y-px text-white/15">
+          <div>LAT -23.5506°</div>
+          <div>LON -46.6333°</div>
+          <div>ALT 850.5 m</div>
+          <div>SPD 10.4 km/h</div>
+          <div>HDG 184°</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** System info overlay (right) */
 function SystemOverlay() {
   return (
-    <div className="absolute bottom-4 left-4 z-10 pointer-events-none hidden md:block">
+    <div className="absolute bottom-5 right-24 pointer-events-none z-[2] text-right hidden md:block">
       <div className="font-mono text-[9px] text-white/20 space-y-0.5 leading-tight">
         <div>SYS · PLATFORM</div>
         <div>ENC AES-256-GCM</div>
         <div>TLS 1.3 · VERIFIED</div>
+        <div>NODE BR-SP-01</div>
         <div>UPTIME 99.97%</div>
         <div>v2.0.0 · STABLE</div>
       </div>
@@ -261,36 +578,52 @@ export default function LoginPage() {
   const isLoading = loading || socialLoading
 
   return (
-    <main className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
-      {/* Animated mesh background */}
+    <main className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Layer 0: Animated mesh background */}
       <div className="absolute inset-0 animated-mesh" />
 
-      {/* Grid overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 60px',
-        }}
-      />
+      {/* Layer 1: Noise texture */}
+      <NoiseOverlay />
 
-      {/* Floating dots */}
-      <FloatingDots />
+      {/* Layer 2: Vignette */}
+      <VignetteOverlay />
 
-      {/* Status ticker */}
+      {/* Layer 3: Status ticker */}
       <StatusTicker />
 
-      {/* System telemetry overlay */}
+      {/* Layer 4: Animated scrolling grid */}
+      <AnimatedGrid />
+
+      {/* Layer 5: 30 floating particles */}
+      <Particles />
+
+      {/* Layer 6: Orbit rings */}
+      <OrbitRings />
+
+      {/* Layer 7: Scan line */}
+      <ScanLine />
+
+      {/* Layer 8: Vector lines */}
+      <VectorLines />
+
+      {/* Layer 9: Radar sweep */}
+      <RadarSweep />
+
+      {/* Layer 10: Corner brackets */}
+      <CornerBrackets />
+
+      {/* Layer 11: Drone telemetry overlays */}
+      <DroneOverlay />
       <SystemOverlay />
 
+      {/* Layer 12: 5 animated drones with SVG icons */}
+      <DronePaths />
+
       {/* Main content */}
-      <div className="relative z-20 w-full max-w-sm">
+      <div className="relative z-10 w-full max-w-md px-4">
         {/* Logo & Title */}
         <div className="text-center mb-6 animate-fade-in-up">
-          <div className="inline-block mb-4">
+          <div className="inline-block mb-4 logo-glitch">
             {logoUrl ? (
               <img src={logoUrl} alt={appName} className="h-16 w-auto object-contain mx-auto" />
             ) : (
@@ -307,10 +640,7 @@ export default function LoginPage() {
         {/* Login Card */}
         <div
           className="rounded-2xl backdrop-blur-2xl luminous-border animate-fade-in-up p-8"
-          style={{
-            backgroundColor: 'rgba(5, 15, 35, 0.85)',
-            animationDelay: '0.15s',
-          }}
+          style={{ backgroundColor: 'rgba(5, 15, 35, 0.85)', animationDelay: '0.15s' }}
         >
           <h2 className="text-lg font-semibold text-white text-center mb-6">Bem-vindo de volta</h2>
 
@@ -428,7 +758,9 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* CSS Animations */}
+      {/* ================================================================== */}
+      {/* CSS Animations — all keyframes matching aero-survey production     */}
+      {/* ================================================================== */}
       <style jsx>{`
         .animated-mesh {
           background: linear-gradient(-45deg, #0c2340, #163b5c, #0e8c6b, #0c2340, #1a4a73);
@@ -446,6 +778,125 @@ export default function LoginPage() {
             background-position: 0% 50%;
           }
         }
+
+        /* Grid scroll */
+        @keyframes gridScroll {
+          0% {
+            background-position: 0 0;
+          }
+          to {
+            background-position: 0 60px;
+          }
+        }
+
+        /* Particles */
+        @keyframes particleFloat {
+          0%,
+          100% {
+            opacity: 0.6;
+            transform: translate(0) scale(1);
+          }
+          25% {
+            opacity: 1;
+            transform: translate(10px, -20px) scale(1.2);
+          }
+          50% {
+            opacity: 0.4;
+            transform: translate(-5px, -35px) scale(0.8);
+          }
+          75% {
+            opacity: 0.8;
+            transform: translate(15px, -15px) scale(1.1);
+          }
+        }
+
+        /* Orbit rings */
+        @keyframes orbitSpin {
+          0% {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        /* Scan line */
+        @keyframes scanLine {
+          0% {
+            opacity: 0;
+            top: -2px;
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          to {
+            opacity: 0;
+            top: 100%;
+          }
+        }
+
+        /* Radar sweep */
+        @keyframes radarSweep {
+          0% {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        /* Status bar */
+        .status-bar-scroll {
+          width: max-content;
+          animation: statusBarScroll 28s linear infinite;
+        }
+        @keyframes statusBarScroll {
+          0% {
+            transform: translate(0);
+          }
+          to {
+            transform: translate(-50%);
+          }
+        }
+
+        /* Logo glitch on load */
+        .logo-glitch {
+          animation: glitchLoad 1.2s ease-out forwards;
+        }
+        @keyframes glitchLoad {
+          0% {
+            filter: none;
+            opacity: 1;
+            transform: translate(0);
+          }
+          8% {
+            filter: hue-rotate(80deg) saturate(3) brightness(1.5);
+            transform: translate(-4px) skew(-3deg);
+          }
+          16% {
+            filter: none;
+            transform: translate(2px) skew(1deg);
+          }
+          24% {
+            filter: hue-rotate(-60deg) saturate(2);
+            transform: translate(-2px);
+          }
+          32% {
+            filter: none;
+            opacity: 0.8;
+            transform: translate(0);
+          }
+          100% {
+            filter: none;
+            opacity: 1;
+            transform: translate(0);
+          }
+        }
+
+        /* Fade in up */
         .animate-fade-in-up {
           animation: fadeInUp 0.6s ease-out forwards;
           opacity: 0;
@@ -460,6 +911,8 @@ export default function LoginPage() {
             transform: translateY(0);
           }
         }
+
+        /* Luminous card border */
         .luminous-border {
           border: 1px solid rgba(255, 255, 255, 0.1);
           transition:
@@ -475,27 +928,157 @@ export default function LoginPage() {
             0 8px 40px rgba(0, 0, 0, 0.3),
             0 0 20px rgba(41, 128, 185, 0.15);
         }
-        .animate-ticker {
-          animation: ticker 40s linear infinite;
+
+        /* Drone rotor spin */
+        .drone-rotor-1,
+        .drone-rotor-2,
+        .drone-rotor-3,
+        .drone-rotor-4 {
+          animation: rotorSpin 0.15s linear infinite;
         }
-        @keyframes ticker {
+        .drone-rotor-1 {
+          transform-origin: 42px 82px;
+        }
+        .drone-rotor-2 {
+          transform-origin: 158px 82px;
+          animation-direction: reverse;
+        }
+        .drone-rotor-3 {
+          transform-origin: 47px 133px;
+          animation-delay: 50ms;
+        }
+        .drone-rotor-4 {
+          transform-origin: 153px 133px;
+          animation-direction: reverse;
+          animation-delay: 30ms;
+        }
+        @keyframes rotorSpin {
           0% {
-            transform: translateX(0);
+            transform: scaleX(1);
           }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0);
+          25% {
+            transform: scaleX(0.3);
           }
           50% {
-            transform: translateY(-15px);
+            transform: scaleX(1);
+          }
+          75% {
+            transform: scaleX(0.3);
+          }
+          100% {
+            transform: scaleX(1);
+          }
+        }
+
+        /* Drone path animations */
+        @keyframes path-login-d1 {
+          0% {
+            left: 8%;
+            top: 12%;
+          }
+          25% {
+            left: 65%;
+            top: 22%;
+          }
+          50% {
+            left: 55%;
+            top: 55%;
+          }
+          75% {
+            left: 18%;
+            top: 45%;
+          }
+          100% {
+            left: 8%;
+            top: 12%;
+          }
+        }
+        @keyframes path-login-d2 {
+          0% {
+            left: 82%;
+            top: 72%;
+          }
+          25% {
+            left: 30%;
+            top: 80%;
+          }
+          50% {
+            left: 45%;
+            top: 35%;
+          }
+          75% {
+            left: 75%;
+            top: 55%;
+          }
+          100% {
+            left: 82%;
+            top: 72%;
+          }
+        }
+        @keyframes path-login-d3 {
+          0% {
+            left: 75%;
+            top: 10%;
+          }
+          25% {
+            left: 90%;
+            top: 40%;
+          }
+          50% {
+            left: 60%;
+            top: 18%;
+          }
+          75% {
+            left: 85%;
+            top: 25%;
+          }
+          100% {
+            left: 75%;
+            top: 10%;
+          }
+        }
+        @keyframes path-login-d4 {
+          0% {
+            left: 5%;
+            top: 78%;
+          }
+          25% {
+            left: 38%;
+            top: 68%;
+          }
+          50% {
+            left: 22%;
+            top: 42%;
+          }
+          75% {
+            left: 10%;
+            top: 62%;
+          }
+          100% {
+            left: 5%;
+            top: 78%;
+          }
+        }
+        @keyframes path-login-d5 {
+          0% {
+            left: 52%;
+            top: 82%;
+          }
+          25% {
+            left: 72%;
+            top: 68%;
+          }
+          50% {
+            left: 88%;
+            top: 55%;
+          }
+          75% {
+            left: 58%;
+            top: 70%;
+          }
+          100% {
+            left: 52%;
+            top: 82%;
           }
         }
       `}</style>
