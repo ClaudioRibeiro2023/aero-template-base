@@ -62,6 +62,18 @@ export default [
     },
   },
 
+  // ESM config files (next.config.mjs, etc.)
+  {
+    files: ['**/*.mjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.es2021,
+      },
+      sourceType: 'module',
+    },
+  },
+
   // Test files
   {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],

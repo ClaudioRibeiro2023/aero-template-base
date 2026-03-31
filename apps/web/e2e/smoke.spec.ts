@@ -4,7 +4,8 @@ test('health endpoint retorna 200', async ({ request }) => {
   const response = await request.get('/api/health')
   expect(response.status()).toBe(200)
   const body = await response.json()
-  expect(body).toHaveProperty('status')
+  // health retorna wrapper { data: { status, ... }, error, meta }
+  expect(body.data).toHaveProperty('status')
 })
 
 test('página de login carrega', async ({ page }) => {
