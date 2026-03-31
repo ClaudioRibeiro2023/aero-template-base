@@ -34,13 +34,11 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm --filter @template/web exec playwright install --with-deps chromium
 
-      - name: Build app
-        run: pnpm --filter @template/web build
-
-      - name: Run E2E tests
+      - name: Run E2E tests (contra produção)
         run: pnpm --filter @template/web test:e2e
         env:
-          VITE_DEMO_MODE: 'true'
+          PLAYWRIGHT_BASE_URL: 'https://template.aeroeng.tech'
+          NEXT_PUBLIC_DEMO_MODE: 'true'
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

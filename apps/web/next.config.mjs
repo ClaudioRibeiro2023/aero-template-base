@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // output: 'standalone', // Enable in Dockerfile/CI (requires symlink permissions — not supported on Windows dev)
+  output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   eslint: {
     ignoreDuringBuilds: true, // Lint runs as separate CI step
   },
