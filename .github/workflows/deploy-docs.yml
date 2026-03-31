@@ -31,10 +31,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build Docusaurus
-        run: pnpm -C apps/docs build
+        run: pnpm --filter @template/docs build
 
       - name: Build Storybook
-        run: pnpm -C apps/web build-storybook -o ../../apps/docs/build/storybook
+        run: pnpm --filter @template/web build-storybook -o ../../apps/docs/build/storybook
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
