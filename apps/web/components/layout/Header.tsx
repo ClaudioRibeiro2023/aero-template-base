@@ -3,9 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { Search, Moon, Sun, Menu } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Tooltip, Breadcrumb, BreadcrumbItem } from '@template/design-system'
-import { LanguageSelector } from '@/components/common/LanguageSelector'
 import { NotificationCenter } from '@/components/common/NotificationCenter'
 import { useNotifications } from '@/hooks/useNotifications'
 
@@ -16,7 +14,6 @@ interface HeaderProps {
 
 export function Header({ onMobileMenuToggle, isMobile = false }: HeaderProps) {
   const pathname = usePathname()
-  const { t } = useTranslation()
   const notifs = useNotifications()
   const [isDark, setIsDark] = useState(() => {
     if (typeof window === 'undefined') return true
@@ -42,11 +39,30 @@ export function Header({ onMobileMenuToggle, isMobile = false }: HeaderProps) {
     setIsDark(prev => !prev)
   }
 
+  // Friendly label mapping for breadcrumb segments (P3-02)
+  const SEGMENT_LABELS: Record<string, string> = {
+    dashboard: 'Dashboard',
+    admin: 'Administração',
+    usuarios: 'Usuários',
+    config: 'Configurações',
+    geral: 'Geral',
+    aparencia: 'Aparência',
+    integracoes: 'Integrações',
+    notificacoes: 'Notificações',
+    relatorios: 'Relatórios',
+    profile: 'Perfil',
+    tasks: 'Tarefas',
+  }
+
+  function segmentLabel(seg: string): string {
+    return SEGMENT_LABELS[seg.toLowerCase()] ?? seg.charAt(0).toUpperCase() + seg.slice(1)
+  }
+
   // Generate breadcrumb from path
   const pathSegments = pathname.split('/').filter(Boolean)
 
   return (
-    <header className="h-14 md:h-16 bg-surface-elevated border-b border-border-default px-3 md:px-6 flex items-center justify-between gap-2">
+    <header className="h-[52px] bg-transparent border-b border-[rgba(255,255,255,0.06)] px-3 md:px-5 flex items-center justify-between gap-2">
       {/* Left section */}
       <div className="flex items-center gap-2 md:gap-3 min-w-0">
         {/* Mobile menu toggle — visible only on mobile */}
@@ -54,10 +70,10 @@ export function Header({ onMobileMenuToggle, isMobile = false }: HeaderProps) {
           <Tooltip content="Menu">
             <button
               onClick={onMobileMenuToggle}
-              className="p-2 -ml-1 rounded-lg hover:bg-surface-muted transition-colors flex-shrink-0"
+              className="p-1.5 -ml-1 rounded-lg hover:bg-white/[0.04] transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Abrir menu"
             >
-              <Menu size={22} />
+              <Menu size={20} className="text-[var(--text-secondary)]" />
             </button>
           </Tooltip>
         )}
@@ -71,7 +87,7 @@ export function Header({ onMobileMenuToggle, isMobile = false }: HeaderProps) {
               const segPath = '/' + pathSegments.slice(0, i + 1).join('/')
               return (
                 <BreadcrumbItem key={segPath} current={isLast} href={isLast ? undefined : segPath}>
-                  {seg.charAt(0).toUpperCase() + seg.slice(1)}
+                  {segmentLabel(seg)}
                 </BreadcrumbItem>
               )
             })}
@@ -80,24 +96,23 @@ export function Header({ onMobileMenuToggle, isMobile = false }: HeaderProps) {
 
         {/* Mobile: show current page title */}
         {isMobile && (
-          <span className="text-sm font-medium text-text-primary truncate">
+          <span className="text-sm font-medium text-[var(--text-primary)] truncate">
             {pathSegments.length > 0
-              ? pathSegments[pathSegments.length - 1].charAt(0).toUpperCase() +
-                pathSegments[pathSegments.length - 1].slice(1)
+              ? segmentLabel(pathSegments[pathSegments.length - 1])
               : 'Início'}
           </span>
         )}
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-1 md:gap-3 flex-shrink-0">
+      <div className="flex items-center gap-1 flex-shrink-0">
         {/* Search — hidden on mobile (use Ctrl+K or GlobalSearch) */}
         <Tooltip content="Buscar (Ctrl+K)">
           <button
-            className="p-2 rounded-lg hover:bg-surface-muted transition-colors hidden sm:flex"
+            className="p-1.5 rounded-lg hover:bg-white/[0.04] transition-colors hidden sm:flex min-w-[44px] min-h-[44px] items-center justify-center"
             aria-label="Buscar"
           >
-            <Search size={20} className="text-text-secondary" />
+            <Search size={18} className="text-[var(--text-secondary)]" />
           </button>
         </Tooltip>
 
@@ -111,22 +126,17 @@ export function Header({ onMobileMenuToggle, isMobile = false }: HeaderProps) {
           compact={isMobile}
         />
 
-        {/* Language Selector */}
-        <LanguageSelector compact={isMobile} />
-
         {/* Theme toggle */}
-        <Tooltip
-          content={isDark ? t('app.lightMode', 'Modo claro') : t('app.darkMode', 'Modo escuro')}
-        >
+        <Tooltip content={isDark ? 'Modo claro' : 'Modo escuro'}>
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg hover:bg-surface-muted transition-colors"
+            className="p-1.5 rounded-lg hover:bg-white/[0.04] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="Alternar tema"
           >
             {isDark ? (
-              <Sun size={isMobile ? 18 : 20} className="text-text-secondary" />
+              <Sun size={isMobile ? 16 : 18} className="text-[var(--text-secondary)]" />
             ) : (
-              <Moon size={isMobile ? 18 : 20} className="text-text-secondary" />
+              <Moon size={isMobile ? 16 : 18} className="text-[var(--text-secondary)]" />
             )}
           </button>
         </Tooltip>

@@ -30,8 +30,10 @@ import {
   Globe,
   Zap,
   FolderOpen,
+  CheckCircle,
   type LucideIcon,
 } from 'lucide-react'
+
 import clsx from 'clsx'
 import { useNavigationConfig } from '@/hooks/useNavigationConfig'
 import { useGlobalSearch } from '@/components/search'
@@ -57,6 +59,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Globe,
   Zap,
   FolderOpen,
+  CheckCircle,
 }
 
 // Função helper para obter ícone
@@ -71,9 +74,9 @@ const MOD_KEY = IS_MAC ? '⌘' : 'Ctrl+'
 
 // Badge color map
 const BADGE_COLORS: Record<string, string> = {
-  BETA: 'bg-amber-500/20 text-amber-300',
-  DEV: 'bg-purple-500/20 text-purple-300',
-  NEW: 'bg-emerald-500/20 text-emerald-300',
+  BETA: 'bg-amber-500/15 text-amber-400/80',
+  DEV: 'bg-purple-500/15 text-purple-400/80',
+  NEW: 'bg-emerald-500/15 text-emerald-400/80',
 }
 
 // Ordered group list to ensure consistent rendering
@@ -118,17 +121,16 @@ function SidebarLink({
     <Link
       href={href}
       className={clsx(
-        'flex items-center gap-2.5 rounded-lg transition-all duration-150 relative',
+        'flex items-center gap-2.5 rounded-lg transition-all duration-150 ease-out relative',
         'text-[var(--sidebar-text)] hover:text-[var(--sidebar-text-hover)]',
-        'hover:bg-[var(--sidebar-item-hover)]',
-        collapsed ? 'p-2 justify-center' : 'px-2.5 py-2',
-        isActive &&
-          'bg-[var(--brand-primary)] text-white shadow-md shadow-[var(--brand-primary)]/25'
+        'hover:bg-white/[0.04]',
+        collapsed ? 'p-2 justify-center' : 'px-2.5 py-1.5',
+        isActive && 'bg-[rgba(0,180,216,0.12)] text-[#00b4d8]'
       )}
     >
       {isActive && (
         <span
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-[var(--sidebar-active-bar)] transition-all duration-200"
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 rounded-r-full bg-[var(--brand-primary)] transition-all duration-200"
           aria-hidden="true"
         />
       )}
@@ -136,7 +138,7 @@ function SidebarLink({
         {icon}
         {notificationCount != null && notificationCount > 0 && (
           <span
-            className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-full bg-red-500 text-white text-[8px] font-bold px-0.5 ring-2 ring-[var(--sidebar-bg)]"
+            className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-full bg-rose-500 text-white text-[9px] font-bold px-0.5 ring-2 ring-[rgba(9,9,11,0.85)]"
             aria-label={`${notificationCount} notificacoes`}
           >
             {notificationCount > 99 ? '99+' : notificationCount}
@@ -158,7 +160,7 @@ function SidebarLink({
           )}
           <ChevronRight
             size={14}
-            className="opacity-0 group-hover:opacity-40 transition-opacity flex-shrink-0 text-white/40"
+            className="opacity-0 group-hover:opacity-40 transition-opacity flex-shrink-0 text-white/30"
           />
         </>
       )}
@@ -307,9 +309,10 @@ export function AppSidebar({
         role="navigation"
         aria-label="Menu principal"
         className={clsx(
-          'fixed left-0 top-0 h-screen flex flex-col sidebar-gradient transition-all duration-300 z-50',
+          'fixed left-0 top-0 h-screen flex flex-col sidebar-gradient border-r border-[rgba(255,255,255,0.06)] z-50',
+          'transition-[width,transform] duration-250 ease-[cubic-bezier(0.4,0,0.2,1)]',
           // Desktop: posição estática pelo width
-          collapsed ? 'w-[var(--sidebar-collapsed-width,64px)]' : 'w-[var(--sidebar-width)]',
+          collapsed ? 'w-[var(--sidebar-collapsed-width,56px)]' : 'w-[var(--sidebar-width)]',
           // Mobile: drawer — escondido por padrão, visível quando aberto
           'lg:translate-x-0',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
@@ -318,14 +321,14 @@ export function AppSidebar({
         {/* ── Header: Logo + Collapse Toggle ── */}
         <div
           className={clsx(
-            'h-12 flex items-center border-b border-[var(--sidebar-border)]',
+            'h-[52px] flex items-center border-b border-[rgba(255,255,255,0.06)]',
             collapsed ? 'flex-col justify-center gap-0 px-1 py-1' : 'justify-between px-3'
           )}
         >
           <Link
             href="/dashboard"
             className={clsx(
-              'flex items-center overflow-hidden',
+              'flex items-center overflow-hidden rounded-lg transition-all duration-200 hover:shadow-[0_0_12px_rgba(0,180,216,0.15)]',
               collapsed ? 'justify-center' : 'gap-2.5'
             )}
           >
@@ -360,7 +363,7 @@ export function AppSidebar({
           {onToggle && !collapsed && (
             <button
               onClick={onToggle}
-              className="p-1 rounded-md hover:bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] transition-colors"
+              className="p-1 rounded-md hover:bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               title="Recolher menu"
               aria-label="Recolher menu"
             >
@@ -370,7 +373,7 @@ export function AppSidebar({
           {onToggle && collapsed && (
             <button
               onClick={onToggle}
-              className="p-1 rounded-md hover:bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] transition-colors"
+              className="p-1 rounded-md hover:bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               title="Expandir menu"
               aria-label="Expandir menu"
             >
@@ -384,8 +387,8 @@ export function AppSidebar({
           <button
             onClick={() => globalSearch.open()}
             className={clsx(
-              'w-full flex items-center gap-2 rounded-lg transition-all duration-150',
-              'bg-white/[0.04] hover:bg-[var(--sidebar-item-hover)] border border-white/[0.06]',
+              'w-full flex items-center gap-2 rounded-lg transition-all duration-150 ease-out',
+              'bg-[rgba(255,255,255,0.03)] hover:bg-white/[0.06] border border-[rgba(255,255,255,0.06)]',
               'text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text)]',
               collapsed ? 'p-2 justify-center' : 'px-2.5 py-1.5'
             )}
@@ -396,7 +399,7 @@ export function AppSidebar({
             {!collapsed && (
               <>
                 <span className="text-xs flex-1 text-left">Buscar...</span>
-                <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] font-mono">
+                <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.08] font-mono text-[var(--sidebar-text-muted)]">
                   {MOD_KEY}K
                 </kbd>
               </>
@@ -415,7 +418,7 @@ export function AppSidebar({
               {groupIdx > 0 && (
                 <div
                   className={clsx(
-                    'border-t border-[var(--sidebar-border)]',
+                    'border-t border-[rgba(255,255,255,0.04)]',
                     collapsed ? 'mx-2 mb-1.5' : 'mx-2.5 mb-1.5'
                   )}
                 />
@@ -456,11 +459,11 @@ export function AppSidebar({
                               })
                             }}
                             className={clsx(
-                              'w-full flex items-center gap-2.5 rounded-lg transition-all duration-150',
+                              'w-full flex items-center gap-2.5 rounded-lg transition-all duration-150 ease-out',
                               'text-[var(--sidebar-text)] hover:text-[var(--sidebar-text-hover)]',
-                              'hover:bg-[var(--sidebar-item-hover)]',
-                              collapsed ? 'p-2 justify-center' : 'px-2.5 py-2',
-                              isActive && 'text-[var(--brand-primary)]'
+                              'hover:bg-white/[0.04]',
+                              collapsed ? 'p-2 justify-center' : 'px-2.5 py-1.5',
+                              isActive && 'text-[#00b4d8]'
                             )}
                           >
                             <span className="flex-shrink-0">
@@ -561,52 +564,52 @@ export function AppSidebar({
         {/* ── Footer: User compact ── */}
         <div
           className={clsx(
-            'border-t border-[var(--sidebar-border)]',
+            'border-t border-[rgba(255,255,255,0.06)]',
             collapsed ? 'p-2' : 'px-3 py-2.5'
           )}
         >
           {collapsed ? (
             <div className="flex flex-col items-center gap-1.5">
               <div
-                className="w-8 h-8 rounded-full bg-[var(--brand-primary)]/20 flex items-center justify-center text-[var(--brand-accent)] text-xs font-semibold"
+                className="w-7 h-7 rounded-full bg-[rgba(0,180,216,0.15)] border-2 border-[rgba(255,255,255,0.1)] flex items-center justify-center text-[var(--brand-primary)] text-[10px] font-semibold"
                 title={user?.name || 'Usuário'}
               >
                 {userInitials}
               </div>
               <button
                 onClick={logout}
-                className="p-1.5 rounded-md hover:bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text-muted)] hover:text-red-400 transition-colors"
+                className="p-1.5 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-rose-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Sair"
                 aria-label="Sair"
               >
-                <LogOut size={15} />
+                <LogOut size={14} />
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-[var(--brand-primary)]/20 flex items-center justify-center text-[var(--brand-accent)] text-xs font-semibold flex-shrink-0">
+              <div className="w-7 h-7 rounded-full bg-[rgba(0,180,216,0.15)] border-2 border-[rgba(255,255,255,0.1)] flex items-center justify-center text-[var(--brand-primary)] text-[10px] font-semibold flex-shrink-0">
                 {userInitials}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-white/80 truncate leading-tight">
+                <p className="text-[12px] font-medium text-white/70 truncate leading-tight">
                   {user?.name || 'Usuário'}
                 </p>
               </div>
               <Link
                 href="/admin/config"
-                className="p-1.5 rounded-md hover:bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] transition-colors flex-shrink-0"
+                className="p-1 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Configurações"
                 aria-label="Configurações"
               >
-                <Settings size={15} />
+                <Settings size={14} />
               </Link>
               <button
                 onClick={logout}
-                className="p-1.5 rounded-md hover:bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text-muted)] hover:text-red-400 transition-colors flex-shrink-0"
+                className="p-1 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-rose-400 transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Sair"
                 aria-label="Sair"
               >
-                <LogOut size={15} />
+                <LogOut size={14} />
               </button>
             </div>
           )}
