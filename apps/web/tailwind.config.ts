@@ -15,9 +15,9 @@ const config: Config = {
       },
       colors: {
         brand: {
-          primary: 'var(--brand-primary, #14b8a6)',
-          secondary: 'var(--brand-secondary, #0e7490)',
-          accent: 'var(--brand-accent, #2dd4bf)',
+          primary: 'var(--brand-primary, #0087A8)',
+          secondary: 'var(--brand-secondary, #005F73)',
+          accent: 'var(--brand-accent, #94D2BD)',
         },
       },
     },

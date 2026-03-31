@@ -56,8 +56,6 @@ template-platform/
 │   ├── design-system/          # Componentes UI
 │   └── types/                  # Tipos TypeScript
 │
-├── api-template/               # Backend FastAPI
-│
 ├── infra/                      # Docker, K8s
 │
 ├── package.json                # Root workspace
@@ -91,7 +89,7 @@ packages/types
 ### Escopo
 
 - **Afeta:** Toda a organização do código frontend
-- **Não afeta:** Backend (api-template é independente)
+- **Não afeta:** Infraestrutura de deploy
 
 ## 4. Alternativas Consideradas
 

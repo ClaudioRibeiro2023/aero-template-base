@@ -5,13 +5,19 @@ import { createApiClient, type ApiClientConfig } from '../client'
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-// Mock getUserManager
-vi.mock('../../auth/AuthContext', () => ({
-  getUserManager: vi.fn(() => ({
-    getUser: vi.fn().mockResolvedValue({
-      access_token: 'mock-token-123',
-    }),
-  })),
+// Mock Supabase client
+vi.mock('../../supabase/client', () => ({
+  supabase: {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({
+        data: {
+          session: {
+            access_token: 'mock-token-123',
+          },
+        },
+      }),
+    },
+  },
 }))
 
 describe('API Client', () => {
@@ -223,7 +229,7 @@ describe('API Client', () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
       const client = createApiClient({ baseURL: 'https://api.test.com' })
-      
+
       await expect(client.get('/users')).rejects.toThrow('Network error')
     })
   })

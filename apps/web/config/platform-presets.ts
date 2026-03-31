@@ -18,9 +18,9 @@ export const PRESET_DEFAULT: PresetOverride = {
   appName: 'Template Platform',
   appVersion: '1.0.0',
   branding: {
-    primaryColor: '#14b8a6',
-    secondaryColor: '#0e7490',
-    accentColor: '#2dd4bf',
+    primaryColor: '#0087A8',
+    secondaryColor: '#005F73',
+    accentColor: '#94D2BD',
     sidebarGradient: ['#0f172a', '#1e293b'],
   },
 }

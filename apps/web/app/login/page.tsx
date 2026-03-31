@@ -1,9 +1,16 @@
 'use client'
 
 import { supabase } from '@template/shared/supabase'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, forwardRef } from 'react'
 import { Mail, Lock, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import type { z } from 'zod'
+import { LoginSchema, ResetPasswordSchema } from '@/schemas/auth'
+
+type LoginFormData = z.infer<typeof LoginSchema>
+type MagicLinkFormData = z.infer<typeof ResetPasswordSchema>
 
 // ============================================================================
 // Subcomponents — Background Effects (matching aero-survey production)
@@ -468,32 +475,25 @@ function SystemOverlay() {
 // Floating Input (label floats up on focus/filled)
 // ============================================================================
 
-function FloatingInput({
-  id,
-  type,
-  label,
-  value,
-  onChange,
-  required,
-}: {
+interface FloatingInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string
-  type: string
   label: string
-  value: string
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  required?: boolean
-}) {
-  const hasValue = value.length > 0
+  currentValue?: string
+}
+
+const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(function FloatingInput(
+  { id, label, currentValue = '', className: _className, ...rest },
+  ref
+) {
+  const hasValue = currentValue.length > 0
   return (
     <div className="relative">
       <input
+        ref={ref}
         id={id}
-        type={type}
-        required={required}
-        value={value}
-        onChange={onChange}
         placeholder=" "
         className="peer w-full px-3 pt-5 pb-2 bg-white/[0.06] border border-white/10 rounded-lg text-white text-sm placeholder-transparent transition-all focus:outline-none focus:ring-2 focus:ring-[#2980B9]/40 focus:border-[#2980B9]/60 backdrop-blur-sm"
+        {...rest}
       />
       <label
         htmlFor={id}
@@ -507,7 +507,7 @@ function FloatingInput({
       </label>
     </div>
   )
-}
+})
 
 // ============================================================================
 // Main Login Page
@@ -516,9 +516,6 @@ function FloatingInput({
 type AuthMode = 'password' | 'magic'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
   const [socialLoading, setSocialLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
   const [mode, setMode] = useState<AuthMode>('password')
@@ -527,11 +524,32 @@ export default function LoginPage() {
   const logoUrl = process.env.NEXT_PUBLIC_LOGO_URL
   const appInitial = appName.charAt(0).toUpperCase()
 
-  async function handlePasswordLogin(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
+  // ── Form: senha ──
+  const {
+    register: registerPassword,
+    handleSubmit: handleSubmitPassword,
+    watch: watchPassword,
+    formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(LoginSchema),
+  })
+
+  // ── Form: magic link ──
+  const {
+    register: registerMagic,
+    handleSubmit: handleSubmitMagic,
+    watch: watchMagic,
+    formState: { errors: magicErrors, isSubmitting: isMagicSubmitting },
+  } = useForm<MagicLinkFormData>({
+    resolver: zodResolver(ResetPasswordSchema),
+  })
+
+  const onPasswordLogin = async (data: LoginFormData) => {
     setMessage(null)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    })
     if (error) {
       setMessage({
         text:
@@ -543,15 +561,12 @@ export default function LoginPage() {
     } else {
       window.location.href = '/dashboard'
     }
-    setLoading(false)
   }
 
-  async function handleMagicLink(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
+  const onMagicLink = async (data: MagicLinkFormData) => {
     setMessage(null)
     const { error } = await supabase.auth.signInWithOtp({
-      email,
+      email: data.email,
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     })
     if (error) {
@@ -559,7 +574,6 @@ export default function LoginPage() {
     } else {
       setMessage({ text: 'Link de acesso enviado! Verifique seu email.', type: 'success' })
     }
-    setLoading(false)
   }
 
   async function handleGoogleLogin() {
@@ -575,7 +589,7 @@ export default function LoginPage() {
     }
   }
 
-  const isLoading = loading || socialLoading
+  const isLoading = isPasswordSubmitting || isMagicSubmitting || socialLoading
 
   return (
     <main className="min-h-screen flex items-center justify-center relative overflow-hidden">
@@ -664,23 +678,35 @@ export default function LoginPage() {
 
           {/* Forms */}
           {mode === 'password' ? (
-            <form onSubmit={handlePasswordLogin} className="space-y-4">
-              <FloatingInput
-                id="email"
-                type="email"
-                label="Email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
-              <FloatingInput
-                id="password"
-                type="password"
-                label="Senha"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-              />
+            <form onSubmit={handleSubmitPassword(onPasswordLogin)} className="space-y-4">
+              <div>
+                <FloatingInput
+                  id="email"
+                  type="email"
+                  label="Email"
+                  currentValue={watchPassword('email') ?? ''}
+                  {...registerPassword('email')}
+                />
+                {passwordErrors.email && (
+                  <p className="text-xs text-red-400 mt-1" role="alert">
+                    {passwordErrors.email.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <FloatingInput
+                  id="password"
+                  type="password"
+                  label="Senha"
+                  currentValue={watchPassword('password') ?? ''}
+                  {...registerPassword('password')}
+                />
+                {passwordErrors.password && (
+                  <p className="text-xs text-red-400 mt-1" role="alert">
+                    {passwordErrors.password.message}
+                  </p>
+                )}
+              </div>
               <div className="flex justify-end">
                 <Link
                   href="/login/forgot-password"
@@ -695,36 +721,42 @@ export default function LoginPage() {
                 className="w-full h-12 rounded-lg text-white text-base font-semibold shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
                 style={{ background: 'linear-gradient(135deg, #2980B9, #0E8C6B)' }}
               >
-                {loading ? (
+                {isPasswordSubmitting ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <Lock className="w-4 h-4" />
                 )}
-                {loading ? 'Entrando...' : 'Entrar'}
+                {isPasswordSubmitting ? 'Entrando...' : 'Entrar'}
               </button>
             </form>
           ) : (
-            <form onSubmit={handleMagicLink} className="space-y-4">
-              <FloatingInput
-                id="magic-email"
-                type="email"
-                label="Email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
+            <form onSubmit={handleSubmitMagic(onMagicLink)} className="space-y-4">
+              <div>
+                <FloatingInput
+                  id="magic-email"
+                  type="email"
+                  label="Email"
+                  currentValue={watchMagic('email') ?? ''}
+                  {...registerMagic('email')}
+                />
+                {magicErrors.email && (
+                  <p className="text-xs text-red-400 mt-1" role="alert">
+                    {magicErrors.email.message}
+                  </p>
+                )}
+              </div>
               <button
                 type="submit"
                 disabled={isLoading}
                 className="w-full h-12 rounded-lg text-white text-base font-semibold shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
                 style={{ background: 'linear-gradient(135deg, #2980B9, #0E8C6B)' }}
               >
-                {loading ? (
+                {isMagicSubmitting ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <Mail className="w-4 h-4" />
                 )}
-                {loading ? 'Enviando...' : 'Enviar link de acesso'}
+                {isMagicSubmitting ? 'Enviando...' : 'Enviar link de acesso'}
               </button>
             </form>
           )}

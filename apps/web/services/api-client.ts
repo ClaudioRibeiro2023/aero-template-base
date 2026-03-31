@@ -1,95 +1,9 @@
-import { env } from '@/lib/env'
 /**
  * Base API client for Template Platform.
- * Uses axios with request/response interceptors for auth, errors, and logging.
+ * Uses native fetch with interceptors for auth, errors, and logging.
  */
-import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 
-const BASE_URL = env.API_URL || 'http://localhost:8000'
-const API_PREFIX = '/api/v1'
-
-// ============================================================================
-// Axios Instance
-// ============================================================================
-
-export const apiClient: AxiosInstance = axios.create({
-  baseURL: `${BASE_URL}${API_PREFIX}`,
-  timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-})
-
-// ============================================================================
-// Request Interceptor - attach auth token
-// ============================================================================
-
-apiClient.interceptors.request.use(
-  async config => {
-    // Attach Bearer token from Supabase session (client-side only)
-    if (typeof window !== 'undefined') {
-      try {
-        const { supabase } = await import('@template/shared/supabase')
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-        if (session?.access_token) {
-          config.headers['Authorization'] = `Bearer ${session.access_token}`
-        }
-      } catch {
-        const token = localStorage.getItem('access_token')
-        if (token) {
-          config.headers['Authorization'] = `Bearer ${token}`
-        }
-      }
-    }
-
-    // Generate request ID for tracing
-    config.headers['X-Request-ID'] = crypto.randomUUID()
-
-    return config
-  },
-  error => Promise.reject(error)
-)
-
-// ============================================================================
-// Response Interceptor - normalize errors
-// ============================================================================
-
-apiClient.interceptors.response.use(
-  response => response,
-  async error => {
-    if (error.response) {
-      const { status, data } = error.response
-
-      // 401 - Token expired, redirect to login
-      if (status === 401) {
-        try {
-          const { supabase } = await import('@template/shared/supabase')
-          await supabase.auth.signOut()
-        } catch {
-          /* ignore */
-        }
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login'
-        }
-      }
-
-      // Normalize error message
-      const message =
-        data?.detail || data?.message || `HTTP ${status}: ${error.response.statusText}`
-
-      return Promise.reject(new ApiError(message, status, data))
-    }
-
-    if (error.request) {
-      return Promise.reject(new ApiError('Network error - no response from server', 0))
-    }
-
-    return Promise.reject(new ApiError(error.message || 'Unknown error', -1))
-  }
-)
+const API_PREFIX = '/api'
 
 // ============================================================================
 // Custom Error Class
@@ -107,28 +21,112 @@ export class ApiError extends Error {
 }
 
 // ============================================================================
+// Auth helper
+// ============================================================================
+
+async function getAuthToken(): Promise<string | null> {
+  if (typeof window === 'undefined') return null
+  try {
+    const { supabase } = await import('@template/shared/supabase')
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    return session?.access_token ?? null
+  } catch {
+    return null
+  }
+}
+
+// ============================================================================
+// Base request function
+// ============================================================================
+
+interface RequestOptions extends Omit<RequestInit, 'body'> {
+  body?: unknown
+  timeout?: number
+}
+
+async function request<T>(url: string, options: RequestOptions = {}): Promise<T> {
+  const { body, timeout = 15000, headers: customHeaders, ...rest } = options
+
+  const token = await getAuthToken()
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    'X-Request-ID': crypto.randomUUID(),
+    ...((customHeaders as Record<string, string>) || {}),
+  }
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+  try {
+    const response = await fetch(`${API_PREFIX}${url}`, {
+      ...rest,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => null)
+
+      // 401 - Token expired, redirect to login
+      if (response.status === 401 && typeof window !== 'undefined') {
+        try {
+          const { supabase } = await import('@template/shared/supabase')
+          await supabase.auth.signOut()
+        } catch {
+          /* ignore */
+        }
+        window.location.href = '/login'
+      }
+
+      const message =
+        data?.detail || data?.message || `HTTP ${response.status}: ${response.statusText}`
+      throw new ApiError(message, response.status, data)
+    }
+
+    // 204 No Content
+    if (response.status === 204) return undefined as T
+
+    return (await response.json()) as T
+  } catch (error) {
+    if (error instanceof ApiError) throw error
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new ApiError('Request timeout', 408)
+    }
+    throw new ApiError(error instanceof Error ? error.message : 'Network error', 0)
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
+// ============================================================================
 // Generic CRUD helpers
 // ============================================================================
 
-export async function get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-  const { data } = await apiClient.get<T>(url, config)
-  return data
+export async function get<T>(url: string): Promise<T> {
+  return request<T>(url, { method: 'GET' })
 }
 
-export async function post<T>(
-  url: string,
-  body?: unknown,
-  config?: AxiosRequestConfig
-): Promise<T> {
-  const { data } = await apiClient.post<T>(url, body, config)
-  return data
+export async function post<T>(url: string, body?: unknown): Promise<T> {
+  return request<T>(url, { method: 'POST', body })
 }
 
-export async function put<T>(url: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
-  const { data } = await apiClient.put<T>(url, body, config)
-  return data
+export async function put<T>(url: string, body?: unknown): Promise<T> {
+  return request<T>(url, { method: 'PUT', body })
 }
 
-export async function del(url: string, config?: AxiosRequestConfig): Promise<void> {
-  await apiClient.delete(url, config)
+export async function patch<T>(url: string, body?: unknown): Promise<T> {
+  return request<T>(url, { method: 'PATCH', body })
+}
+
+export async function del(url: string): Promise<void> {
+  await request<void>(url, { method: 'DELETE' })
 }

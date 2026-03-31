@@ -33,44 +33,18 @@ services:
       timeout: 3s
       retries: 3
 
-  # Keycloak (OIDC Authentication)
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0
-    command: start-dev --import-realm
-    ports:
-      - '8080:8080'
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_HEALTH_ENABLED: 'true'
-    volumes:
-      - ./keycloak:/opt/keycloak/data/import
-    healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
-  # Frontend (Nginx serving built app)
+  # Frontend (Next.js app)
   frontend:
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
       args:
-        VITE_API_URL: ''
-        VITE_KEYCLOAK_URL: http://localhost:8080
-        VITE_KEYCLOAK_REALM: template
-        VITE_KEYCLOAK_CLIENT_ID: template-web
-        VITE_DEMO_MODE: 'true'
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-http://localhost:54321}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-your-anon-key}
     ports:
-      - '13000:80'
+      - '3000:3000'
     depends_on:
-      - keycloak
+      - db
 
 volumes:
   postgres_data:

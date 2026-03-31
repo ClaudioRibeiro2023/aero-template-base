@@ -1,25 +1,7 @@
-import { env } from '@/lib/env'
 /**
- * File Upload Service — Sprint 36
- * Connects to /api/v1/files endpoints (file_upload router).
+ * File Upload Service — Supabase Storage
+ * Manages file uploads via Supabase Storage buckets.
  */
-import axios from 'axios'
-
-const BASE_URL = env.API_URL || 'http://localhost:8000'
-
-const fileClient = axios.create({
-  baseURL: `${BASE_URL}/api/v1`,
-  timeout: 60000, // 60s for uploads
-})
-
-// Attach auth token
-fileClient.interceptors.request.use(config => {
-  const token = localStorage.getItem('access_token')
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`
-  }
-  return config
-})
 
 // ============================================================================
 // Types
@@ -27,82 +9,100 @@ fileClient.interceptors.request.use(config => {
 
 export interface FileMetadata {
   id: string
-  filename: string
+  name: string
   content_type: string
   size: number
-  uploaded_at: string
-  uploaded_by: string | null
-  tags: string[]
-}
-
-export interface FileListResponse {
-  items: FileMetadata[]
-  total: number
-}
-
-export interface PresignedUrlResponse {
-  upload_url: string
-  file_id: string
-  expires_in: number
+  created_at: string
+  updated_at: string
+  bucket_id: string
+  path: string
 }
 
 export interface UploadOptions {
-  tags?: string[]
-  uploadedBy?: string
-  onProgress?: (percent: number) => void
+  bucket?: string
+  folder?: string
+  upsert?: boolean
 }
 
 export interface ListFilesParams {
-  page?: number
+  bucket?: string
+  folder?: string
   limit?: number
-  tag?: string
+  offset?: number
 }
 
 // ============================================================================
 // Service
 // ============================================================================
 
+const DEFAULT_BUCKET = 'attachments'
+
 export const fileUploadService = {
   async upload(file: File, options: UploadOptions = {}): Promise<FileMetadata> {
-    const formData = new FormData()
-    formData.append('file', file)
-    if (options.tags?.length) {
-      formData.append('tags', options.tags.join(','))
-    }
-    if (options.uploadedBy) {
-      formData.append('uploaded_by', options.uploadedBy)
-    }
+    const { supabase } = await import('@template/shared/supabase')
+    const bucket = options.bucket || DEFAULT_BUCKET
+    const folder = options.folder || ''
+    const timestamp = Date.now()
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+    const path = folder ? `${folder}/${timestamp}-${safeName}` : `${timestamp}-${safeName}`
 
-    const { data } = await fileClient.post<FileMetadata>('/files/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      onUploadProgress: e => {
-        if (options.onProgress && e.total) {
-          options.onProgress(Math.round((e.loaded * 100) / e.total))
-        }
-      },
+    const { data, error } = await supabase.storage.from(bucket).upload(path, file, {
+      cacheControl: '3600',
+      upsert: options.upsert ?? false,
+      contentType: file.type,
     })
-    return data
+
+    if (error) throw new Error(`Upload failed: ${error.message}`)
+
+    return {
+      id: data.id ?? data.path,
+      name: file.name,
+      content_type: file.type,
+      size: file.size,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      bucket_id: bucket,
+      path: data.path,
+    }
   },
 
-  async getMetadata(fileId: string): Promise<FileMetadata> {
-    const { data } = await fileClient.get<FileMetadata>(`/files/${fileId}`)
-    return data
+  async getPublicUrl(path: string, bucket = DEFAULT_BUCKET): Promise<string> {
+    const { supabase } = await import('@template/shared/supabase')
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path)
+    return data.publicUrl
   },
 
-  async list(params: ListFilesParams = {}): Promise<FileListResponse> {
-    const { data } = await fileClient.get<FileListResponse>('/files', { params })
-    return data
+  async getSignedUrl(path: string, expiresIn = 3600, bucket = DEFAULT_BUCKET): Promise<string> {
+    const { supabase } = await import('@template/shared/supabase')
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresIn)
+    if (error) throw new Error(`Signed URL failed: ${error.message}`)
+    return data.signedUrl
   },
 
-  async delete(fileId: string): Promise<void> {
-    await fileClient.delete(`/files/${fileId}`)
-  },
-
-  async getPresignedUrl(filename: string, contentType?: string): Promise<PresignedUrlResponse> {
-    const { data } = await fileClient.post<PresignedUrlResponse>('/files/presigned', {
-      filename,
-      content_type: contentType || 'application/octet-stream',
+  async list(params: ListFilesParams = {}): Promise<FileMetadata[]> {
+    const { supabase } = await import('@template/shared/supabase')
+    const bucket = params.bucket || DEFAULT_BUCKET
+    const { data, error } = await supabase.storage.from(bucket).list(params.folder || '', {
+      limit: params.limit || 100,
+      offset: params.offset || 0,
+      sortBy: { column: 'created_at', order: 'desc' },
     })
-    return data
+    if (error) throw new Error(`List files failed: ${error.message}`)
+    return (data || []).map(f => ({
+      id: f.id ?? f.name,
+      name: f.name,
+      content_type: f.metadata?.mimetype || 'application/octet-stream',
+      size: f.metadata?.size || 0,
+      created_at: f.created_at || '',
+      updated_at: f.updated_at || '',
+      bucket_id: bucket,
+      path: params.folder ? `${params.folder}/${f.name}` : f.name,
+    }))
+  },
+
+  async delete(path: string, bucket = DEFAULT_BUCKET): Promise<void> {
+    const { supabase } = await import('@template/shared/supabase')
+    const { error } = await supabase.storage.from(bucket).remove([path])
+    if (error) throw new Error(`Delete failed: ${error.message}`)
   },
 }

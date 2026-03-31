@@ -3,7 +3,7 @@
 import { useAuth } from '@/hooks/useAuth'
 import { useState } from 'react'
 import { Save, Camera } from 'lucide-react'
-import { useToast } from '@/components/ui/Toast'
+import { useToast } from '@template/design-system'
 import { useFormDirty } from '@/hooks/useFormDirty'
 
 export default function ProfilePage() {
@@ -11,7 +11,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState(user?.name || '')
   const [bio, setBio] = useState('')
   const [saving, setSaving] = useState(false)
-  const { toast } = useToast()
+  const { success } = useToast()
   const { isDirty, markDirty, markClean } = useFormDirty()
 
   const initials = displayName
@@ -30,7 +30,7 @@ export default function ProfilePage() {
     await new Promise(r => setTimeout(r, 600))
     setSaving(false)
     markClean()
-    toast('Perfil atualizado com sucesso')
+    success('Perfil atualizado com sucesso')
   }
 
   return (

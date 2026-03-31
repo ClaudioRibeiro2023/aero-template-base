@@ -5,19 +5,13 @@ title: Criando um Novo Módulo
 
 # Criando um Novo Módulo
 
-A plataforma inclui um **CLI scaffolding** que gera todo o boilerplate para um módulo full-stack.
+A plataforma inclui um **CLI scaffolding** que gera todo o boilerplate para um módulo frontend.
 
 ## Uso
 
 ```bash
-# Full-stack (FE + BE)
+# Frontend
 pnpm create-module products
-
-# Apenas frontend
-pnpm create-module products --fe-only
-
-# Apenas backend
-pnpm create-module products --be-only
 
 # Preview sem criar arquivos
 pnpm create-module products --dry-run
@@ -25,7 +19,7 @@ pnpm create-module products --dry-run
 
 ## O que é gerado
 
-### Frontend (`--fe-only` ou full-stack)
+### Frontend
 
 ```
 apps/web/src/
@@ -37,33 +31,15 @@ apps/web/src/
     └── ProductsList.tsx
 ```
 
-### Backend (`--be-only` ou full-stack)
-
-```
-api-template/
-├── app/routers/products.py              # FastAPI router (CRUD completo)
-├── app/schemas/products.py              # Pydantic schemas
-└── tests/test_products.py               # Test placeholder
-```
-
 ## Após Criar
 
-1. **Backend**: Registre o router em `app/main.py`:
-
-   ```python
-   from app.routers.products import router as products_router
-   app.include_router(products_router)
-   ```
-
-2. **Frontend**: Adicione a rota em `App.tsx`:
+1. **Frontend**: Adicione a rota em `App.tsx`:
 
    ```tsx
    import ProductsPage from '@/components/pages/ProductsPage'
    ;<Route path="/products" element={<ProductsPage />} />
    ```
 
-3. **Crie os models** SQLAlchemy em `app/models/products.py`
+2. **Crie os types** TypeScript em `types/products.ts`
 
-4. **Crie a migration**: `cd api-template && python -m alembic revision --autogenerate -m "add_products"`
-
-5. **Escreva testes** para o router e os hooks
+3. **Escreva testes** para os hooks e componentes

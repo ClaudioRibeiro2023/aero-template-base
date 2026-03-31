@@ -1,13 +1,12 @@
 /**
  * useFileUpload — TanStack Query hook for file upload operations.
- * Sprint 36: Connects FE FileUpload component to BE /api/files router.
+ * Uses Supabase Storage for file management.
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, useCallback } from 'react'
 import {
   fileUploadService,
   type FileMetadata,
-  type FileListResponse,
   type UploadOptions,
   type ListFilesParams,
 } from '../services/fileUpload'
@@ -19,26 +18,14 @@ const FILE_QUERY_KEY = ['files'] as const
 // ============================================================================
 
 export function useFileList(params: ListFilesParams = {}) {
-  return useQuery<FileListResponse>({
+  return useQuery<FileMetadata[]>({
     queryKey: [...FILE_QUERY_KEY, params],
     queryFn: () => fileUploadService.list(params),
   })
 }
 
 // ============================================================================
-// Get single file metadata
-// ============================================================================
-
-export function useFileMetadata(fileId: string | null) {
-  return useQuery<FileMetadata>({
-    queryKey: [...FILE_QUERY_KEY, fileId],
-    queryFn: () => fileUploadService.getMetadata(fileId!),
-    enabled: !!fileId,
-  })
-}
-
-// ============================================================================
-// Upload mutation with progress tracking
+// Upload mutation
 // ============================================================================
 
 export function useFileUpload(options?: {
@@ -48,16 +35,13 @@ export function useFileUpload(options?: {
   const queryClient = useQueryClient()
   const [progress, setProgress] = useState(0)
 
-  const mutation = useMutation<
-    FileMetadata,
-    Error,
-    { file: File; options?: Omit<UploadOptions, 'onProgress'> }
-  >({
-    mutationFn: ({ file, options: uploadOpts }) =>
-      fileUploadService.upload(file, {
-        ...uploadOpts,
-        onProgress: setProgress,
-      }),
+  const mutation = useMutation<FileMetadata, Error, { file: File; options?: UploadOptions }>({
+    mutationFn: async ({ file, options: uploadOpts }) => {
+      setProgress(10)
+      const result = await fileUploadService.upload(file, uploadOpts)
+      setProgress(100)
+      return result
+    },
     onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: FILE_QUERY_KEY })
       setProgress(0)
@@ -70,7 +54,7 @@ export function useFileUpload(options?: {
   })
 
   const upload = useCallback(
-    (file: File, uploadOpts?: Omit<UploadOptions, 'onProgress'>) => {
+    (file: File, uploadOpts?: UploadOptions) => {
       mutation.mutate({ file, options: uploadOpts })
     },
     [mutation]
@@ -96,7 +80,7 @@ export function useFileDelete(options?: { onSuccess?: () => void }) {
   const queryClient = useQueryClient()
 
   return useMutation<void, Error, string>({
-    mutationFn: fileId => fileUploadService.delete(fileId),
+    mutationFn: path => fileUploadService.delete(path),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: FILE_QUERY_KEY })
       options?.onSuccess?.()

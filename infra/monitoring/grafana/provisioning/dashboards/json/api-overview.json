@@ -303,7 +303,7 @@
       },
       "targets": [
         {
-          "expr": "up{job=\"fastapi\"}",
+          "expr": "up{job=\"nextjs\"}",
           "legendFormat": "",
           "refId": "A"
         }

@@ -3,20 +3,20 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Save } from 'lucide-react'
-import { useToast } from '@/components/ui/Toast'
+import { useToast } from '@template/design-system'
 import { useFormDirty } from '@/hooks/useFormDirty'
 
 export default function ConfigGeralPage() {
   const [appName, setAppName] = useState(process.env.NEXT_PUBLIC_APP_NAME || 'Template Platform')
   const [language, setLanguage] = useState('pt-BR')
-  const { toast } = useToast()
+  const { success } = useToast()
   const { isDirty, markDirty, markClean } = useFormDirty()
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     // Em produção: salvar em admin_config no Supabase
     markClean()
-    toast('Configurações salvas com sucesso')
+    success('Configurações salvas com sucesso')
   }
 
   return (

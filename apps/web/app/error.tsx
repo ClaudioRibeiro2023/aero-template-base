@@ -11,6 +11,8 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error('[App Error]', error)
+    // To enable Sentry: install @sentry/nextjs and replace the line above with:
+    // if (process.env.NODE_ENV === 'production') Sentry.captureException(error)
   }, [error])
 
   return (

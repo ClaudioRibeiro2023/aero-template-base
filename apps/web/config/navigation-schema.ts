@@ -3,6 +3,11 @@
  *
  * Define a estrutura de dados para configuração dinâmica de:
  * - Módulos (seções principais da aplicação)
+ */
+import type { UserRole } from '@template/types'
+
+/**
+ * Navigation Configuration Schema (continued)
  * - Funções (páginas/features dentro de módulos)
  * - Filtros (filtros aplicáveis às funções)
  * - Categorias (agrupamentos de funções)
@@ -12,8 +17,8 @@
 // TIPOS BASE
 // ═══════════════════════════════════════════════════════════════
 
-/** Roles de usuário disponíveis no sistema (alinhado com @template/shared) */
-export type UserRole = 'ADMIN' | 'GESTOR' | 'OPERADOR' | 'VIEWER'
+// UserRole importado de @template/types — fonte canônica: packages/types/src/auth.ts
+export type { UserRole } from '@template/types'
 
 /** Categorias para agrupamento de funções */
 export type FunctionCategory =

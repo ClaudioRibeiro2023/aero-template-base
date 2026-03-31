@@ -1,49 +1,43 @@
-# OpenAPI / Swagger
+# OpenAPI / API Routes
 
-> Documentação automática da API REST gerada pelo FastAPI.
+> Documentação da API REST via Next.js API Route Handlers.
 
 ---
 
 ## Acesso à Documentação
 
-### Swagger UI (Interativo)
-
-```
-http://localhost:8000/docs
-```
-
-Interface interativa para testar endpoints diretamente no browser.
-
-### ReDoc (Leitura)
-
-```
-http://localhost:8000/redoc
-```
-
-Documentação mais limpa para leitura e referência.
-
 ### OpenAPI Schema (JSON)
 
 ```
-http://localhost:8000/openapi.json
+http://localhost:3000/api/openapi.json
 ```
 
 Schema OpenAPI 3.0 para geração de clientes ou importação em ferramentas.
 
+### Swagger UI (opcional)
+
+Se configurado via `next-swagger-doc` ou similar:
+
+```
+http://localhost:3000/api-docs
+```
+
 ---
 
-## Configuração do FastAPI
+## Estrutura das API Routes
 
-**Fonte:** `api-template/app/main.py:24-30`
+**Fonte:** `apps/web/app/api/`
 
-```python
-app = FastAPI(
-    title="Template API",
-    description="API Template with authentication and basic endpoints",
-    version="0.1.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
+```
+app/api/
+├── health/
+│   └── route.ts          # Health check endpoint
+├── openapi.json/
+│   └── route.ts          # OpenAPI schema (se implementado)
+└── [resource]/
+    ├── route.ts           # GET (list), POST (create)
+    └── [id]/
+        └── route.ts       # GET (detail), PUT (update), DELETE
 ```
 
 ---
@@ -57,17 +51,14 @@ app = FastAPI(
 npm install -D openapi-typescript
 
 # Gerar tipos
-npx openapi-typescript http://localhost:8000/openapi.json -o src/types/api.d.ts
+npx openapi-typescript http://localhost:3000/api/openapi.json -o src/types/api.d.ts
 ```
 
-### Python (openapi-python-client)
+### Supabase Types (recomendado)
 
 ```bash
-# Instalar
-pip install openapi-python-client
-
-# Gerar cliente
-openapi-python-client generate --url http://localhost:8000/openapi.json
+# Gerar tipos diretamente do Supabase
+npx supabase gen types typescript --project-id your-project-id > src/types/database.ts
 ```
 
 ### Outras Ferramentas
@@ -107,7 +98,7 @@ spectral lint openapi.json
   "openapi": "3.1.0",
   "info": {
     "title": "Template API",
-    "description": "API Template with authentication and basic endpoints",
+    "description": "API Routes via Next.js 14 com Supabase",
     "version": "0.1.0"
   }
 }
@@ -115,14 +106,11 @@ spectral lint openapi.json
 
 ### Paths Documentados
 
-| Path            | Methods | Descrição          |
-| --------------- | ------- | ------------------ |
-| `/`             | GET     | Root health check  |
-| `/health`       | GET     | Basic health check |
-| `/health/live`  | GET     | Liveness probe     |
-| `/health/ready` | GET     | Readiness probe    |
-| `/api/me`       | GET     | Current user info  |
-| `/api/config`   | GET     | Frontend config    |
+| Path          | Methods | Descrição         |
+| ------------- | ------- | ----------------- |
+| `/api/health` | GET     | Health check      |
+| `/api/me`     | GET     | Current user info |
+| `/api/config` | GET     | Frontend config   |
 
 ### Schemas
 
@@ -156,7 +144,7 @@ spectral lint openapi.json
 
 ## Exportar para Postman
 
-1. Acesse `http://localhost:8000/openapi.json`
+1. Acesse `http://localhost:3000/api/openapi.json`
 2. Copie o conteúdo
 3. No Postman: **Import** → **Raw text** → Cole o JSON
 4. A collection será criada automaticamente
@@ -165,41 +153,46 @@ spectral lint openapi.json
 
 ## Customização
 
-### Adicionar Descrições aos Endpoints
+### Adicionar Documentação aos Route Handlers
 
-```python
-@app.get(
-    "/api/resource",
-    summary="Get Resource",
-    description="Detailed description of what this endpoint does",
-    response_description="The resource data",
-    tags=["Resources"],
-    responses={
-        200: {"description": "Successful response"},
-        404: {"description": "Resource not found"},
-    }
-)
-async def get_resource():
-    ...
+```typescript
+// app/api/resource/route.ts
+import { NextResponse } from 'next/server'
+
+/**
+ * @swagger
+ * /api/resource:
+ *   get:
+ *     summary: Get Resource
+ *     description: Retorna lista de recursos
+ *     tags: [Resources]
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *       404:
+ *         description: Resource not found
+ */
+export async function GET() {
+  // ...
+  return NextResponse.json(data)
+}
 ```
 
-### Adicionar Exemplos
+### Validação com Zod
 
-```python
-from pydantic import BaseModel, Field
+```typescript
+import { z } from 'zod'
 
-class ResourceCreate(BaseModel):
-    name: str = Field(..., example="My Resource")
-    value: int = Field(..., example=42, ge=0)
+const ResourceCreateSchema = z.object({
+  name: z.string().min(1),
+  value: z.number().int().nonnegative(),
+})
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {"name": "Example 1", "value": 100},
-                {"name": "Example 2", "value": 200}
-            ]
-        }
-    }
+export async function POST(request: Request) {
+  const body = await request.json()
+  const validated = ResourceCreateSchema.parse(body)
+  // ...
+}
 ```
 
 ---
@@ -220,33 +213,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Start API
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: pnpm install
+
+      - name: Start app
         run: |
-          cd api-template
-          pip install -r requirements.txt
-          uvicorn app.main:app &
+          pnpm build
+          pnpm start &
           sleep 5
 
       - name: Download schema
-        run: curl http://localhost:8000/openapi.json -o openapi.json
+        run: curl http://localhost:3000/api/openapi.json -o openapi.json
 
       - name: Validate schema
         run: |
-          pip install openapi-spec-validator
-          openapi-spec-validator openapi.json
+          npm install -g @stoplight/spectral-cli
+          spectral lint openapi.json
 ```
-
----
-
-## [TODO: confirmar]
-
-- [ ] Verificar se há schemas Pydantic adicionais em `api-template/app/schemas/`
-- [ ] Confirmar se todos os endpoints estão documentados
-- [ ] Adicionar security schemes para autenticação JWT no OpenAPI
 
 ---
 
 **Arquivos relacionados:**
 
-- `api-template/app/main.py` - Configuração do FastAPI
-- `http://localhost:8000/openapi.json` - Schema gerado
+- `apps/web/app/api/` - API Route Handlers
+- `http://localhost:3000/api/openapi.json` - Schema gerado

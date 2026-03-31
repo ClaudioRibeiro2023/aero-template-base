@@ -1,23 +1,23 @@
 :root {
-  --ifm-color-primary: #14b8a6;
-  --ifm-color-primary-dark: #0d9488;
-  --ifm-color-primary-darker: #0f766e;
-  --ifm-color-primary-darkest: #115e59;
-  --ifm-color-primary-light: #2dd4bf;
-  --ifm-color-primary-lighter: #5eead4;
-  --ifm-color-primary-lightest: #99f6e4;
+  --ifm-color-primary: #0087a8;
+  --ifm-color-primary-dark: #006f8a;
+  --ifm-color-primary-darker: #005f73;
+  --ifm-color-primary-darkest: #003d4a;
+  --ifm-color-primary-light: #009bc2;
+  --ifm-color-primary-lighter: #33b5d6;
+  --ifm-color-primary-lightest: #66ceea;
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
   --ifm-font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 [data-theme='dark'] {
-  --ifm-color-primary: #2dd4bf;
-  --ifm-color-primary-dark: #14b8a6;
-  --ifm-color-primary-darker: #0d9488;
-  --ifm-color-primary-darkest: #0f766e;
-  --ifm-color-primary-light: #5eead4;
-  --ifm-color-primary-lighter: #99f6e4;
-  --ifm-color-primary-lightest: #ccfbf1;
+  --ifm-color-primary: #33b5d6;
+  --ifm-color-primary-dark: #0087a8;
+  --ifm-color-primary-darker: #006f8a;
+  --ifm-color-primary-darkest: #005f73;
+  --ifm-color-primary-light: #66ceea;
+  --ifm-color-primary-lighter: #99e0f0;
+  --ifm-color-primary-lightest: #ccf0f8;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }

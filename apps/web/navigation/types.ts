@@ -1,5 +1,7 @@
 // Navigation Types
-export type UserRole = 'ADMIN' | 'GESTOR' | 'OPERADOR' | 'VIEWER'
+// UserRole importado de @template/types — fonte canônica: packages/types/src/auth.ts
+import type { UserRole } from '@template/types'
+export type { UserRole }
 
 export type NavCategory = 'ANALISE' | 'MAPEAMENTO' | 'INDICADORES' | 'CONTROLE' | 'OPERACIONAL'
 

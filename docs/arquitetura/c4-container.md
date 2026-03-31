@@ -11,100 +11,73 @@ C4Container
     Person(user, "Usuário", "Acessa via browser")
 
     System_Boundary(platform, "Template Platform") {
-        Container(spa, "Frontend SPA", "React 18, TypeScript, Vite", "Interface web responsiva com Design System")
-        Container(api, "API Backend", "FastAPI, Python 3.11+", "API REST com autenticação e RBAC")
-        ContainerDb(db, "Database", "PostgreSQL 15", "Dados da aplicação")
-        ContainerDb(cache, "Cache/Sessions", "Redis 7", "Cache, sessões, rate limiting")
+        Container(app, "Next.js App", "Next.js 14, TypeScript, Tailwind", "Frontend SSR + API Routes")
+        ContainerDb(supabase, "Supabase", "PostgreSQL + Auth + Realtime + Storage", "Backend-as-a-Service")
+        ContainerDb(cache, "Cache/Sessions", "Redis 7", "Cache, sessões, rate limiting (opcional)")
     }
 
-    System_Ext(keycloak, "Keycloak", "Identity Provider OIDC")
-    System_Ext(cdn, "CDN", "Assets estáticos (opcional)")
+    System_Ext(cdn, "CDN", "Assets estáticos (Vercel Edge)")
 
-    Rel(user, spa, "Acessa", "HTTPS/443")
+    Rel(user, app, "Acessa", "HTTPS/443")
     Rel(user, cdn, "Assets", "HTTPS")
-    Rel(spa, api, "Consome", "REST/JSON")
-    Rel(spa, keycloak, "Autentica", "OIDC/PKCE")
-    Rel(api, db, "Lê/Escreve", "asyncpg")
-    Rel(api, cache, "Cache/Sessões", "redis-py")
-    Rel(api, keycloak, "Valida JWT", "JWKS")
+    Rel(app, supabase, "Auth + Data + Realtime", "@supabase/ssr")
+    Rel(app, cache, "Cache/Sessões", "redis (opcional)")
 ```
 
 ## Containers
 
-### Frontend SPA
+### Next.js App
 
-| Atributo         | Valor                              |
-| ---------------- | ---------------------------------- |
-| **Tecnologia**   | React 18.2, TypeScript 5.3, Vite 5 |
-| **Localização**  | `apps/web/`                        |
-| **Build output** | `apps/web/dist/`                   |
-| **Porta (dev)**  | 13000                              |
-| **Porta (prod)** | 80 (nginx)                         |
+| Atributo         | Valor                                      |
+| ---------------- | ------------------------------------------ |
+| **Tecnologia**   | Next.js 14, TypeScript 5.x, Tailwind CSS 3 |
+| **Localização**  | `apps/web/`                                |
+| **Build output** | `.next/`                                   |
+| **Porta (dev)**  | 3000                                       |
+| **Porta (prod)** | 443 (Vercel)                               |
 
 **Responsabilidades:**
 
-- Interface de usuário responsiva
-- Roteamento SPA (React Router)
-- Autenticação OIDC (oidc-client-ts)
-- Gerenciamento de estado (TanStack Query)
-- Design System compartilhado
+- Interface de usuário com SSR/SSG
+- API Routes (server-side)
+- Autenticação via Supabase Auth (`@supabase/ssr`)
+- Server Actions para mutações
+- Design System compartilhado (Tailwind)
 
 **Dependências de runtime:**
 
 ```
-@tanstack/react-query ^5.12.2
-oidc-client-ts ^2.4.0
-react-router-dom ^6.20.0
-axios ^1.6.2
+@supabase/supabase-js ^2.x
+@supabase/ssr ^0.x
+@tanstack/react-query ^5.x
+tailwindcss ^3.x
+zod ^3.x
 ```
 
-### API Backend
+### Supabase (Backend-as-a-Service)
 
-| Atributo        | Valor                                       |
-| --------------- | ------------------------------------------- |
-| **Tecnologia**  | FastAPI 0.104+, Python 3.11+, Pydantic 2.5+ |
-| **Localização** | `api-template/`                             |
-| **Entry point** | `api-template/app/main.py`                  |
-| **Porta**       | 8000                                        |
-| **Docs**        | `/docs` (Swagger), `/redoc` (ReDoc)         |
+| Atributo       | Valor                             |
+| -------------- | --------------------------------- |
+| **Tecnologia** | PostgreSQL 15 + GoTrue + Realtime |
+| **Auth**       | Supabase Auth (JWT RS256)         |
+| **Database**   | PostgreSQL com RLS                |
+| **Realtime**   | WebSocket subscriptions           |
+| **Storage**    | S3-compatible object storage      |
 
 **Responsabilidades:**
 
-- API REST com validação de schema (Pydantic)
-- Autenticação JWT (python-jose)
-- Rate limiting (slowapi)
-- CSRF protection
-- Audit logging (structlog)
-- Database migrations (Alembic)
-
-**Dependências de runtime:**
-
-```
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-pydantic>=2.5.0
-python-jose[cryptography]>=3.3.0
-sqlalchemy>=2.0.0
-redis>=5.0.0
-slowapi>=0.1.9
-structlog>=24.1.0
-```
-
-### Database (PostgreSQL)
-
-| Atributo       | Valor                |
-| -------------- | -------------------- |
-| **Tecnologia** | PostgreSQL 15 Alpine |
-| **Porta**      | 5432                 |
-| **Database**   | `template`           |
-| **Driver**     | asyncpg (async)      |
+- Autenticação e autorização (JWT + RLS)
+- Persistência de dados (PostgreSQL)
+- Row-Level Security para multi-tenancy
+- Realtime subscriptions
+- File storage
 
 **Schema gerenciado por:**
 
-- Alembic migrations (`api-template/alembic/`)
-- SQLAlchemy 2.0 models
+- Supabase migrations (`supabase/migrations/`)
+- TypeScript types gerados via `supabase gen types`
 
-### Cache/Sessions (Redis)
+### Cache/Sessions (Redis) — Opcional
 
 | Atributo         | Valor            |
 | ---------------- | ---------------- |
@@ -114,49 +87,26 @@ structlog>=24.1.0
 
 **Usos:**
 
-- Cache de queries
-- Sessões distribuídas
+- Cache de queries (opcional)
 - Rate limiting storage
-- Pub/Sub para WebSockets
+- Sessões distribuídas (se necessário)
 
 ## Comunicação entre Containers
 
-### Frontend → API
+### Next.js → Supabase
 
 ```
-Protocolo: HTTPS (REST/JSON)
-Autenticação: Bearer token (JWT)
-Headers:
+Protocolo: HTTPS (supabase-js client)
+Autenticação: JWT gerenciado pelo @supabase/ssr
+Headers automáticos:
   - Authorization: Bearer <access_token>
-  - Content-Type: application/json
-  - X-Request-ID: <uuid> (correlação)
+  - apikey: <anon_key>
 ```
 
-### Frontend → Keycloak
+### Next.js → Redis (opcional)
 
 ```
-Protocolo: HTTPS (OIDC)
-Fluxo: Authorization Code + PKCE
-Endpoints usados:
-  - /protocol/openid-connect/auth
-  - /protocol/openid-connect/token
-  - /protocol/openid-connect/userinfo
-  - /protocol/openid-connect/logout
-```
-
-### API → PostgreSQL
-
-```
-Protocolo: TCP (asyncpg)
-Connection string: postgresql://user:pass@host:5432/db
-Pool: min=5, max=20 (configurável)
-SSL: obrigatório em produção
-```
-
-### API → Redis
-
-```
-Protocolo: TCP (redis-py async)
+Protocolo: TCP (ioredis)
 Connection string: redis://host:6379
 SSL: opcional
 ```
@@ -166,28 +116,22 @@ SSL: opcional
 ### Desenvolvimento Local
 
 ```yaml
-# infra/docker-compose.yml
 services:
-  frontend: localhost:13000
-  api: localhost:8000
-  keycloak: localhost:8080
-  db: localhost:5432
-  redis: localhost:6379
+  web: localhost:3000 # Next.js dev server
+  supabase: localhost:54321 # Supabase local (CLI)
+  db: localhost:54322 # PostgreSQL (via Supabase)
+  redis: localhost:6379 # Redis (opcional)
 ```
 
-### Produção (Kubernetes)
+### Produção (Vercel + Supabase Cloud)
 
 ```yaml
-# infra/k8s/deployment.yaml
 Deployments:
-  - api (replicas: 2-10, HPA)
-  - web (replicas: 2-5)
-Services:
-  - api-service (ClusterIP)
-  - web-service (ClusterIP)
-Ingress:
-  - api.domain.com → api-service
-  - app.domain.com → web-service
+  - Next.js App → Vercel (auto-scaling)
+  - Supabase → Supabase Cloud (managed)
+Domains:
+  - app.domain.com → Vercel
+  - *.supabase.co → Supabase Cloud
 ```
 
 ---

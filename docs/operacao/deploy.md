@@ -18,7 +18,7 @@ Este documento descreve como fazer deploy da Template Platform em diferentes amb
 - Docker 24+ e Docker Compose 2.20+
 - Node.js 20+ e pnpm 9+
 - Acesso ao registry de containers (GitHub Container Registry)
-- Credenciais de acesso aos serviços externos (Keycloak, PostgreSQL, Redis)
+- Credenciais de acesso aos serviços externos (Supabase, PostgreSQL, Redis)
 
 ---
 
@@ -48,9 +48,7 @@ docker-compose logs -f
 ### 3. Acessar a aplicação
 
 - **Frontend:** http://localhost:13000
-- **API:** http://localhost:8000
-- **Keycloak:** http://localhost:8080
-- **API Docs:** http://localhost:8000/docs
+- **API:** http://localhost:3000/api
 
 ### 4. Parar os serviços
 
@@ -75,13 +73,11 @@ docker-compose down -v
 ### Manualmente
 
 ```bash
-# Build das imagens
+# Build da imagem
 docker build -t ghcr.io/seu-org/template-web:staging -f apps/web/Dockerfile .
-docker build -t ghcr.io/seu-org/template-api:staging -f api-template/Dockerfile --target production ./api-template
 
 # Push para o registry
 docker push ghcr.io/seu-org/template-web:staging
-docker push ghcr.io/seu-org/template-api:staging
 ```
 
 ---
@@ -118,36 +114,19 @@ docker push ghcr.io/seu-org/template-api:staging
 
 ### Frontend (Web)
 
-| Variável                  | Descrição               | Exemplo                    |
-| ------------------------- | ----------------------- | -------------------------- |
-| `VITE_API_URL`            | URL base da API         | `https://api.exemplo.com`  |
-| `VITE_KEYCLOAK_URL`       | URL do Keycloak         | `https://auth.exemplo.com` |
-| `VITE_KEYCLOAK_REALM`     | Realm do Keycloak       | `template`                 |
-| `VITE_KEYCLOAK_CLIENT_ID` | Client ID               | `template-web`             |
-| `VITE_DEMO_MODE`          | Modo demo (bypass auth) | `false`                    |
-
-### Backend (API)
-
-| Variável         | Descrição                 | Exemplo                               |
-| ---------------- | ------------------------- | ------------------------------------- |
-| `DATABASE_URL`   | URL de conexão PostgreSQL | `postgresql://user:pass@host:5432/db` |
-| `REDIS_URL`      | URL de conexão Redis      | `redis://host:6379`                   |
-| `SECRET_KEY`     | Chave secreta para JWT    | `sua-chave-secreta-aqui`              |
-| `KEYCLOAK_URL`   | URL do Keycloak           | `https://auth.exemplo.com`            |
-| `KEYCLOAK_REALM` | Realm do Keycloak         | `template`                            |
-| `LOG_LEVEL`      | Nível de log              | `info`                                |
-| `CORS_ORIGINS`   | Origens permitidas        | `https://app.exemplo.com`             |
+| Variável                        | Descrição               | Exemplo                   |
+| ------------------------------- | ----------------------- | ------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | URL do projeto Supabase | `https://xxx.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anon do Supabase  | (ver painel Supabase)     |
 
 ### Infraestrutura
 
-| Variável                  | Descrição             | Default       |
-| ------------------------- | --------------------- | ------------- |
-| `POSTGRES_USER`           | Usuário do PostgreSQL | `template`    |
-| `POSTGRES_PASSWORD`       | Senha do PostgreSQL   | -             |
-| `POSTGRES_DB`             | Nome do banco         | `template_db` |
-| `REDIS_PASSWORD`          | Senha do Redis        | -             |
-| `KEYCLOAK_ADMIN`          | Admin do Keycloak     | `admin`       |
-| `KEYCLOAK_ADMIN_PASSWORD` | Senha admin Keycloak  | -             |
+| Variável            | Descrição             | Default       |
+| ------------------- | --------------------- | ------------- |
+| `POSTGRES_USER`     | Usuário do PostgreSQL | `template`    |
+| `POSTGRES_PASSWORD` | Senha do PostgreSQL   | -             |
+| `POSTGRES_DB`       | Nome do banco         | `template_db` |
+| `REDIS_PASSWORD`    | Senha do Redis        | -             |
 
 ---
 
@@ -179,35 +158,15 @@ docker-compose up -d --force-recreate <service-name>
    docker-compose exec postgres psql -U template -d template_db
    ```
 
-### Problemas com Keycloak
-
-1. Verifique os logs:
-
-   ```bash
-   docker-compose logs keycloak
-   ```
-
-2. Acesse o admin console: http://localhost:8080/admin
-
-3. Verifique se o realm e client estão configurados
-
 ### API retornando 500
 
-1. Verifique os logs da API:
+1. Verifique os logs da aplicação Next.js
 
-   ```bash
-   docker-compose logs api
-   ```
-
-2. Verifique variáveis de ambiente:
-
-   ```bash
-   docker-compose exec api env
-   ```
+2. Verifique variáveis de ambiente (Supabase URL e chave)
 
 3. Teste o health check:
    ```bash
-   curl http://localhost:8000/health
+   curl http://localhost:3000/api/health
    ```
 
 ---

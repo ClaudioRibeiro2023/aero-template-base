@@ -1,12 +1,12 @@
 # Guia de Início Rápido
 
-Guia passo a passo para configurar e rodar um projeto baseado no Template.Base v2.0.
+Guia passo a passo para configurar e rodar um projeto baseado no Template.Base v2.1.
 
 ## Pré-requisitos
 
 | Ferramenta     | Versão Mínima | Instalação                           |
 | -------------- | ------------- | ------------------------------------ |
-| Node.js        | 18+           | [nodejs.org](https://nodejs.org)     |
+| Node.js        | 20+           | [nodejs.org](https://nodejs.org)     |
 | pnpm           | 9+            | `npm install -g pnpm`                |
 | Supabase CLI   | 1.x           | `npm install -g supabase`            |
 | Conta Supabase | —             | [supabase.com](https://supabase.com) |
@@ -35,8 +35,7 @@ pnpm run setup
 O wizard interativo vai configurar:
 
 - **Nome do projeto** e namespace dos pacotes
-- **Supabase** — URL e chaves do projeto (anon key + service role key)
-- **Autenticação** — Supabase Auth (padrão) ou Keycloak OIDC
+- **Supabase** — URL e chaves do projeto (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`)
 - **Branding** — Nome da aplicação, cores primárias, logo
 
 O wizard gera automaticamente o arquivo `.env.local` com todas as variáveis.
@@ -98,12 +97,12 @@ Veja `scripts/setup.example.json` para o formato esperado.
 ```
 ├── apps/web/               # Frontend Next.js 14 (App Router)
 ├── packages/
-│   ├── design-system/      # Componentes UI + Storybook
-│   ├── shared/             # Auth, Supabase client, utilitários
-│   └── types/              # TypeScript types compartilhados
+│   ├── design-system/      # Componentes UI canônicos + Storybook
+│   ├── shared/             # Auth adapter, Supabase client, utilitários
+│   └── types/              # TypeScript types compartilhados (UserRole, etc.)
 ├── supabase/
-│   └── migrations/         # 4 migrations SQL com RLS
-├── infra/                  # Docker, K8s, CI/CD
+│   └── migrations/         # 8 migrations SQL com RLS e triggers
+├── infra/                  # Docker Compose para infra local
 └── scripts/                # Setup wizard e utilitários
 ```
 

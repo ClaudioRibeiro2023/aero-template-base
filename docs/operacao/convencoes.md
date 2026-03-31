@@ -105,26 +105,22 @@ pnpm -C apps/web test:e2e
 ### Frontend (`apps/web/.env`)
 
 ```bash
-# API
-VITE_API_URL=http://localhost:8000/api
-
-# Keycloak/OIDC
-VITE_KEYCLOAK_URL=http://localhost:8080
-VITE_KEYCLOAK_REALM=template
-VITE_KEYCLOAK_CLIENT_ID=template-web
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anon
 
 # App
-VITE_APP_URL=http://localhost:13000
+NEXT_PUBLIC_APP_URL=http://localhost:13000
 
 # Development
-VITE_DEMO_MODE=false
+NEXT_PUBLIC_DEMO_MODE=false
 ```
 
 ### Acesso no código
 
 ```typescript
-const apiUrl = import.meta.env.VITE_API_URL
-const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 ```
 
 ---

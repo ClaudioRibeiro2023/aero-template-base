@@ -1,7 +1,15 @@
 import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabase, createAnonSupabase } from '@/app/lib/supabase-server'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import {
+  ok,
+  badRequest,
+  unauthorized,
+  serverError,
+  tooManyRequests,
+  notFound,
+} from '@/lib/api-response'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,15 +47,15 @@ const AdminConfigSchema = z
   .strict()
 
 export async function GET(request: NextRequest) {
+  const ip = getClientIp(request.headers)
+  const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
+  if (!success) return tooManyRequests()
+
   const user = await authenticateRequest(request)
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!user) return unauthorized()
 
   const tenantId = request.headers.get('x-tenant-id')
-  if (!tenantId) {
-    return NextResponse.json({ error: 'Missing x-tenant-id header' }, { status: 400 })
-  }
+  if (!tenantId) return badRequest('Missing x-tenant-id header')
 
   const { data, error } = await createServerSupabase()
     .from('admin_config')
@@ -55,32 +63,30 @@ export async function GET(request: NextRequest) {
     .eq('tenant_id', tenantId)
     .single()
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 404 })
-  }
+  if (error) return notFound(error.message)
 
-  return NextResponse.json(data)
+  return ok(data)
 }
 
 export async function PATCH(request: NextRequest) {
+  const ip = getClientIp(request.headers)
+  const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
+  if (!success) return tooManyRequests()
+
   const user = await authenticateRequest(request)
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!user) return unauthorized()
 
   const tenantId = request.headers.get('x-tenant-id')
-  if (!tenantId) {
-    return NextResponse.json({ error: 'Missing x-tenant-id header' }, { status: 400 })
-  }
+  if (!tenantId) return badRequest('Missing x-tenant-id header')
 
   let body
   try {
     body = AdminConfigSchema.parse(await request.json())
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid input', details: err.errors }, { status: 400 })
+      return badRequest('Invalid input', err.errors)
     }
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    return badRequest('Invalid JSON')
   }
 
   const { data, error } = await createServerSupabase()
@@ -90,9 +96,7 @@ export async function PATCH(request: NextRequest) {
     .select()
     .single()
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
+  if (error) return serverError(error.message)
 
-  return NextResponse.json(data)
+  return ok(data)
 }

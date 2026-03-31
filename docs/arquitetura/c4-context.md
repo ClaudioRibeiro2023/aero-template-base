@@ -14,17 +14,15 @@ C4Context
 
     System(templatePlatform, "Template Platform", "Plataforma web corporativa com autenticação, RBAC e módulos extensíveis")
 
-    System_Ext(keycloak, "Keycloak", "Identity Provider - Autenticação OIDC/OAuth2")
-    System_Ext(postgres, "PostgreSQL", "Banco de dados relacional")
-    System_Ext(redis, "Redis", "Cache e sessões distribuídas")
+    System_Ext(supabase, "Supabase", "Backend-as-a-Service - Auth, DB, Realtime, Storage")
+    System_Ext(redis, "Redis", "Cache e sessões distribuídas (opcional)")
     System_Ext(smtp, "SMTP Server", "Envio de e-mails (opcional)")
 
     Rel(user, templatePlatform, "Acessa via browser", "HTTPS")
     Rel(admin, templatePlatform, "Gerencia usuários e configurações", "HTTPS")
-    Rel(integrador, templatePlatform, "Consome API REST", "HTTPS + JWT")
+    Rel(integrador, templatePlatform, "Consome API Routes", "HTTPS + JWT")
 
-    Rel(templatePlatform, keycloak, "Autentica usuários", "OIDC/PKCE")
-    Rel(templatePlatform, postgres, "Persiste dados", "TCP/5432")
+    Rel(templatePlatform, supabase, "Autentica e persiste dados", "HTTPS")
     Rel(templatePlatform, redis, "Cache e sessões", "TCP/6379")
     Rel(templatePlatform, smtp, "Envia notificações", "SMTP")
 ```
@@ -41,18 +39,17 @@ C4Context
 
 ### Sistema Principal
 
-| Sistema               | Descrição                                                                              | Tecnologia         |
-| --------------------- | -------------------------------------------------------------------------------------- | ------------------ |
-| **Template Platform** | Plataforma web corporativa com autenticação OIDC, RBAC, módulos extensíveis e API REST | React 18 + FastAPI |
+| Sistema               | Descrição                                                                           | Tecnologia            |
+| --------------------- | ----------------------------------------------------------------------------------- | --------------------- |
+| **Template Platform** | Plataforma web corporativa com autenticação, RBAC, módulos extensíveis e API Routes | Next.js 14 + Supabase |
 
 ### Sistemas Externos
 
-| Sistema        | Propósito                                  | Protocolo          | Obrigatório        |
-| -------------- | ------------------------------------------ | ------------------ | ------------------ |
-| **Keycloak**   | Identity Provider - SSO, autenticação OIDC | HTTPS (porta 8080) | Sim (ou modo demo) |
-| **PostgreSQL** | Persistência de dados                      | TCP (porta 5432)   | Sim                |
-| **Redis**      | Cache, sessões, rate limiting              | TCP (porta 6379)   | Recomendado        |
-| **SMTP**       | Notificações por e-mail                    | SMTP (porta 587)   | Opcional           |
+| Sistema      | Propósito                         | Protocolo        | Obrigatório |
+| ------------ | --------------------------------- | ---------------- | ----------- |
+| **Supabase** | Auth, Database, Realtime, Storage | HTTPS            | Sim         |
+| **Redis**    | Cache, sessões, rate limiting     | TCP (porta 6379) | Opcional    |
+| **SMTP**     | Notificações por e-mail           | SMTP (porta 587) | Opcional    |
 
 ## Fluxos Principais
 
@@ -61,20 +58,17 @@ C4Context
 ```mermaid
 sequenceDiagram
     participant U as Usuário
-    participant F as Frontend
-    participant K as Keycloak
-    participant A as API
+    participant App as Next.js App
+    participant S as Supabase Auth
 
-    U->>F: Acessa aplicação
-    F->>K: Redirect para login (PKCE)
-    K->>U: Tela de login
-    U->>K: Credenciais
-    K->>F: Authorization code
-    F->>K: Troca code por tokens
-    K->>F: Access + ID + Refresh tokens
-    F->>A: Request com Bearer token
-    A->>A: Valida JWT (JWKS)
-    A->>F: Response
+    U->>App: Acessa aplicação
+    App->>S: signInWithPassword / signInWithOAuth
+    S->>U: Tela de login (ou OAuth redirect)
+    U->>S: Credenciais
+    S->>App: Session (access_token + refresh_token)
+    App->>App: Middleware valida session
+    App->>S: Query dados com RLS
+    S->>App: Response
 ```
 
 ### 2. Integração Externa (API)
@@ -82,36 +76,32 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant I as Sistema Integrador
-    participant A as API
-    participant K as Keycloak
-    participant DB as PostgreSQL
+    participant App as Next.js API Routes
+    participant S as Supabase
 
-    I->>K: Client credentials grant
-    K->>I: Access token
-    I->>A: GET /api/resource (Bearer token)
-    A->>A: Valida JWT, verifica roles
-    A->>DB: Query dados
-    DB->>A: Resultado
-    A->>I: JSON response
+    I->>App: GET /api/resource (Authorization: Bearer token)
+    App->>S: Valida JWT via supabase.auth.getUser()
+    S->>App: User + roles
+    App->>S: Query dados com RLS
+    S->>App: Resultado
+    App->>I: JSON response
 ```
 
 ## Limites do Sistema
 
 ### Dentro do Escopo (Template Platform)
 
-- Frontend React SPA
-- API REST FastAPI
-- Autenticação OIDC
-- Autorização RBAC
+- Next.js App (SSR + API Routes)
+- Autenticação via Supabase Auth
+- Autorização RBAC via RLS
 - Módulos de negócio
-- Design System
+- Design System (Tailwind)
 - Testes E2E
 
 ### Fora do Escopo (Sistemas Externos)
 
-- Keycloak (Identity Provider) - provisionado separadamente
-- PostgreSQL - banco de dados gerenciado
-- Redis - cache distribuído
+- Supabase (Auth, Database, Realtime, Storage) - plataforma gerenciada
+- Redis - cache distribuído (opcional)
 - Infraestrutura de rede/DNS
 - CDN para assets estáticos
 

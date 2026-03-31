@@ -60,71 +60,77 @@ pnpm dev
 
 ```
 ├── apps/
-│   └── web/                 # Aplicação React principal
-│       ├── src/
-│       │   ├── components/  # Componentes reutilizáveis
-│       │   ├── hooks/       # Custom hooks
-│       │   ├── modules/     # Módulos de feature
-│       │   ├── pages/       # Páginas da aplicação
-│       │   └── routes/      # Configuração de rotas
-│       └── ...
+│   └── web/                    # Aplicação Next.js 14 (App Router)
+│       ├── app/                # Rotas e layouts (file-based routing)
+│       │   ├── (auth)/         # Páginas públicas (login, register)
+│       │   ├── (protected)/    # Páginas autenticadas (dashboard, etc.)
+│       │   └── api/            # API Routes (auth, admin, health)
+│       ├── components/         # Componentes da aplicação
+│       ├── hooks/              # Custom hooks
+│       ├── lib/                # Utilitários (api-response, auth-guard, validate)
+│       ├── schemas/            # Schemas Zod (auth.ts, admin.ts)
+│       ├── services/           # Camada de serviços (API calls)
+│       ├── middleware.ts        # Middleware Next.js (@supabase/ssr)
+│       └── next.config.mjs     # Configuração Next.js (ESM)
 ├── packages/
-│   ├── shared/              # Código compartilhado (auth, api, utils)
-│   ├── types/               # Tipos TypeScript compartilhados
-│   └── design-system/       # Componentes de UI
-├── api-template/            # API FastAPI
-├── infra/                   # Docker e configurações de infra
-└── docs/                    # Documentação
+│   ├── shared/                 # Auth adapter, Supabase client, utilitários
+│   ├── types/                  # TypeScript types compartilhados (UserRole, etc.)
+│   └── design-system/          # Componentes UI canônicos + Storybook
+├── supabase/
+│   └── migrations/             # 8 migrations SQL com RLS e triggers
+├── infra/                      # Docker Compose para infra local
+└── docs/                       # Documentação técnica
 ```
 
 ---
 
 ## Como Criar um Módulo
 
-Os módulos ficam em `apps/web/src/modules/` e seguem uma estrutura padronizada:
+Use o gerador automático para criar a estrutura completa de um novo módulo:
+
+```bash
+pnpm create-module
+```
+
+Ou crie manualmente em `apps/web/app/(protected)/`:
 
 ### Estrutura de um Módulo
 
 ```
-modules/
+app/(protected)/
 └── meu-modulo/
-    ├── index.ts              # Barrel exports
-    ├── types.ts              # Tipos específicos do módulo
-    ├── MeuModuloPage.tsx     # Página principal
-    ├── components/           # Componentes do módulo
-    │   ├── index.ts
-    │   └── MeuComponente.tsx
-    ├── hooks/                # Hooks do módulo
-    │   ├── index.ts
-    │   └── useMeuDado.ts
-    └── services/             # Serviços/API calls
-        ├── index.ts
-        └── meuModulo.service.ts
+    ├── page.tsx              # Server Component (rota /meu-modulo)
+    ├── loading.tsx           # Skeleton de carregamento
+    ├── error.tsx             # Error boundary da rota
+    └── components/           # Client Components do módulo
+        └── MeuModuloClient.tsx
 ```
 
 ### Passo a Passo
 
-1. **Crie a pasta do módulo:**
+1. **Crie a pasta da rota:**
 
    ```bash
-   mkdir -p apps/web/src/modules/meu-modulo/{components,hooks,services}
+   mkdir -p apps/web/app/\(protected\)/meu-modulo/components
    ```
 
 2. **Crie os arquivos base:**
-   - `types.ts` — Defina interfaces e tipos
-   - `MeuModuloPage.tsx` — Componente principal
-   - `index.ts` — Exporte o módulo
+   - `page.tsx` — Server Component com `requireAuth()` no topo
+   - `loading.tsx` — Skeleton de carregamento
+   - `components/MeuModuloClient.tsx` — Lógica interativa com `'use client'`
 
-3. **Registre a rota em `App.tsx`:**
+3. **Proteja a rota em `page.tsx`:**
 
    ```tsx
-   const MeuModuloPage = lazy(() => import('./modules/meu-modulo/MeuModuloPage'))
+   import { requireAuth } from '@/lib/auth-guard'
 
-   // Na configuração de rotas:
-   <Route path="/meu-modulo" element={<MeuModuloPage />} />
+   export default async function MeuModuloPage() {
+     const user = await requireAuth()
+     // ...
+   }
    ```
 
-4. **Adicione ao menu (se necessário)** em `navigation/map.ts`
+4. **Adicione ao menu (se necessário)** em `config/navigation.ts`
 
 ---
 

@@ -4,33 +4,43 @@ import { supabase } from '@template/shared/supabase'
 import { useState } from 'react'
 import Link from 'next/link'
 import { Mail, Loader2, CheckCircle, ArrowLeft } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import type { z } from 'zod'
+import { ResetPasswordSchema } from '@/schemas/auth'
+
+type ResetPasswordFormData = z.infer<typeof ResetPasswordSchema>
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [serverError, setServerError] = useState<string | null>(null)
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Template Platform'
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(ResetPasswordSchema),
+  })
+
+  const emailValue = watch('email') ?? ''
+
+  const onSubmit = async (data: ResetPasswordFormData) => {
+    setServerError(null)
 
     if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
-      setTimeout(() => {
-        setSent(true)
-        setLoading(false)
-      }, 800)
+      await new Promise(r => setTimeout(r, 800))
+      setSent(true)
       return
     }
 
-    const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error: authError } = await supabase.auth.resetPasswordForEmail(data.email, {
       redirectTo: `${window.location.origin}/login/reset-password`,
     })
-    if (authError) setError(authError.message)
+    if (authError) setServerError(authError.message)
     else setSent(true)
-    setLoading(false)
   }
 
   return (
@@ -75,47 +85,52 @@ export default function ForgotPasswordPage() {
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="relative">
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder=" "
-                  className="peer w-full px-3 pt-5 pb-2 bg-white/[0.06] border border-white/10 rounded-lg text-white text-sm placeholder-transparent transition-all focus:outline-none focus:ring-2 focus:ring-[#2980B9]/40 focus:border-[#2980B9]/60 backdrop-blur-sm"
-                />
-                <label
-                  htmlFor="email"
-                  className={`absolute left-3 transition-all duration-200 pointer-events-none text-slate-400 ${
-                    email.length > 0
-                      ? 'top-1.5 text-[10px] text-[#2980B9]'
-                      : 'top-1/2 -translate-y-1/2 text-sm peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:translate-y-0 peer-focus:text-[#2980B9]'
-                  }`}
-                >
-                  Email
-                </label>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <div className="relative">
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder=" "
+                    className="peer w-full px-3 pt-5 pb-2 bg-white/[0.06] border border-white/10 rounded-lg text-white text-sm placeholder-transparent transition-all focus:outline-none focus:ring-2 focus:ring-[#2980B9]/40 focus:border-[#2980B9]/60 backdrop-blur-sm"
+                    {...register('email')}
+                  />
+                  <label
+                    htmlFor="email"
+                    className={`absolute left-3 transition-all duration-200 pointer-events-none text-slate-400 ${
+                      emailValue.length > 0
+                        ? 'top-1.5 text-[10px] text-[#2980B9]'
+                        : 'top-1/2 -translate-y-1/2 text-sm peer-focus:top-1.5 peer-focus:text-[10px] peer-focus:translate-y-0 peer-focus:text-[#2980B9]'
+                    }`}
+                  >
+                    Email
+                  </label>
+                </div>
+                {errors.email && (
+                  <p className="text-xs text-red-400 mt-1" role="alert">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
 
-              {error && (
+              {serverError && (
                 <p className="text-sm text-red-400 text-center" role="alert">
-                  {error}
+                  {serverError}
                 </p>
               )}
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={isSubmitting}
                 className="w-full h-12 rounded-lg text-white text-base font-semibold shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{ background: 'linear-gradient(135deg, #2980B9, #0E8C6B)' }}
               >
-                {loading ? (
+                {isSubmitting ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <Mail className="w-4 h-4" />
                 )}
-                {loading ? 'Enviando...' : 'Enviar instruções'}
+                {isSubmitting ? 'Enviando...' : 'Enviar instruções'}
               </button>
 
               <div className="text-center pt-1">

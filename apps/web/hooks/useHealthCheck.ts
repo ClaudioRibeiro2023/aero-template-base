@@ -9,7 +9,7 @@ export interface HealthStatus {
 }
 
 export interface UseHealthCheckOptions {
-  /** API base URL (defaults to VITE_API_URL) */
+  /** API base URL (defaults to Next.js API route /api/health) */
   apiUrl?: string
   /** Check interval in ms (default: 30000 = 30s) */
   interval?: number
@@ -30,11 +30,7 @@ export interface UseHealthCheckOptions {
  * ```
  */
 export function useHealthCheck(options: UseHealthCheckOptions = {}) {
-  const {
-    apiUrl = env.API_URL || 'http://localhost:8000',
-    interval = 30000,
-    enabled = true,
-  } = options
+  const { apiUrl = env.API_URL || '/api', interval = 30000, enabled = true } = options
 
   const [status, setStatus] = useState<HealthStatus>({
     api: 'checking',

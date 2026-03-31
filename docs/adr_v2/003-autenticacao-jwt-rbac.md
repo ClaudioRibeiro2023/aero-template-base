@@ -9,8 +9,7 @@ tags:
   - 'segurança'
   - 'auth'
   - 'rbac'
-  - 'oidc'
-  - 'keycloak'
+  - 'supabase'
 related:
   - 'ADR-001'
 supersedes: null
@@ -42,17 +41,17 @@ Priorização: DR1 > DR2 > DR3 > DR4
 
 ## 3. Decisão
 
-> **Decidimos:** Implementar autenticação via OIDC com Keycloak, usando JWT para autorização stateless e RBAC para controle de acesso.
+> **Decidimos:** Implementar autenticação via Supabase Auth, usando JWT para autorização stateless, RLS para controle de acesso e RBAC via roles customizadas.
 
 ### Especificações
 
-| Item           | Valor                     | Arquivo de Referência                    |
-| -------------- | ------------------------- | ---------------------------------------- |
-| Protocolo      | OIDC 1.0                  | -                                        |
-| Fluxo          | Authorization Code + PKCE | `packages/shared/src/auth/oidcConfig.ts` |
-| Token          | JWT RS256                 | -                                        |
-| IdP            | Keycloak 23+              | `infra/docker-compose.yml`               |
-| Client Library | oidc-client-ts 2.4+       | `packages/shared/package.json`           |
+| Item           | Valor                                     | Arquivo de Referência    |
+| -------------- | ----------------------------------------- | ------------------------ |
+| Protocolo      | Supabase Auth (GoTrue)                    | -                        |
+| Fluxo          | Email/Password + OAuth                    | `lib/supabase/client.ts` |
+| Token          | JWT RS256                                 | -                        |
+| IdP            | Supabase Auth                             | Supabase Dashboard       |
+| Client Library | @supabase/supabase-js 2.x + @supabase/ssr | `package.json`           |
 
 ### Roles Implementadas
 
@@ -73,17 +72,17 @@ export type UserRole = 'ADMIN' | 'GESTOR' | 'OPERADOR' | 'VIEWER'
 
 ```
 1. Usuário acessa aplicação
-2. Frontend redireciona para Keycloak (PKCE)
-3. Usuário autentica no Keycloak
-4. Keycloak retorna authorization code
-5. Frontend troca code por tokens
-6. Requisições incluem JWT no header Authorization
-7. Backend valida JWT via JWKS
+2. Middleware verifica sessão (supabase.auth.getUser)
+3. Se não autenticado, redireciona para /login
+4. Usuário autentica via Supabase Auth (email/password ou OAuth)
+5. Supabase retorna session (access_token + refresh_token)
+6. Middleware faz refresh automático de tokens
+7. RLS no PostgreSQL garante acesso baseado em roles
 ```
 
 ### Escopo
 
-- **Afeta:** Frontend (auth flow), Backend (validação), Infraestrutura (Keycloak)
+- **Afeta:** Frontend (auth flow), API Routes (validação), Database (RLS)
 - **Não afeta:** Lógica de negócio específica de módulos
 
 ## 4. Alternativas Consideradas
@@ -132,17 +131,17 @@ export type UserRole = 'ADMIN' | 'GESTOR' | 'OPERADOR' | 'VIEWER'
 
 ### Negativas
 
-- ⚠️ Complexidade do OIDC
-- ⚠️ Manutenção do Keycloak
-- ⚠️ Revogação não instantânea (depende de TTL)
+- ⚠️ Dependência do Supabase como provedor de auth
+- ⚠️ Revogação não instantânea (depende de TTL do JWT)
+- ⚠️ RLS requer planejamento cuidadoso de policies
 
 ### Riscos Identificados
 
-| Risco                         | Probabilidade | Impacto | Mitigação                |
-| ----------------------------- | ------------- | ------- | ------------------------ |
-| Token theft via XSS           | Baixa         | Alto    | CSP, tokens em memória   |
-| Keycloak indisponível         | Baixa         | Alto    | HA, graceful degradation |
-| JWT expirado durante operação | Média         | Baixo   | Silent refresh           |
+| Risco                         | Probabilidade | Impacto | Mitigação                       |
+| ----------------------------- | ------------- | ------- | ------------------------------- |
+| Token theft via XSS           | Baixa         | Alto    | CSP, tokens em httpOnly cookies |
+| Supabase indisponível         | Baixa         | Alto    | Graceful degradation            |
+| JWT expirado durante operação | Média         | Baixo   | Auto-refresh via middleware     |
 
 ## 6. Impacto em Integrações e Contratos
 
@@ -152,28 +151,27 @@ export type UserRole = 'ADMIN' | 'GESTOR' | 'OPERADOR' | 'VIEWER'
 
 ### Contratos para Integradores
 
-#### Obter Token (Client Credentials)
+#### Obter Token (via Supabase Auth)
 
 ```bash
 curl -X POST \
-  "http://localhost:8080/realms/template/protocol/openid-connect/token" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials" \
-  -d "client_id=<client_id>" \
-  -d "client_secret=<client_secret>"
+  "https://your-project.supabase.co/auth/v1/token?grant_type=password" \
+  -H "Content-Type: application/json" \
+  -H "apikey: <anon_key>" \
+  -d '{"email": "user@example.com", "password": "password"}'
 ```
 
 #### Usar Token na API
 
 ```bash
-curl -X GET "http://localhost:8000/api/resource" \
+curl -X GET "https://your-app.com/api/resource" \
   -H "Authorization: Bearer <access_token>"
 ```
 
 #### Validar Token (JWKS)
 
 ```
-GET http://localhost:8080/realms/template/protocol/openid-connect/certs
+GET https://your-project.supabase.co/auth/v1/.well-known/jwks.json
 ```
 
 ### Claims Obrigatórias no JWT
@@ -196,14 +194,13 @@ Ver: [Contrato de Autenticação](../contratos-integracao/auth.md)
 
 ### Configurações de Segurança Recomendadas
 
-**Keycloak:**
+**Supabase Auth (Dashboard > Authentication > Settings):**
 
 ```yaml
-accessTokenLifespan: 5m
-ssoSessionIdleTimeout: 30m
-ssoSessionMaxLifespan: 8h
-bruteForceProtected: true
-failureFactor: 5
+JWT expiry: 3600 # 1 hora
+Enable email confirmations: true
+Minimum password length: 8
+Enable brute force protection: true
 ```
 
 ### Evolução Futura
@@ -222,9 +219,8 @@ failureFactor: 5
 
 ### Externas
 
-- [OIDC Core Spec](https://openid.net/specs/openid-connect-core-1_0.html)
-- [PKCE RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636)
-- [Keycloak Documentation](https://www.keycloak.org/documentation)
+- [Supabase Auth Documentation](https://supabase.com/docs/guides/auth)
+- [Supabase RLS Guide](https://supabase.com/docs/guides/auth/row-level-security)
 - [OWASP Auth Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
 
 ---

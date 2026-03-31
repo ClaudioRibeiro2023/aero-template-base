@@ -3,18 +3,18 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Save } from 'lucide-react'
-import { useToast } from '@/components/ui/Toast'
+import { useToast } from '@template/design-system'
 
 export default function ConfigAparenciaPage() {
   const [primaryColor, setPrimaryColor] = useState('#0087a8')
   const [secondaryColor, setSecondaryColor] = useState('#005f73')
   const [logoUrl, setLogoUrl] = useState('')
-  const { toast } = useToast()
+  const { success } = useToast()
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     // Em produção: salvar em admin_config.branding no Supabase
-    toast('Configurações salvas com sucesso')
+    success('Configurações salvas com sucesso')
   }
 
   return (

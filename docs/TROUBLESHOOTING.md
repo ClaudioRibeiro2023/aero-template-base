@@ -6,8 +6,8 @@ Guia de resolução de problemas comuns no Template Platform.
 
 - [Ambiente de Desenvolvimento](#ambiente-de-desenvolvimento)
 - [Build e Deploy](#build-e-deploy)
-- [Autenticação](#autenticação)
-- [API e Backend](#api-e-backend)
+- [Autenticação (Supabase Auth)](#autenticação-supabase-auth)
+- [API e Server Actions](#api-e-server-actions)
 - [Docker e Infraestrutura](#docker-e-infraestrutura)
 
 ---
@@ -66,10 +66,10 @@ sudo chown -R $(whoami) ~/.pnpm-store
    pnpm dev
    ```
 
-2. Limpe o cache do Vite:
+2. Limpe o cache do Next.js:
 
    ```bash
-   rm -rf node_modules/.vite
+   rm -rf .next
    pnpm dev
    ```
 
@@ -116,61 +116,68 @@ NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
 **Soluções:**
 
-1. Verifique se assets estão em `public/` ou importados corretamente.
+1. Verifique se assets estão em `public/` ou importados via `next/image`.
 
-2. Verifique `base` no `vite.config.ts`:
+2. Verifique `next.config.mjs` para configurações de imagens externas:
    ```ts
-   export default defineConfig({
-     base: '/', // ou '/subpath/' se necessário
-   })
+   images: {
+     remotePatterns: [{ protocol: 'https', hostname: '*.supabase.co' }]
+   }
    ```
 
 ---
 
-## Autenticação
+## Autenticação (Supabase Auth)
 
-### Login redireciona mas não autentica
+### Login não funciona / redireciona infinitamente
 
-**Sintoma:** Após login no Keycloak, volta para a página sem autenticar.
+**Sintoma:** Após login, volta para a página de login sem autenticar.
 
 **Soluções:**
 
 1. Verifique as variáveis de ambiente:
 
    ```env
-   VITE_KEYCLOAK_URL=http://localhost:8080
-   VITE_KEYCLOAK_REALM=template
-   VITE_KEYCLOAK_CLIENT_ID=template-web
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
    ```
 
-2. Verifique se o client no Keycloak tem:
-   - Valid Redirect URIs: `http://localhost:5173/*`
-   - Web Origins: `http://localhost:5173`
-
-3. Verifique console do browser para erros de CORS.
-
----
-
-### "Invalid token" após refresh
-
-**Sintoma:** Token expira e não renova automaticamente.
-
-**Soluções:**
-
-1. Verifique se `oidc-client-ts` está configurado com `automaticSilentRenew`:
+2. Verifique se o middleware está configurado corretamente em `middleware.ts`:
 
    ```ts
-   const config = {
-     automaticSilentRenew: true,
-     silent_redirect_uri: 'http://localhost:5173/silent-renew.html',
+   import { updateSession } from '@/lib/supabase/middleware'
+   export async function middleware(request) {
+     return await updateSession(request)
    }
    ```
 
-2. Crie o arquivo `public/silent-renew.html` se não existir.
+3. Verifique no Supabase Dashboard:
+   - Authentication > URL Configuration > Site URL
+   - Authentication > URL Configuration > Redirect URLs
 
 ---
 
-### DEMO_MODE não funciona
+### Token expira e não renova
+
+**Sintoma:** Sessão expira e usuário é deslogado.
+
+**Soluções:**
+
+1. Verifique se o middleware está fazendo refresh da sessão:
+
+   ```ts
+   // lib/supabase/middleware.ts
+   const {
+     data: { session },
+   } = await supabase.auth.getSession()
+   ```
+
+2. Verifique configurações de JWT no Supabase Dashboard:
+   - Authentication > Settings > JWT expiry: 3600 (1h recomendado)
+
+---
+
+### DEMO_MODE / Auth bypass não funciona
 
 **Sintoma:** Autenticação não é bypassada em modo demo.
 
@@ -179,32 +186,31 @@ NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 1. Verifique se a variável está setada:
 
    ```env
-   VITE_DEMO_MODE=true
+   NEXT_PUBLIC_DEMO_MODE=true
    ```
 
-2. Reinicie o dev server após alterar `.env`.
+2. Reinicie o dev server após alterar `.env.local`.
 
 ---
 
-## API e Backend
+## API e Server Actions
 
-### Erro 500 na API
+### Erro 500 nas API Routes
 
 **Sintoma:** API retorna Internal Server Error.
 
 **Soluções:**
 
-1. Verifique logs da API:
+1. Verifique logs do Next.js no terminal:
 
    ```bash
-   docker-compose logs api
-   # ou
-   cd api-template && uvicorn app.main:app --reload
+   pnpm dev
+   # Logs aparecem no terminal
    ```
 
-2. Verifique conexão com banco de dados.
+2. Verifique conexão com Supabase (URL e anon key corretos).
 
-3. Verifique variáveis de ambiente da API.
+3. Verifique se as variáveis de ambiente do servidor estão definidas.
 
 ---
 
@@ -214,17 +220,21 @@ NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
 **Soluções:**
 
-1. Verifique se a origem está permitida no FastAPI:
+1. Next.js API Routes não precisam de CORS config manual para same-origin.
 
-   ```python
-   app.add_middleware(
-       CORSMiddleware,
-       allow_origins=["http://localhost:5173"],
-       ...
-   )
+2. Para cross-origin, configure headers no route handler:
+
+   ```ts
+   export async function GET(request: Request) {
+     return NextResponse.json(data, {
+       headers: {
+         'Access-Control-Allow-Origin': 'https://your-domain.com',
+       },
+     })
+   }
    ```
 
-2. Verifique se o FRONTEND_URL está correto no `.env` da API.
+3. Verifique se o Supabase project tem a URL do site configurada corretamente.
 
 ---
 
@@ -234,13 +244,18 @@ NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
 **Soluções:**
 
-1. Aumente o timeout no API client:
+1. Verifique se o Supabase project está ativo (não pausado).
+
+2. Para queries pesadas, aumente o timeout:
 
    ```ts
-   const client = createApiClient({ timeout: 60000 })
+   const supabase = createClient(url, key, {
+     db: { schema: 'public' },
+     global: {
+       fetch: (url, options) => fetch(url, { ...options, signal: AbortSignal.timeout(30000) }),
+     },
+   })
    ```
-
-2. Verifique se a API está sobrecarregada.
 
 3. Verifique conexão de rede/VPN.
 
@@ -264,9 +279,9 @@ NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
    ```bash
    # Windows
-   netstat -ano | findstr :5432
+   netstat -ano | findstr :3000
    # Linux/Mac
-   lsof -i :5432
+   lsof -i :3000
    ```
 
 3. Remova volumes e recrie:
@@ -277,22 +292,25 @@ NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
 ---
 
-### Keycloak não inicia
+### Supabase local não conecta
 
-**Sintoma:** Keycloak container reinicia constantemente.
+**Sintoma:** Supabase CLI não inicia ou database não conecta.
 
 **Soluções:**
 
-1. Verifique memória disponível (mínimo 512MB para Keycloak).
+1. Verifique se o Docker está rodando.
 
-2. Verifique se o banco de dados está acessível.
+2. Reinicie o Supabase local:
 
-3. Remova o container e volume:
    ```bash
-   docker-compose rm -f keycloak
-   docker volume rm template_keycloak_data
-   docker-compose up -d keycloak
+   supabase stop
+   supabase start
    ```
+
+3. Verifique as portas padrão:
+   - API: 54321
+   - DB: 54322
+   - Studio: 54323
 
 ---
 
@@ -302,17 +320,17 @@ NODE_OPTIONS="--max-old-space-size=4096" pnpm build
 
 **Soluções:**
 
-1. Verifique se o container está rodando:
+1. Se usando Supabase local:
 
    ```bash
-   docker-compose ps postgres
+   supabase status
    ```
 
-2. Verifique credenciais no `.env`.
+2. Se usando Supabase Cloud, verifique se o projeto não está pausado.
 
 3. Teste conexão manual:
    ```bash
-   docker-compose exec postgres psql -U template -d template_db
+   psql "postgresql://postgres:postgres@localhost:54322/postgres"
    ```
 
 ---

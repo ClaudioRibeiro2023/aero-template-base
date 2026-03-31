@@ -1,15 +1,23 @@
 /**
  * Sistema de Permissões Granulares
- * 
+ *
  * Evolução do sistema de roles para permissões mais específicas.
  * Permite controle fino de acesso a funcionalidades.
  */
+import type { UserRole } from '@template/types'
 
 // Tipos de ações
-export type PermissionAction = 'VIEW' | 'CREATE' | 'EDIT' | 'DELETE' | 'EXECUTE' | 'EXPORT' | 'ADMIN'
+export type PermissionAction =
+  | 'VIEW'
+  | 'CREATE'
+  | 'EDIT'
+  | 'DELETE'
+  | 'EXECUTE'
+  | 'EXPORT'
+  | 'ADMIN'
 
 // Recursos do sistema
-export type PermissionResource = 
+export type PermissionResource =
   | 'DASHBOARD'
   | 'RELATORIOS'
   | 'EXEMPLO'
@@ -27,8 +35,8 @@ export type PermissionResource =
 // Permissão granular no formato "RECURSO.ACAO"
 export type Permission = `${PermissionResource}.${PermissionAction}`
 
-// Roles do sistema
-export type UserRole = 'ADMIN' | 'GESTOR' | 'OPERADOR' | 'VIEWER'
+// UserRole importado de @template/types — fonte canônica: packages/types/src/auth.ts
+export type { UserRole } from '@template/types'
 
 /**
  * Mapeamento de Roles para Permissões
@@ -36,26 +44,63 @@ export type UserRole = 'ADMIN' | 'GESTOR' | 'OPERADOR' | 'VIEWER'
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   // ADMIN tem todas as permissões
   ADMIN: [
-    'DASHBOARD.VIEW', 'DASHBOARD.EXPORT', 'DASHBOARD.ADMIN',
-    'RELATORIOS.VIEW', 'RELATORIOS.CREATE', 'RELATORIOS.EXPORT', 'RELATORIOS.ADMIN',
-    'EXEMPLO.VIEW', 'EXEMPLO.CREATE', 'EXEMPLO.EDIT', 'EXEMPLO.DELETE', 'EXEMPLO.EXPORT',
-    'ETL.VIEW', 'ETL.EXECUTE', 'ETL.ADMIN',
-    'CONFIGURACOES.VIEW', 'CONFIGURACOES.EDIT', 'CONFIGURACOES.ADMIN',
-    'OBSERVABILIDADE.VIEW', 'OBSERVABILIDADE.ADMIN',
-    'DOCUMENTACAO.VIEW', 'DOCUMENTACAO.EDIT',
-    'LGPD.VIEW', 'LGPD.EDIT', 'LGPD.ADMIN',
-    'ADMIN.VIEW', 'ADMIN.CREATE', 'ADMIN.EDIT', 'ADMIN.DELETE', 'ADMIN.ADMIN',
-    'USUARIOS.VIEW', 'USUARIOS.CREATE', 'USUARIOS.EDIT', 'USUARIOS.DELETE',
-    'PERFIS.VIEW', 'PERFIS.CREATE', 'PERFIS.EDIT', 'PERFIS.DELETE',
-    'ENTIDADES.VIEW', 'ENTIDADES.CREATE', 'ENTIDADES.EDIT', 'ENTIDADES.DELETE',
-    'AUDITORIA.VIEW', 'AUDITORIA.EXPORT',
+    'DASHBOARD.VIEW',
+    'DASHBOARD.EXPORT',
+    'DASHBOARD.ADMIN',
+    'RELATORIOS.VIEW',
+    'RELATORIOS.CREATE',
+    'RELATORIOS.EXPORT',
+    'RELATORIOS.ADMIN',
+    'EXEMPLO.VIEW',
+    'EXEMPLO.CREATE',
+    'EXEMPLO.EDIT',
+    'EXEMPLO.DELETE',
+    'EXEMPLO.EXPORT',
+    'ETL.VIEW',
+    'ETL.EXECUTE',
+    'ETL.ADMIN',
+    'CONFIGURACOES.VIEW',
+    'CONFIGURACOES.EDIT',
+    'CONFIGURACOES.ADMIN',
+    'OBSERVABILIDADE.VIEW',
+    'OBSERVABILIDADE.ADMIN',
+    'DOCUMENTACAO.VIEW',
+    'DOCUMENTACAO.EDIT',
+    'LGPD.VIEW',
+    'LGPD.EDIT',
+    'LGPD.ADMIN',
+    'ADMIN.VIEW',
+    'ADMIN.CREATE',
+    'ADMIN.EDIT',
+    'ADMIN.DELETE',
+    'ADMIN.ADMIN',
+    'USUARIOS.VIEW',
+    'USUARIOS.CREATE',
+    'USUARIOS.EDIT',
+    'USUARIOS.DELETE',
+    'PERFIS.VIEW',
+    'PERFIS.CREATE',
+    'PERFIS.EDIT',
+    'PERFIS.DELETE',
+    'ENTIDADES.VIEW',
+    'ENTIDADES.CREATE',
+    'ENTIDADES.EDIT',
+    'ENTIDADES.DELETE',
+    'AUDITORIA.VIEW',
+    'AUDITORIA.EXPORT',
   ],
 
   // GESTOR tem permissões de leitura, relatórios e exportação
   GESTOR: [
-    'DASHBOARD.VIEW', 'DASHBOARD.EXPORT',
-    'RELATORIOS.VIEW', 'RELATORIOS.CREATE', 'RELATORIOS.EXPORT',
-    'EXEMPLO.VIEW', 'EXEMPLO.CREATE', 'EXEMPLO.EDIT', 'EXEMPLO.EXPORT',
+    'DASHBOARD.VIEW',
+    'DASHBOARD.EXPORT',
+    'RELATORIOS.VIEW',
+    'RELATORIOS.CREATE',
+    'RELATORIOS.EXPORT',
+    'EXEMPLO.VIEW',
+    'EXEMPLO.CREATE',
+    'EXEMPLO.EDIT',
+    'EXEMPLO.EXPORT',
     'ETL.VIEW',
     'CONFIGURACOES.VIEW',
     'OBSERVABILIDADE.VIEW',
@@ -63,26 +108,24 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'LGPD.VIEW',
     'USUARIOS.VIEW',
     'ENTIDADES.VIEW',
-    'AUDITORIA.VIEW', 'AUDITORIA.EXPORT',
+    'AUDITORIA.VIEW',
+    'AUDITORIA.EXPORT',
   ],
 
   // OPERADOR tem permissões operacionais
   OPERADOR: [
     'DASHBOARD.VIEW',
-    'RELATORIOS.VIEW', 'RELATORIOS.EXPORT',
-    'EXEMPLO.VIEW', 'EXEMPLO.CREATE', 'EXEMPLO.EDIT',
+    'RELATORIOS.VIEW',
+    'RELATORIOS.EXPORT',
+    'EXEMPLO.VIEW',
+    'EXEMPLO.CREATE',
+    'EXEMPLO.EDIT',
     'DOCUMENTACAO.VIEW',
     'LGPD.VIEW',
   ],
 
   // VIEWER tem apenas permissões de leitura
-  VIEWER: [
-    'DASHBOARD.VIEW',
-    'RELATORIOS.VIEW',
-    'EXEMPLO.VIEW',
-    'DOCUMENTACAO.VIEW',
-    'LGPD.VIEW',
-  ],
+  VIEWER: ['DASHBOARD.VIEW', 'RELATORIOS.VIEW', 'EXEMPLO.VIEW', 'DOCUMENTACAO.VIEW', 'LGPD.VIEW'],
 }
 
 /**
@@ -90,7 +133,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
  */
 export function hasPermission(userRoles: UserRole[], permission: Permission): boolean {
   if (!userRoles || userRoles.length === 0) return false
-  
+
   return userRoles.some(role => {
     const rolePermissions = ROLE_PERMISSIONS[role] || []
     return rolePermissions.includes(permission)
@@ -116,12 +159,12 @@ export function hasAnyPermission(userRoles: UserRole[], permissions: Permission[
  */
 export function getPermissions(userRoles: UserRole[]): Permission[] {
   const allPermissions = new Set<Permission>()
-  
+
   userRoles.forEach(role => {
     const rolePermissions = ROLE_PERMISSIONS[role] || []
     rolePermissions.forEach(p => allPermissions.add(p))
   })
-  
+
   return Array.from(allPermissions)
 }
 
@@ -129,8 +172,8 @@ export function getPermissions(userRoles: UserRole[]): Permission[] {
  * Verificar se usuário pode realizar ação em recurso
  */
 export function can(
-  userRoles: UserRole[], 
-  action: PermissionAction, 
+  userRoles: UserRole[],
+  action: PermissionAction,
   resource: PermissionResource
 ): boolean {
   const permission: Permission = `${resource}.${action}`
@@ -141,7 +184,7 @@ export function can(
  * Obter permissões faltantes
  */
 export function getMissingPermissions(
-  userRoles: UserRole[], 
+  userRoles: UserRole[],
   requiredPermissions: Permission[]
 ): Permission[] {
   return requiredPermissions.filter(p => !hasPermission(userRoles, p))
@@ -151,17 +194,25 @@ export function getMissingPermissions(
  * Verificar nível de acesso a um recurso
  */
 export function getAccessLevel(
-  userRoles: UserRole[], 
+  userRoles: UserRole[],
   resource: PermissionResource
 ): PermissionAction | null {
-  const actionOrder: PermissionAction[] = ['ADMIN', 'DELETE', 'EDIT', 'CREATE', 'EXECUTE', 'EXPORT', 'VIEW']
-  
+  const actionOrder: PermissionAction[] = [
+    'ADMIN',
+    'DELETE',
+    'EDIT',
+    'CREATE',
+    'EXECUTE',
+    'EXPORT',
+    'VIEW',
+  ]
+
   for (const action of actionOrder) {
     if (can(userRoles, action, resource)) {
       return action
     }
   }
-  
+
   return null
 }
 

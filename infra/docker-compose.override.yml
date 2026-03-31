@@ -1,8 +1,6 @@
 # Docker Compose Override for Local Development
 # This file is automatically loaded when running `docker-compose up`
 
-version: '3.8'
-
 services:
   # PostgreSQL with exposed port for local tools
   db:
@@ -16,29 +14,6 @@ services:
     ports:
       - "${REDIS_PORT:-6379}:6379"
 
-  # Keycloak with dev mode
-  keycloak:
-    environment:
-      - KC_HEALTH_ENABLED=true
-      - KC_METRICS_ENABLED=true
-    ports:
-      - "${KEYCLOAK_HTTP_PORT:-8080}:8080"
-
-  # API with hot-reload
-  api:
-    build:
-      context: ../api-template
-      dockerfile: Dockerfile
-      target: development
-    volumes:
-      - ../api-template:/app
-      - /app/__pycache__
-    environment:
-      - DEBUG=true
-      - LOG_LEVEL=debug
-    ports:
-      - "${API_PORT:-8000}:8000"
-
   # Frontend dev server (optional, usually run locally)
   # Uncomment if you want to run frontend in Docker
   # web:
@@ -50,9 +25,10 @@ services:
   #     - ../apps/web:/app
   #     - /app/node_modules
   #   ports:
-  #     - "5173:5173"
+  #     - "3000:3000"
   #   environment:
-  #     - VITE_API_URL=http://localhost:8000/api
+  #     - NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+  #     - NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 volumes:
   postgres_data:

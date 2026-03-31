@@ -8,7 +8,7 @@
 
 ## Visão Geral
 
-O Template Platform implementa RBAC (Role-Based Access Control) com integração ao Keycloak. As roles são definidas no Keycloak e propagadas via JWT.
+O Template Platform implementa RBAC (Role-Based Access Control) com integração ao Supabase Auth. As roles são definidas no Supabase e propagadas via JWT.
 
 ### Roles Disponíveis
 
@@ -27,23 +27,15 @@ export type UserRole = 'ADMIN' | 'GESTOR' | 'OPERADOR' | 'VIEWER'
 
 ---
 
-## Configuração no Keycloak
+## Configuração no Supabase
 
-### 1. Criar Roles no Realm
+### 1. Definir Roles
 
-1. Keycloak Admin → Realm Settings → Realm Roles
-2. Create role para cada: `ADMIN`, `GESTOR`, `OPERADOR`, `VIEWER`
+As roles são armazenadas na tabela `profiles` ou via custom claims no JWT do Supabase Auth.
 
 ### 2. Atribuir Roles a Usuários
 
-1. Users → Selecionar usuário → Role mapping
-2. Assign role(s) do realm
-
-### 3. Incluir Roles no Token
-
-Por padrão, Keycloak inclui realm roles em `realm_access.roles`. Verificar em:
-
-- Clients → template-web → Client scopes → Dedicated scope → Mappers
+Atualizar o campo `role` no perfil do usuário via dashboard Supabase ou API.
 
 ---
 
@@ -118,64 +110,28 @@ function Sidebar() {
 
 ---
 
-## Uso no Backend
+## Uso no Backend (Next.js API Routes)
 
-### Decorator para Endpoints
+### Middleware de autorização
 
-```python
-from fastapi import Depends, HTTPException
-from functools import wraps
+```typescript
+import { createClient } from '@/lib/supabase/server'
 
-def require_roles(*required_roles: str):
-    """Decorator para exigir roles específicas."""
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, user=Depends(get_current_user), **kwargs):
-            user_roles = set(user.get("roles", []))
-            required = set(required_roles)
+export async function requireRole(requiredRoles: string[]) {
+  const supabase = createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-            if not required.intersection(user_roles):
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"Required roles: {required_roles}"
-                )
-            return await func(*args, user=user, **kwargs)
-        return wrapper
-    return decorator
+  if (!user) throw new Error('Unauthorized')
 
-# Uso
-@app.get("/admin/config")
-@require_roles("ADMIN")
-async def get_config(user: dict = Depends(get_current_user)):
-    return {"config": "..."}
+  const userRole = user.user_metadata?.role
+  if (!requiredRoles.includes(userRole)) {
+    throw new Error('Forbidden')
+  }
 
-@app.get("/management/reports")
-@require_roles("ADMIN", "GESTOR")  # Qualquer uma
-async def get_reports(user: dict = Depends(get_current_user)):
-    return {"reports": [...]}
-```
-
-### Extrair Roles do JWT
-
-**Fonte:** `packages/shared/src/auth/AuthContext.tsx:34-73`
-
-```python
-def extract_roles_from_token(payload: dict) -> list[str]:
-    """Extrai roles do payload JWT."""
-    roles = []
-
-    # Realm roles
-    realm_access = payload.get("realm_access", {})
-    roles.extend(realm_access.get("roles", []))
-
-    # Client roles (opcional)
-    resource_access = payload.get("resource_access", {})
-    client_roles = resource_access.get("template-web", {}).get("roles", [])
-    roles.extend(client_roles)
-
-    # Filtrar apenas roles válidas
-    valid_roles = {"ADMIN", "GESTOR", "OPERADOR", "VIEWER"}
-    return [r.upper() for r in roles if r.upper() in valid_roles]
+  return user
+}
 ```
 
 ---
@@ -245,7 +201,7 @@ function hasEffectiveRole(userRoles: UserRole[], requiredRole: UserRole): boolea
 
 ### Todas as Roles
 
-No modo demo (`VITE_DEMO_MODE=true`), o usuário mock tem todas as roles:
+No modo demo (`NEXT_PUBLIC_DEMO_MODE=true`), o usuário mock tem todas as roles:
 
 ```typescript
 const mockUser: AuthUser = {
@@ -268,25 +224,7 @@ localStorage.setItem('e2e-roles', '["OPERADOR"]')
 
 ## Auditoria
 
-Todas as ações de alteração devem incluir o user ID para auditoria:
-
-```python
-# api-template/app/audit.py
-async def log_action(
-    user_id: str,
-    action: str,
-    resource: str,
-    details: dict = None
-):
-    logger.info(
-        "audit_log",
-        user_id=user_id,
-        action=action,
-        resource=resource,
-        details=details,
-        timestamp=datetime.utcnow().isoformat()
-    )
-```
+Todas as ações de alteração devem incluir o user ID para auditoria, registrado via Supabase database triggers ou logging no server action.
 
 ---
 
@@ -294,21 +232,20 @@ async def log_action(
 
 ### Usuário não tem roles esperadas
 
-1. Verificar roles no Keycloak Admin
+1. Verificar roles no dashboard Supabase
 2. Inspecionar JWT em jwt.io
-3. Verificar se mapper está configurado no client scope
+3. Verificar user_metadata no Supabase Auth
 
 ### 403 mesmo com role correta
 
 1. Verificar case sensitivity (ADMIN vs admin)
-2. Verificar se role está em `realm_access.roles`
+2. Verificar se role está no user_metadata
 3. Logs do backend para ver roles extraídas
 
 ### Roles não aparecem no frontend
 
-1. Verificar `loadUserInfo: true` no oidcConfig
-2. Verificar `scope: 'openid profile email roles'`
-3. Console do browser: `useAuth().user?.roles`
+1. Verificar se user_metadata contém o campo role
+2. Console do browser: `useAuth().user?.roles`
 
 ---
 

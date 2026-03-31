@@ -1,6 +1,8 @@
 # Contrato de Integração: API REST
 
-> Padrões, convenções e contratos da API REST do Template Platform.
+> **NOTA:** Este documento refere-se ao backend FastAPI (v1.x), que foi substituido por Next.js API Routes + Supabase na v2.0. Mantido como referencia historica.
+
+> Padrões, convenções e contratos da API REST do Template Platform (v1.x).
 
 **Fonte:** `api-template/app/main.py`
 

@@ -11,30 +11,29 @@ title: Arquitetura
 ┌─────────────────────────────────────────────────────────┐
 │                        Browser                          │
 │  ┌─────────────┐  ┌──────────┐  ┌───────────────────┐  │
-│  │ React SPA   │  │ SW/PWA   │  │ Keycloak OIDC     │  │
+│  │ React SPA   │  │ SW/PWA   │  │ Supabase Auth     │  │
 │  │ + TanStack  │  │ Offline  │  │ Auth Flow         │  │
 │  └──────┬──────┘  └──────────┘  └───────────────────┘  │
 └─────────┼───────────────────────────────────────────────┘
           │ REST API (JSON)
 ┌─────────▼───────────────────────────────────────────────┐
-│                    FastAPI Backend                        │
+│              Next.js API Routes + Supabase                │
 │  ┌────────┐ ┌─────────┐ ┌──────┐ ┌──────────────────┐  │
 │  │ Auth   │ │ CSRF    │ │ CORS │ │ Rate Limiting    │  │
 │  │ JWT    │ │ CSP     │ │      │ │ Metrics/Sentry   │  │
 │  └────────┘ └─────────┘ └──────┘ └──────────────────┘  │
 │  ┌─────────────────────────────────────────────────┐    │
-│  │ Routers: tasks, users, files, admin_config,     │    │
-│  │          feature_flags, metrics, health          │    │
+│  │ API Routes: tasks, users, files, admin_config,  │    │
+│  │             feature_flags, metrics, health       │    │
 │  └──────────────────────┬──────────────────────────┘    │
 │                         │                                │
 │  ┌──────────────────────▼──────────────────────────┐    │
-│  │ SQLAlchemy ORM (async) + Alembic Migrations     │    │
-│  │ Models: Tenant, User, Task, AdminConfig, FF     │    │
+│  │ Supabase Client (PostgreSQL + RLS)              │    │
 │  └──────────────────────┬──────────────────────────┘    │
 └─────────────────────────┼───────────────────────────────┘
                           │
 ┌─────────────────────────▼───────────────────────────────┐
-│  PostgreSQL  │  Redis (cache + sessions)  │  Keycloak   │
+│  Supabase (PostgreSQL + Auth + Storage + Realtime)      │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -43,10 +42,9 @@ title: Arquitetura
 1. **Multi-tenant by design** — Tenant isolation via RLS + middleware
 2. **White-label** — Branding configurável por tenant via API
 3. **Security-first** — CSRF, CSP, JWT, RBAC, rate limiting, audit log
-4. **Cache resiliente** — Redis com circuit breaker + fallback Memory
-5. **Observabilidade** — Sentry + Prometheus-style metrics
-6. **DX-first** — Hot reload, CLI scaffolding, Storybook, VSCode configs
-7. **Testável** — 1.613+ testes, 85% cobertura BE
+4. **Observabilidade** — Sentry + métricas
+5. **DX-first** — Hot reload, CLI scaffolding, Storybook, VSCode configs
+6. **Testável** — Testes unitários + E2E
 
 ## Camadas do Frontend
 
@@ -62,12 +60,11 @@ title: Arquitetura
 
 ## Camadas do Backend
 
-| Camada            | Responsabilidade             | Tecnologia              |
-| ----------------- | ---------------------------- | ----------------------- |
-| **Routers**       | Endpoints REST               | FastAPI                 |
-| **Middleware**    | Auth, CSRF, CORS, Rate Limit | Starlette               |
-| **Models**        | ORM + migrations             | SQLAlchemy 2 + Alembic  |
-| **Cache**         | Key-value store              | Redis + circuit breaker |
-| **Sessions**      | Session management           | Redis / Memory          |
-| **Security**      | Headers, CSP, HSTS           | Custom middleware       |
-| **Observability** | Logging, metrics, errors     | Sentry + MetricsStore   |
+| Camada            | Responsabilidade             | Tecnologia                  |
+| ----------------- | ---------------------------- | --------------------------- |
+| **API Routes**    | Endpoints REST               | Next.js API Routes          |
+| **Middleware**    | Auth, CSRF, CORS, Rate Limit | Next.js Middleware          |
+| **Database**      | ORM + migrations             | Supabase (PostgreSQL + RLS) |
+| **Auth**          | Autenticação e autorização   | Supabase Auth               |
+| **Storage**       | Upload de arquivos           | Supabase Storage            |
+| **Observability** | Logging, metrics, errors     | Sentry                      |

@@ -4,7 +4,7 @@
  * Sprint 23: Admin & White-Label Configuration
  * Manages tenant-level platform configuration: branding, theme, navigation, features.
  */
-import { apiClient } from './api-client'
+import { get, patch, post, put } from './api-client'
 
 // ============================================================================
 // Types
@@ -73,7 +73,7 @@ export const DEFAULT_BRANDING: BrandingConfig = {
   appName: 'Template Platform',
   logoUrl: null,
   faviconUrl: null,
-  primaryColor: '#14b8a6',
+  primaryColor: '#0087A8',
   secondaryColor: '#6366f1',
 }
 
@@ -209,27 +209,22 @@ const BASE = '/admin/config'
 
 export const adminConfigService = {
   async getConfig(): Promise<PlatformConfig> {
-    const response = await apiClient.get<PlatformConfig>(BASE)
-    return response.data
+    return get<PlatformConfig>(BASE)
   },
 
   async updateConfig(partial: PartialPlatformConfig): Promise<PlatformConfig> {
-    const response = await apiClient.patch<PlatformConfig>(BASE, partial)
-    return response.data
+    return patch<PlatformConfig>(BASE, partial)
   },
 
   async resetConfig(): Promise<PlatformConfig> {
-    const response = await apiClient.post<PlatformConfig>(`${BASE}/reset`)
-    return response.data
+    return post<PlatformConfig>(`${BASE}/reset`)
   },
 
   async updateBranding(branding: Partial<BrandingConfig>): Promise<PlatformConfig> {
-    const response = await apiClient.patch<PlatformConfig>(`${BASE}/branding`, branding)
-    return response.data
+    return patch<PlatformConfig>(`${BASE}/branding`, branding)
   },
 
   async updateNavigation(navigation: NavigationItem[]): Promise<PlatformConfig> {
-    const response = await apiClient.put<PlatformConfig>(`${BASE}/navigation`, { navigation })
-    return response.data
+    return put<PlatformConfig>(`${BASE}/navigation`, { navigation })
   },
 }

@@ -7,10 +7,12 @@
  * The types below are a manual baseline matching migration 001-004.
  * Regenerate after any schema change.
  */
+import type { UserRole } from '@template/types'
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
-export type UserRole = 'ADMIN' | 'GESTOR' | 'OPERADOR' | 'VIEWER'
+// UserRole importado de @template/types — fonte canônica: packages/types/src/auth.ts
+export type { UserRole } from '@template/types'
 
 export interface Database {
   public: {

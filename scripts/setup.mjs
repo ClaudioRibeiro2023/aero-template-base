@@ -79,8 +79,8 @@ async function collectConfig() {
   const authProvider = await askChoice('Provedor de auth:', ['supabase', 'keycloak'])
 
   console.log('\n  --- Branding ---')
-  const primaryColor = await ask('Cor primaria (hex)', '#14b8a6')
-  const secondaryColor = await ask('Cor secundaria (hex)', '#0e7490')
+  const primaryColor = await ask('Cor primaria (hex)', '#0087A8')
+  const secondaryColor = await ask('Cor secundaria (hex)', '#005F73')
   const logoUrl = await ask('URL/path do logo', '/logo.svg')
 
   console.log('\n  --- Git ---')
@@ -216,8 +216,8 @@ async function main() {
   }
 
   generateEnvFile(
-    join(ROOT, 'apps/web-next/.env.template'),
-    join(ROOT, 'apps/web-next/.env.local'),
+    join(ROOT, 'apps/web/.env.template'),
+    join(ROOT, 'apps/web/.env.local'),
     envVars
   )
   generateEnvFile(
@@ -271,7 +271,7 @@ async function main() {
   console.log(`  ║   ${appName} configurado com sucesso!`)
   console.log('  ╠══════════════════════════════════════════╣')
   console.log('  ║   Proximos passos:                       ║')
-  console.log('  ║   1. cd apps/web-next && pnpm dev        ║')
+  console.log('  ║   1. cd apps/web && pnpm dev              ║')
   console.log('  ║   2. Acesse http://localhost:3000         ║')
   console.log('  ╚══════════════════════════════════════════╝\n')
 }

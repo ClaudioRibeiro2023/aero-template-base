@@ -10,7 +10,6 @@ title: Testes
 | Tipo        | Framework      | Localização                    | Comando                     |
 | ----------- | -------------- | ------------------------------ | --------------------------- |
 | **Unit FE** | Vitest + RTL   | `apps/web/src/**/*.test.ts(x)` | `pnpm -C apps/web test:run` |
-| **Unit BE** | pytest         | `api-template/tests/`          | `pnpm test:backend`         |
 | **E2E**     | Playwright     | `apps/web/e2e/*.spec.ts`       | `pnpm e2e`                  |
 | **CLI**     | Node.js assert | `scripts/*.test.js`            | `pnpm create-module:test`   |
 
@@ -42,22 +41,6 @@ vi.mock('axios', () => ({
 }))
 ```
 
-## Backend (pytest)
-
-```bash
-cd api-template
-python -m pytest tests/ -v --tb=short        # Todos
-python -m pytest tests/test_cache.py -v      # Arquivo específico
-python -m pytest --cov=app --cov-report=html # Com cobertura HTML
-```
-
-### Convenções
-
-- Prefixo `test_`: `test_file_upload.py`
-- Fixtures em `conftest.py`
-- `httpx.AsyncClient` para testar endpoints
-- `fakeredis` para simular Redis
-
 ## E2E (Playwright)
 
 ```bash
@@ -78,5 +61,5 @@ pnpm e2e:ui           # UI mode (interativo)
 ## Executar Todos
 
 ```bash
-pnpm test:all   # FE (Vitest) + BE (pytest)
+pnpm test:all   # FE (Vitest) + E2E (Playwright)
 ```

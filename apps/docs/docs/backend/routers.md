@@ -3,6 +3,8 @@ sidebar_position: 2
 title: Routers
 ---
 
+> **NOTA:** Este documento refere-se ao backend FastAPI (v1.x), que foi substituido por Next.js API Routes + Supabase na v2.0. Mantido como referencia historica.
+
 # Routers (Endpoints)
 
 ## Registrados em main.py

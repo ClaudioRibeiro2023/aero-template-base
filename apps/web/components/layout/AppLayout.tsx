@@ -2,15 +2,31 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
 import { Footer } from './Footer'
-import { GlobalSearch, useGlobalSearch } from '@/components/search'
-import { FirstRunWizard } from '@/components/common/FirstRunWizard'
+import { useGlobalSearch } from '@/components/search'
 import { usePlatformConfig, useIsSetupComplete } from '@/hooks/usePlatformConfig'
+
 import { usePlatformBranding } from '@/hooks/usePlatformBranding'
 import { useNavigationConfig } from '@/hooks/useNavigationConfig'
 import clsx from 'clsx'
+
+// Lazy: modal de busca global — não é necessário no render inicial do layout
+const GlobalSearch = dynamic(() => import('@/components/search/GlobalSearch'), {
+  loading: () => null,
+  ssr: false,
+})
+
+// Lazy: wizard multi-step exibido apenas no primeiro uso — não bloqueia o render inicial
+const FirstRunWizard = dynamic(
+  () => import('@/components/common/FirstRunWizard').then(m => ({ default: m.FirstRunWizard })),
+  {
+    loading: () => null,
+    ssr: false,
+  }
+)
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed'
 const WIZARD_DISMISSED_KEY = 'wizard-dismissed'

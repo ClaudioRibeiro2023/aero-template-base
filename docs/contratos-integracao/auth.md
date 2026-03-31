@@ -1,6 +1,8 @@
 # Contrato de Integração: Autenticação
 
-> Guia completo para integração de autenticação OIDC/JWT com o Template Platform.
+> **NOTA:** Este documento refere-se ao backend FastAPI (v1.x), que foi substituido por Next.js API Routes + Supabase na v2.0. Mantido como referencia historica.
+
+> Guia completo para integração de autenticação OIDC/JWT com o Template Platform (v1.x).
 
 **Fonte:** `packages/shared/src/auth/oidcConfig.ts`
 
@@ -206,7 +208,6 @@ function MyComponent() {
 
 ```tsx
 import { ProtectedRoute } from '@template/shared/auth'
-
 ;<Route
   path="/config"
   element={

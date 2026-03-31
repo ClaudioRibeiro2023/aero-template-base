@@ -2,14 +2,14 @@ name: Frontend CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, main, develop]
     paths:
       - 'apps/web/**'
       - 'packages/**'
       - '.github/workflows/frontend-ci.yml'
       - 'pnpm-lock.yaml'
   pull_request:
-    branches: [main, develop]
+    branches: [master, main, develop]
     paths:
       - 'apps/web/**'
       - 'packages/**'
@@ -99,90 +99,10 @@ jobs:
 
       - name: Build
         run: pnpm -C apps/web build
-        env:
-          VITE_API_URL: http://localhost:8000
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: web-dist
-          path: apps/web/dist/
-          retention-days: 7
-
-  e2e:
-    name: E2E Tests (Playwright)
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'push'
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: template
-          POSTGRES_PASSWORD: template
-          POSTGRES_DB: template_e2e
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
-          pip install -r api-template/requirements.txt -r api-template/requirements-dev.txt
-
-      - name: Install Playwright browsers
-        run: pnpm -C apps/web exec playwright install chromium --with-deps
-
-      - name: Apply DB migrations
-        run: alembic upgrade head
-        working-directory: api-template
-        env:
-          DATABASE_URL: postgresql+asyncpg://template:template@localhost:5432/template_e2e
-
-      - name: Start backend
-        run: |
-          cd api-template
-          python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 &
-          sleep 3
-        env:
-          DATABASE_URL: postgresql+asyncpg://template:template@localhost:5432/template_e2e
-          ENVIRONMENT: testing
-          SECRET_KEY: ci-e2e-secret-key
-          ENABLE_RATE_LIMITING: "false"
-
-      - name: Run API health E2E tests
-        run: pnpm -C apps/web exec playwright test e2e/api-health.spec.ts --reporter=github
-        env:
-          CI: true
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report
-          path: apps/web/playwright-report/
+          path: apps/web/.next/
           retention-days: 7

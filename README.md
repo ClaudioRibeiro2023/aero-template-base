@@ -1,4 +1,4 @@
-# Template Base v2.0
+# Template Base v2.1
 
 > **Starter Template Corporativo** | Next.js 14 | Supabase | pnpm Monorepo | TypeScript
 
@@ -14,13 +14,14 @@ Template base para projetos internos da Aero Engenharia. Clone, configure e come
 | ----------------- | -------------------------------------- | ---------- |
 | **Framework**     | Next.js (App Router)                   | 14.2       |
 | **UI**            | React + TailwindCSS                    | 18.2 / 3.3 |
-| **Linguagem**     | TypeScript (strict)                    | 5.3        |
+| **Linguagem**     | TypeScript (strict)                    | 5.5+       |
 | **Auth**          | Supabase Auth + Google OAuth           | 2.x        |
 | **Banco**         | PostgreSQL via Supabase                | 15+        |
 | **Monorepo**      | pnpm Workspaces                        | 9.x        |
+| **Lint**          | ESLint 9 flat config                   | 9.x        |
 | **Testes**        | Vitest + Testing Library               | 3.x        |
 | **Design System** | Componentes compartilhados + Storybook | -          |
-| **Deploy**        | Vercel                                 | -          |
+| **Deploy**        | Vercel (via GitHub Actions)            | -          |
 
 ---
 
@@ -77,12 +78,14 @@ template.base/
 
 ## Autenticacao
 
-O template suporta dois provedores de autenticacao:
+O template usa Supabase Auth como provedor padrão, com middleware baseado em `@supabase/ssr` para auto-refresh seguro de tokens via cookies HttpOnly.
 
-| Provedor                   | Quando usar                                                            |
-| -------------------------- | ---------------------------------------------------------------------- |
-| **Supabase Auth** (padrao) | Projetos com Supabase. Login por email/senha, magic link, Google OAuth |
-| **Keycloak** (opcional)    | Ambientes corporativos com OIDC/SAML existente                         |
+| Metodo             | Suporte                                     |
+| ------------------ | ------------------------------------------- |
+| **Email/Senha**    | Login tradicional com validação Zod         |
+| **Magic Link**     | Login sem senha via email                   |
+| **Google OAuth**   | Login social com PKCE callback              |
+| **Reset de Senha** | Rota `/api/auth/reset-password` padronizada |
 
 ### Sistema de Roles
 
@@ -95,6 +98,8 @@ O template suporta dois provedores de autenticacao:
 | `OPERADOR` | Operacoes do dia a dia                   |
 | `VIEWER`   | Somente leitura                          |
 
+Auth guard disponivel em `lib/auth-guard.ts` com `requireAuth()` e `requireRole()` para protecao de API routes server-side.
+
 ---
 
 ## Customizacao
@@ -103,7 +108,7 @@ O template suporta dois provedores de autenticacao:
 
 ```env
 NEXT_PUBLIC_APP_NAME=Minha Aplicacao
-NEXT_PUBLIC_PRIMARY_COLOR=#14b8a6
+NEXT_PUBLIC_PRIMARY_COLOR=#0087A8
 NEXT_PUBLIC_SECONDARY_COLOR=#0e7490
 NEXT_PUBLIC_LOGO_URL=/logo.svg
 ```
@@ -171,14 +176,25 @@ Para mais detalhes, veja [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ---
 
+## Destaques v2.1
+
+- **Middleware `@supabase/ssr`** — auto-refresh de tokens, sem parsing manual de cookies
+- **4 migrations de seguranca** (00005–00008): RLS audit_logs, handle_new_user, FK RESTRICT, drop uuid-ossp
+- **API response wrapper** padronizado (`ok`, `created`, `badRequest`, `unauthorized`, `forbidden`, etc.) em `lib/api-response.ts`
+- **Auth guard** com `requireAuth()` e `requireRole()` em `lib/auth-guard.ts`
+- **ESLint 9** flat config (`eslint.config.mjs`)
+- **TypeScript 5.5+** com `verbatimModuleSyntax` e target ES2022
+- **192 testes** em 10 arquivos, coverage threshold 60%
+- **Deploy automatico Vercel** via GitHub Actions em push na `master`
+
 ## Seguranca
 
 - **Row-Level Security** (RLS) no Supabase para multi-tenancy
-- **Middleware** de autenticacao com verificacao de cookies
+- **Middleware** com `@supabase/ssr` (auto-refresh seguro via cookies HttpOnly)
 - **Security Headers**: HSTS, X-Frame-Options DENY, CSP, Referrer-Policy
-- **Rate Limiting** em APIs sensiveis
+- **Rate Limiting** em APIs sensiveis (30 req/min admin, 60 req/min health)
 - **Audit Logging** de acoes administrativas
-- **Input Validation** com Zod schemas
+- **Input Validation** com Zod schemas (7 schemas em `schemas/`)
 - **DEMO_MODE** bloqueado em producao
 
 ---

@@ -11,11 +11,6 @@
   "files.eol": "\n",
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter",
-    "editor.formatOnSave": true,
-    "editor.tabSize": 4
-  },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -29,19 +24,14 @@
     { "directory": "packages/shared", "changeProcessCWD": true },
     { "directory": "packages/design-system", "changeProcessCWD": true }
   ],
-  "python.defaultInterpreterPath": "${workspaceFolder}/api-template/.venv/Scripts/python",
-  "python.terminal.activateEnvironment": true,
   "search.exclude": {
     "**/node_modules": true,
     "**/dist": true,
-    "**/.venv": true,
     "**/pnpm-lock.yaml": true,
-    "**/coverage": true,
-    "**/htmlcov": true
+    "**/coverage": true
   },
   "files.watcherExclude": {
     "**/node_modules/**": true,
-    "**/.venv/**": true,
     "**/dist/**": true
   },
   "testing.automaticallyOpenPeekView": "never",

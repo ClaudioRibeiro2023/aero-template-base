@@ -11,121 +11,76 @@ Este documento mapeia a estrutura completa do repositório **Template Platform**
 ```
 template-platform/
 │
-├── 📁 apps/                           # Aplicações deployáveis
-│   └── web/                           # Frontend React SPA
-│       ├── src/
-│       │   ├── components/            # Componentes React específicos da app
-│       │   ├── pages/                 # Páginas/rotas da aplicação
-│       │   ├── modules/               # Módulos de features (ETL, Users, etc.)
-│       │   ├── hooks/                 # Custom hooks (useImageOptimization, etc.)
-│       │   ├── lib/                   # Utilitários (cdn.ts, sentry.ts)
-│       │   └── config/                # Configurações da app
-│       ├── e2e/                       # Testes E2E (Playwright)
-│       ├── package.json               # Deps: react@18, vite@5, tailwindcss@3
-│       ├── vite.config.ts             # Config do Vite
-│       ├── tailwind.config.js         # Config do Tailwind
-│       └── playwright.config.ts       # Config do Playwright
+├── 📁 app/                            # Next.js App Router
+│   ├── (auth)/                        # Grupo de rotas de autenticação
+│   │   ├── login/page.tsx             # Página de login
+│   │   └── register/page.tsx          # Página de registro
+│   ├── (dashboard)/                   # Grupo de rotas do dashboard
+│   │   ├── layout.tsx                 # Layout com sidebar
+│   │   └── page.tsx                   # Dashboard principal
+│   ├── api/                           # API Routes (Next.js)
+│   │   ├── health/route.ts            # Health check
+│   │   └── v1/                        # API v1 endpoints
+│   ├── layout.tsx                     # Root layout
+│   ├── page.tsx                       # Landing page
+│   └── globals.css                    # Estilos globais (Tailwind)
 │
-├── 📁 packages/                       # Packages compartilhados (workspace)
-│   │
-│   ├── shared/                        # Lógica compartilhada
-│   │   └── src/
-│   │       ├── auth/                  # 🔑 AuthContext, oidcConfig, types
-│   │       │   ├── AuthContext.tsx    # Provider de autenticação
-│   │       │   ├── oidcConfig.ts      # Config OIDC/Keycloak
-│   │       │   └── types.ts           # UserRole, AuthUser, AuthContextType
-│   │       ├── api/                   # API client (axios)
-│   │       ├── cache/                 # React Query config
-│   │       └── utils/                 # Helpers, formatters, logger
-│   │
-│   ├── design-system/                 # Componentes UI reutilizáveis
-│   │   └── src/
-│   │       ├── components/            # Button, Input, Modal, Card, etc.
-│   │       ├── tokens/                # Design tokens (cores, spacing)
-│   │       └── styles/                # Estilos base
-│   │
-│   └── types/                         # Tipos TypeScript compartilhados
-│       └── src/
-│           ├── api.ts                 # Tipos de responses da API
-│           ├── auth.ts                # Tipos de autenticação
-│           └── common.ts              # Tipos genéricos
+├── 📁 components/                     # Componentes React
+│   ├── ui/                            # Design system (Button, Input, Card, etc.)
+│   ├── layout/                        # Header, Sidebar, Footer
+│   ├── forms/                         # Componentes de formulário
+│   └── data/                          # Tabelas, gráficos, cards de dados
 │
-├── 📁 api-template/                   # Backend FastAPI
-│   ├── app/
-│   │   ├── main.py                    # 🎯 Entry point da API
-│   │   ├── admin_config.py            # AdminConfigStore (white-label)
-│   │   ├── cache.py                   # Redis/Memory cache layer
-│   │   ├── rate_limit.py              # Rate limiting (slowapi)
-│   │   ├── csrf.py                    # CSRF protection
-│   │   ├── session.py                 # Redis session store
-│   │   ├── security.py                # CSP headers
-│   │   ├── audit.py                   # Audit logging
-│   │   ├── analytics.py               # Event tracking
-│   │   ├── rls.py                     # Row-level security
-│   │   ├── tenant.py                  # Multi-tenancy
-│   │   ├── websocket.py               # WebSocket support
-│   │   ├── middleware.py              # Custom middlewares
-│   │   ├── logging_config.py          # Structlog config
-│   │   └── routers/                   # API routers
-│   │       ├── admin_config.py        # Admin config endpoints
-│   │       ├── tasks.py               # Tasks CRUD
-│   │       ├── users.py               # Users management
-│   │       ├── tenants.py             # Tenants CRUD
-│   │       └── dashboard.py           # Dashboard analytics
-│   ├── tests/                         # 617 testes pytest
-│   ├── scripts/seed.py                # db:seed script
-│   ├── alembic/                       # Database migrations
-│   ├── alembic.ini                    # Alembic config
-│   ├── requirements.txt               # Deps Python
-│   └── Dockerfile                     # Container image
+├── 📁 lib/                            # Lógica compartilhada
+│   ├── supabase/                      # Supabase client + server + types
+│   │   ├── client.ts                  # Browser client
+│   │   ├── server.ts                  # Server client (SSR)
+│   │   └── types.ts                   # Tipos gerados do Supabase
+│   ├── auth.ts                        # Autenticação (Supabase Auth)
+│   ├── validations/                   # Schemas Zod
+│   └── utils.ts                       # Helpers e formatters
 │
-├── 📁 infra/                          # Infraestrutura
-│   ├── docker-compose.yml             # 🐳 Stack principal (db, redis, keycloak, api, frontend)
-│   ├── docker-compose.local.yml       # Override para desenvolvimento
-│   ├── docker-compose.prod.yml        # Override para produção
-│   ├── .env.example                   # Template de variáveis
-│   ├── .env.production.example        # Template produção
-│   ├── keycloak/                      # Config Keycloak (realm export)
-│   ├── k8s/                           # Kubernetes manifests
-│   │   ├── deployment.yaml            # Deployments, Services, Ingress
-│   │   └── blue-green.yaml            # Blue-green deployment
-│   └── monitoring/                    # Observability (Prometheus, Grafana)
+├── 📁 types/                          # Tipos TypeScript
+│   ├── database.ts                    # Tipos do banco de dados
+│   └── index.ts                       # Barrel exports
+│
+├── 📁 supabase/                       # Supabase local
+│   ├── config.toml                    # Config do Supabase CLI
+│   └── migrations/                    # SQL migrations
+│
+├── 📁 public/                         # Assets estáticos
 │
 ├── 📁 docs/                           # Documentação (~25 páginas)
 │   ├── INDEX.md                       # Índice mestre
-│   ├── MEGAPLAN-EVOLUCAO.md           # Plano mestre v1.3 (24 sprints)
-│   ├── BACKLOG-V1.1.md                # Backlog consolidado v1.1
+│   ├── MEGAPLAN-EVOLUCAO.md           # Plano mestre
+│   ├── BACKLOG-V1.1.md                # Backlog consolidado
 │   ├── TECHNICAL-DEBT.md              # Technical Debt Register
-│   ├── SPRINT-LOG.md                  # Sprint logs 19–24
-│   ├── RETROSPECTIVA-RELEASE-1.0.md   # Retrospectiva Release 1.0
-│   ├── BOOK_OF_TESTS.md               # Matriz de testes
 │   ├── DESIGN_SYSTEM.md               # Design system
 │   ├── TROUBLESHOOTING.md             # Resolução de problemas
 │   ├── arquitetura/                   # C4 Model diagrams
-│   ├── contratos-integracao/           # Auth, API, OpenAPI
+│   ├── contratos-integracao/          # Auth, API
 │   ├── operacao/                      # Setup, deploy, env vars
 │   ├── seguranca/                     # RBAC, headers
 │   └── adr_v2/                        # Architecture Decision Records
 │
 ├── 📁 scripts/                        # Scripts de automação
-│   ├── blue-green-deploy.ps1          # Script de deploy blue-green
 │   ├── new-module.js                  # Scaffolding de módulos
-│   ├── check-env.js                   # Validação de env vars
-│   └── generate-analise-completa.py    # Gerador de DOCX
+│   └── check-env.js                   # Validação de env vars
 │
 ├── 📁 .github/                        # GitHub config
 │   └── workflows/                     # CI/CD pipelines
 │
-├── 📄 package.json                    # 🎯 Root package (workspaces)
-├── 📄 pnpm-workspace.yaml             # Workspace config
+├── 📄 package.json                    # Deps: next@14, react@18, tailwindcss@3
 ├── 📄 pnpm-lock.yaml                  # Lockfile
-├── 📄 tsconfig.base.json              # TypeScript base config
+├── 📄 tsconfig.json                   # TypeScript config
+├── 📄 next.config.mjs                 # Next.js config
+├── 📄 tailwind.config.ts              # Tailwind config
+├── 📄 postcss.config.js               # PostCSS config
 ├── 📄 .eslintrc.cjs                   # ESLint config
 ├── 📄 .prettierrc                     # Prettier config
-├── 📄 commitlint.config.js            # Commit lint config
 ├── 📄 README.md                       # Documentação principal
 ├── 📄 CONTRIBUTING.md                 # Guia de contribuição
-└── 📄 todo.md                         # Roadmap/tarefas
+└── 📄 CLAUDE.md                       # Instruções para agentes IA
 ```
 
 ---
@@ -134,90 +89,65 @@ template-platform/
 
 ### Configuração do Projeto
 
-| Arquivo               | Propósito                          | Versão/Info                             |
-| --------------------- | ---------------------------------- | --------------------------------------- |
-| `package.json`        | Root workspace                     | `@template/platform@1.0.0`, pnpm@9.15.9 |
-| `pnpm-workspace.yaml` | Workspaces: `apps/*`, `packages/*` | -                                       |
-| `tsconfig.base.json`  | TypeScript base config             | TS 5.3.3                                |
+| Arquivo           | Propósito         | Versão/Info                    |
+| ----------------- | ----------------- | ------------------------------ |
+| `package.json`    | Deps do projeto   | Next.js 14, React 18, pnpm 9.x |
+| `tsconfig.json`   | TypeScript config | TS 5.3+, strict mode           |
+| `next.config.mjs` | Next.js config    | App Router, Server Actions     |
 
-### Frontend (apps/web)
+### Frontend + Backend (Next.js)
 
-| Arquivo                         | Propósito     | Versão/Info                           |
-| ------------------------------- | ------------- | ------------------------------------- |
-| `apps/web/package.json`         | Deps frontend | React 18.2, Vite 5.0, TailwindCSS 3.3 |
-| `apps/web/vite.config.ts`       | Build config  | Port 13000 (dev)                      |
-| `apps/web/tailwind.config.js`   | Design tokens | -                                     |
-| `apps/web/playwright.config.ts` | E2E tests     | Chromium + Firefox                    |
-
-### Backend (api-template)
-
-| Arquivo                         | Propósito         | Versão/Info                   |
-| ------------------------------- | ----------------- | ----------------------------- |
-| `api-template/requirements.txt` | Deps Python       | FastAPI ≥0.104, Pydantic ≥2.5 |
-| `api-template/app/main.py`      | API entry point   | v0.1.0, port 8000             |
-| `api-template/alembic.ini`      | Migrations config | -                             |
+| Arquivo              | Propósito       | Versão/Info                         |
+| -------------------- | --------------- | ----------------------------------- |
+| `package.json`       | Deps do projeto | Next.js 14, React 18, TailwindCSS 3 |
+| `tailwind.config.ts` | Design tokens   | -                                   |
+| `app/api/`           | API Routes      | Next.js Route Handlers              |
+| `app/actions/`       | Server Actions  | Next.js Server Actions              |
 
 ### Autenticação
 
-| Arquivo                                    | Propósito     | Descrição                |
-| ------------------------------------------ | ------------- | ------------------------ |
-| `packages/shared/src/auth/oidcConfig.ts`   | Config OIDC   | Keycloak endpoints, PKCE |
-| `packages/shared/src/auth/AuthContext.tsx` | Auth provider | Login, logout, roles     |
-| `packages/shared/src/auth/types.ts`        | Tipos auth    | UserRole, AuthUser       |
+| Arquivo                  | Propósito      | Descrição                        |
+| ------------------------ | -------------- | -------------------------------- |
+| `lib/supabase/client.ts` | Browser client | Supabase client-side             |
+| `lib/supabase/server.ts` | Server client  | Supabase SSR (cookies)           |
+| `lib/auth.ts`            | Auth helpers   | Login, logout, roles, middleware |
 
-### Infraestrutura
+### Banco de Dados
 
-| Arquivo                     | Propósito     | Serviços                            |
-| --------------------------- | ------------- | ----------------------------------- |
-| `infra/docker-compose.yml`  | Stack base    | PostgreSQL 15, Redis 7, Keycloak 23 |
-| `infra/.env.example`        | Variáveis     | DB, Redis, Keycloak, API, Frontend  |
-| `infra/k8s/deployment.yaml` | K8s manifests | Deployments, Services, HPA          |
+| Arquivo                 | Propósito     | Descrição                  |
+| ----------------------- | ------------- | -------------------------- |
+| `supabase/config.toml`  | Config local  | Supabase CLI config        |
+| `supabase/migrations/`  | Migrations    | SQL migrations versionadas |
+| `lib/supabase/types.ts` | Tipos gerados | Types do schema PostgreSQL |
 
 ---
 
 ## Dependências Reais (Confirmadas)
 
-### Frontend (package.json)
+### Next.js + Supabase (package.json)
 
 ```json
 {
   "dependencies": {
+    "next": "^14.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
-    "@tanstack/react-query": "^5.12.2",
-    "oidc-client-ts": "^2.4.0",
-    "axios": "^1.6.2",
+    "@supabase/supabase-js": "^2.39.0",
+    "@supabase/ssr": "^0.1.0",
+    "zod": "^3.22.0",
     "lucide-react": "^0.294.0",
     "tailwind-merge": "^2.1.0",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0"
   },
   "devDependencies": {
-    "vite": "^5.0.8",
-    "typescript": "5.3.3",
+    "typescript": "^5.3.3",
     "@playwright/test": "^1.56.1",
-    "vitest": "^4.0.15",
-    "tailwindcss": "^3.3.6"
+    "tailwindcss": "^3.3.6",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0"
   }
 }
-```
-
-### Backend (requirements.txt)
-
-```
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-pydantic>=2.5.0
-python-jose[cryptography]>=3.3.0
-httpx>=0.25.0
-redis>=5.0.0
-asyncpg>=0.29.0
-structlog>=24.1.0
-slowapi>=0.1.9
-alembic>=1.13.0
-sqlalchemy>=2.0.0
-itsdangerous>=2.1.0
 ```
 
 ---
@@ -226,102 +156,64 @@ itsdangerous>=2.1.0
 
 ### URLs e Endpoints
 
-| Serviço    | URL Local              | URL Docker           |
-| ---------- | ---------------------- | -------------------- |
-| Frontend   | http://localhost:13000 | http://frontend:80   |
-| API        | http://localhost:8000  | http://api:8000      |
-| Keycloak   | http://localhost:8080  | http://keycloak:8080 |
-| PostgreSQL | localhost:5432         | db:5432              |
-| Redis      | localhost:6379         | redis:6379           |
+| Serviço    | URL Local              | Descrição                   |
+| ---------- | ---------------------- | --------------------------- |
+| Next.js    | http://localhost:3000  | App (frontend + API routes) |
+| Supabase   | http://localhost:54321 | Supabase local (CLI)        |
+| PostgreSQL | localhost:54322        | Banco via Supabase CLI      |
 
-### Endpoints da API
+### Endpoints da API (Next.js API Routes)
 
-| Endpoint                      | Método     | Propósito             |
-| ----------------------------- | ---------- | --------------------- |
-| `/`                           | GET        | Health check básico   |
-| `/health`                     | GET        | Health check          |
-| `/health/live`                | GET        | Liveness probe (K8s)  |
-| `/health/ready`               | GET        | Readiness probe (K8s) |
-| `/docs`                       | GET        | Swagger UI            |
-| `/redoc`                      | GET        | ReDoc                 |
-| `/api/me`                     | GET        | Usuário atual         |
-| `/api/config`                 | GET        | Config do frontend    |
-| `/api/tasks`                  | CRUD       | Tasks management      |
-| `/api/users`                  | CRUD       | Users management      |
-| `/api/tenants`                | CRUD       | Tenants management    |
-| `/api/dashboard`              | GET        | Dashboard analytics   |
-| `/api/platform/public-config` | GET        | Platform config       |
-| `/api/admin/platform-config`  | PATCH/POST | Admin config          |
+| Endpoint      | Método | Propósito            |
+| ------------- | ------ | -------------------- |
+| `/api/health` | GET    | Health check         |
+| `/api/v1/...` | CRUD   | Endpoints de negócio |
 
-### Endpoints OIDC (Keycloak)
+### Autenticação (Supabase Auth)
 
-| Endpoint      | URL                                                              |
-| ------------- | ---------------------------------------------------------------- |
-| Authorization | `{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/auth`     |
-| Token         | `{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/token`    |
-| UserInfo      | `{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/userinfo` |
-| Logout        | `{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/logout`   |
-| JWKS          | `{KEYCLOAK_URL}/realms/{REALM}/protocol/openid-connect/certs`    |
+| Funcionalidade     | Implementação                          |
+| ------------------ | -------------------------------------- |
+| Login/Registro     | Supabase Auth (email + password)       |
+| Sessão             | Cookies gerenciados pelo @supabase/ssr |
+| Middleware         | middleware.ts (refresh de sessão)      |
+| Row Level Security | Policies no PostgreSQL via Supabase    |
 
 ---
 
 ## Variáveis de Ambiente
 
-### Frontend (Vite)
+### Next.js + Supabase
 
-| Variável                  | Default                   | Descrição              |
-| ------------------------- | ------------------------- | ---------------------- |
-| `VITE_API_URL`            | http://localhost:8000/api | URL da API             |
-| `VITE_KEYCLOAK_URL`       | http://localhost:8080     | URL do Keycloak        |
-| `VITE_KEYCLOAK_REALM`     | template                  | Realm do Keycloak      |
-| `VITE_KEYCLOAK_CLIENT_ID` | template-web              | Client ID OIDC         |
-| `VITE_DEMO_MODE`          | false                     | Bypass de autenticação |
-| `VITE_APP_URL`            | window.location.origin    | URL da aplicação       |
-
-### Backend (Python)
-
-| Variável             | Default     | Descrição                    |
-| -------------------- | ----------- | ---------------------------- |
-| `DATABASE_URL`       | -           | PostgreSQL connection string |
-| `REDIS_URL`          | -           | Redis connection string      |
-| `API_SECRET_KEY`     | -           | Chave secreta da API         |
-| `ENVIRONMENT`        | development | Ambiente atual               |
-| `RATE_LIMIT_DEFAULT` | 100/minute  | Rate limit padrão            |
-| `RATE_LIMIT_AUTH`    | 10/minute   | Rate limit auth              |
-| `RATE_LIMIT_API`     | 60/minute   | Rate limit API               |
+| Variável                        | Default | Descrição                        |
+| ------------------------------- | ------- | -------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | -       | URL do projeto Supabase          |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | -       | Chave pública (anon) do Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY`     | -       | Chave privada (server-side only) |
+| `NEXT_PUBLIC_APP_URL`           | -       | URL pública da aplicação         |
 
 ---
 
 ## Scripts Disponíveis
 
-### Root (pnpm)
+### Desenvolvimento (pnpm)
 
 ```bash
-pnpm dev          # Inicia frontend em localhost:13000
+pnpm install      # Instala dependências
+pnpm dev          # Inicia Next.js em localhost:3000
 pnpm build        # Build de produção
 pnpm lint         # ESLint
-pnpm typecheck    # TypeScript check
-pnpm test         # Testes unitários (Vitest)
+pnpm typecheck    # TypeScript check (tsc --noEmit)
+pnpm test         # Testes unitários
 pnpm test:e2e     # Testes E2E (Playwright)
-pnpm clean        # Remove node_modules e dist
 ```
 
-### API (Python)
+### Supabase (CLI)
 
 ```bash
-cd api-template
-uvicorn app.main:app --reload --port 8000    # Dev server
-alembic upgrade head                          # Run migrations
-alembic revision --autogenerate -m "..."      # Create migration
-```
-
-### Docker
-
-```bash
-cd infra
-docker-compose up -d                          # Start all services
-docker-compose -f docker-compose.prod.yml up  # Production mode
-docker-compose logs -f api                    # View API logs
+npx supabase start           # Inicia Supabase local
+npx supabase db reset        # Reset + re-aplica migrations
+npx supabase gen types ts    # Gera tipos TypeScript do schema
+npx supabase migration new   # Cria nova migration
 ```
 
 ---
@@ -330,12 +222,10 @@ docker-compose logs -f api                    # View API logs
 
 ### Cobertura Atual
 
-| Tipo             | Quantidade | Localização                       |
-| ---------------- | ---------- | --------------------------------- |
-| API (pytest)     | 617        | `api-template/tests/`             |
-| Unit FE (Vitest) | 513        | `apps/web/src/**/*.test.{ts,tsx}` |
-| E2E (Playwright) | 96         | `apps/web/e2e/*.spec.ts`          |
-| **Total**        | **1130**   | **100% passing**                  |
+| Tipo             | Localização          |
+| ---------------- | -------------------- |
+| Unit (Vitest)    | `**/*.test.{ts,tsx}` |
+| E2E (Playwright) | `e2e/*.spec.ts`      |
 
 ### Categorias E2E
 

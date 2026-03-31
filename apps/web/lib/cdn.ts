@@ -12,7 +12,7 @@ import { env } from '@/lib/env'
 const CDN_CONFIG = {
   enabled: env.CDN_ENABLED,
   baseUrl: env.CDN_URL || '',
-  cacheVersion: 'v1' || 'v1',
+  cacheVersion: 'v1',
   defaultTTL: 31536000, // 1 year in seconds
 }
 

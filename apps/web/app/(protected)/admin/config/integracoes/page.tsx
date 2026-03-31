@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Save, Plus, Trash2 } from 'lucide-react'
-import { useToast } from '@/components/ui/Toast'
+import { useToast } from '@template/design-system'
 
 interface Webhook {
   id: string
@@ -16,7 +16,7 @@ export default function ConfigIntegracoesPage() {
   const [webhooks, setWebhooks] = useState<Webhook[]>([
     { id: '1', url: 'https://example.com/webhook', events: 'user.created, user.updated' },
   ])
-  const { toast } = useToast()
+  const { success } = useToast()
 
   function addWebhook() {
     setWebhooks(prev => [...prev, { id: Date.now().toString(), url: '', events: '' }])
@@ -28,7 +28,7 @@ export default function ConfigIntegracoesPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    toast('Configurações salvas com sucesso')
+    success('Configurações salvas com sucesso')
   }
 
   return (

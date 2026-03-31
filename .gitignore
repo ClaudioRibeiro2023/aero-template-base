@@ -16,6 +16,11 @@ out/
 !.env.example
 !.env.production.example
 
+# Infra environment files
+infra/.env
+infra/.env.local
+infra/.env.*.local
+
 # IDE
 .idea/
 .vscode/*

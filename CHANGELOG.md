@@ -7,6 +7,61 @@ aderindo a [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [2.1.0] — 2026-03-30
+
+### Sprint 1 — Exorcismo da Stack Anterior
+
+- Removidos todos os artefatos FastAPI, Keycloak, Vite (40+ arquivos)
+- CI/CD limpo de referências a Python/uvicorn/VITE\_\*
+- K8s e Docker removidos os serviços obsoletos
+
+### Sprint 2 — Blindagem de Segurança
+
+- Migrations 00005-00008: RLS audit_logs, handle_new_user, FK RESTRICT, drop uuid-ossp
+- Middleware reescrito com @supabase/ssr (auto-refresh de tokens, sem parsing manual)
+- Rate limiting em admin/config (30 req/min) e health (60 req/min)
+- CSP header adicionado, infra/.env protegido no .gitignore
+- Rota /api/auth/callback duplicada removida
+
+### Sprint 3 — Unificação de Design System
+
+- Cor brand unificada: #14b8a6 → #0087A8 (Design System é fonte de verdade)
+- Toast deduplicado: 4 arquivos removidos, 6 consumidores migrados para @template/design-system
+- FormInput/FormSelect/FormTextarea removidos (3 duplicatas), DS canônico preservado
+- SkipLink de acessibilidade adicionado em layout.tsx
+- GlobalSearch com role="dialog" e aria-modal
+
+### Sprint 4 — Backend Hardening
+
+- lib/api-response.ts: 9 helpers padronizados (ok, created, badRequest, unauthorized, etc.)
+- lib/auth-guard.ts: requireAuth() e requireRole() com profile lookup
+- lib/validate.ts: parseBody<T> com Zod e discriminated union
+- schemas/auth.ts + schemas/admin.ts: 7 schemas Zod
+- Novas rotas: POST /api/auth/signup, /api/auth/reset-password, /api/auth/logout
+- UserRole unificado: 5 definições → 1 fonte canônica em @template/types
+
+### Sprint 5 — Modernização de Stack
+
+- TypeScript 5.3.3 → ^5.5.0, target ES2022, verbatimModuleSyntax
+- next.config.js → next.config.mjs (ESM)
+- ESLint 8 → 9, .eslintrc.cjs → eslint.config.mjs (flat config)
+- vercel.json: rootDirectory apps/web, regions gru1 (São Paulo)
+
+### Sprint 6 — Observabilidade
+
+- instrumentation.ts: placeholder Sentry server-side documentado
+- health/route.ts: ping real Supabase + uptime
+- deploy-vercel.yml: deploy automático em push master
+- .env.example: NEXT_PUBLIC_SENTRY_DSN documentado
+
+### Sprint 7 — Cobertura de Testes
+
+- 192 testes (10 arquivos novos): componentes, hooks, lib, schemas
+- vitest.config.ts: threshold 60% (lines, branches, functions, statements)
+- vitest.setup.ts corrigido, middleware.test.ts atualizado para @supabase/ssr
+
+---
+
 ## [2.0.2] — 2026-03-30
 
 ### Resumo

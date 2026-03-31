@@ -1,20 +1,20 @@
 # Arquitetura
 
-Visão geral da arquitetura do Template.Base v2.0 — monorepo Supabase-first com Next.js 14.
+Visão geral da arquitetura do Template.Base v2.1 — monorepo Supabase-first com Next.js 14.
 
 ## Stack Tecnológica
 
-| Camada        | Tecnologia                          | Versão     |
-| ------------- | ----------------------------------- | ---------- |
-| Frontend      | Next.js 14 (App Router)             | 14.x       |
-| UI            | React 18 + TailwindCSS 3            | 18.x / 3.x |
-| Auth          | Supabase Auth + Keycloak (opcional) | 2.x        |
-| Database      | Supabase PostgreSQL + RLS           | 15         |
-| Realtime      | Supabase Realtime                   | 2.x        |
-| Storage       | Supabase Storage                    | 2.x        |
-| i18n          | react-i18next (pt-BR, en-US)        | 14.x       |
-| Design System | @template/design-system             | 1.x        |
-| Gerenciador   | pnpm workspaces                     | 9.x        |
+| Camada        | Tecnologia                    | Versão     |
+| ------------- | ----------------------------- | ---------- |
+| Frontend      | Next.js 14 (App Router)       | 14.x       |
+| UI            | React 18 + TailwindCSS 3      | 18.x / 3.x |
+| Auth          | Supabase Auth + @supabase/ssr | 2.x        |
+| Database      | Supabase PostgreSQL + RLS     | 15         |
+| Realtime      | Supabase Realtime             | 2.x        |
+| Storage       | Supabase Storage              | 2.x        |
+| i18n          | react-i18next (pt-BR, en-US)  | 14.x       |
+| Design System | @template/design-system       | 1.x        |
+| Gerenciador   | pnpm workspaces               | 9.x        |
 
 ## Estrutura do Monorepo
 
@@ -62,29 +62,73 @@ packages/
 └──────────────────────────────────────────────┘
 ```
 
-## Autenticação — Padrão AuthAdapter
+## Autenticação — Supabase Auth + @supabase/ssr
 
-O template suporta dual provider via padrão adapter:
+O template usa Supabase Auth como provider exclusivo, com o cliente server-side criado via `createServerClient` do pacote `@supabase/ssr`.
 
-| Provider                     | Quando Usar                                       |
-| ---------------------------- | ------------------------------------------------- |
-| **Supabase Auth** (padrão)   | Projetos novos, auth simples (email/senha, OAuth) |
-| **Keycloak OIDC** (opcional) | SSO corporativo, federação, MFA avançado          |
+### Fluxo de Autenticação
 
-Configurável via `NEXT_PUBLIC_AUTH_PROVIDER` no `.env`. O `AuthAdapter` em `@template/shared` abstrai a diferença — componentes e páginas não precisam saber qual provider está ativo.
+```
+Browser → middleware.ts (createServerClient) → verifica cookies HttpOnly
+                   ↓
+        Token válido? → continua request
+        Token expirado? → auto-refresh transparente
+        Sem token? → redirect para /login
+```
+
+### Benefícios do @supabase/ssr
+
+- Auto-refresh de tokens sem código manual
+- Cookies HttpOnly gerenciados pelo Next.js
+- Sem exposição do token no JavaScript do cliente
+- Compatível com Edge Runtime e Node.js
+
+### Auth Guard em API Routes
+
+Todas as API routes protegidas usam helpers de `lib/auth-guard.ts`:
+
+```ts
+import { requireAuth, requireRole } from '@/lib/auth-guard'
+
+// Requer apenas autenticação:
+const user = await requireAuth(request)
+
+// Requer role específica:
+const user = await requireRole(request, 'ADMIN')
+```
+
+### Helpers de Resposta — lib/api-response.ts
+
+9 helpers padronizados para API routes:
+
+| Helper            | Status HTTP | Uso                           |
+| ----------------- | ----------- | ----------------------------- |
+| `ok(data)`        | 200         | Sucesso com dados             |
+| `created(data)`   | 201         | Recurso criado                |
+| `noContent()`     | 204         | Sucesso sem dados             |
+| `badRequest(msg)` | 400         | Dados inválidos               |
+| `unauthorized()`  | 401         | Não autenticado               |
+| `forbidden()`     | 403         | Sem permissão (role)          |
+| `notFound(msg)`   | 404         | Recurso não encontrado        |
+| `conflict(msg)`   | 409         | Conflito de estado            |
+| `serverError(e)`  | 500         | Erro interno (log automático) |
 
 ## Banco de Dados — Supabase PostgreSQL
 
 ### Migrations
 
-4 migrations em `supabase/migrations/`:
+8 migrations em `supabase/migrations/`:
 
-| Migration                      | Conteúdo                                   |
-| ------------------------------ | ------------------------------------------ |
-| `00001_create_tenants.sql`     | Tabela de tenants com metadata JSONB       |
-| `00002_create_profiles.sql`    | Perfis de usuário vinculados a tenants     |
-| `00003_create_core_tables.sql` | Tabelas de negócio do template             |
-| `00004_rls_policies.sql`       | Políticas RLS para isolamento multi-tenant |
+| Migration                      | Conteúdo                                        |
+| ------------------------------ | ----------------------------------------------- |
+| `00001_create_tenants.sql`     | Tabela de tenants com metadata JSONB            |
+| `00002_create_profiles.sql`    | Perfis de usuário vinculados a tenants          |
+| `00003_create_core_tables.sql` | Tabelas de negócio do template                  |
+| `00004_rls_policies.sql`       | Políticas RLS para isolamento multi-tenant      |
+| `00005_audit_logs_rls.sql`     | RLS em audit_logs (isolamento por tenant)       |
+| `00006_handle_new_user.sql`    | Trigger auto-criação de profile no signup       |
+| `00007_fk_restrict.sql`        | FK RESTRICT para integridade referencial        |
+| `00008_drop_uuid_ossp.sql`     | Remove extensão uuid-ossp (usa gen_random_uuid) |
 
 ### Multi-Tenancy via RLS
 

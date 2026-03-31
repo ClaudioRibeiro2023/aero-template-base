@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // output: 'standalone', // Enable in Dockerfile or CI (requires symlink permissions on Windows)
+  // output: 'standalone', // Enable in Dockerfile/CI (requires symlink permissions — not supported on Windows dev)
   eslint: {
     ignoreDuringBuilds: true, // Lint runs as separate CI step
   },
@@ -23,10 +23,14 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=31536000; includeSubDomains',
           },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.supabase.co; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'",
+          },
         ],
       },
     ]
   },
 }
 
-module.exports = nextConfig
+export default nextConfig

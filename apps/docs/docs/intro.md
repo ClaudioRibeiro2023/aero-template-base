@@ -14,28 +14,27 @@ Template Platform é um **monorepo starter** projetado como fundação para múl
 
 ## Números da Plataforma
 
-| Métrica               | Valor                    |
-| --------------------- | ------------------------ |
-| **Testes totais**     | 1.613+ (845 BE + 768 FE) |
-| **Cobertura BE**      | 85%+                     |
-| **Storybook stories** | 77+                      |
-| **Sprints entregues** | 37                       |
-| **Dívidas técnicas**  | 0 pendentes              |
+| Métrica               | Valor       |
+| --------------------- | ----------- |
+| **Testes FE**         | 768+        |
+| **Storybook stories** | 77+         |
+| **Sprints entregues** | 37          |
+| **Dívidas técnicas**  | 0 pendentes |
 
 ## Stack Tecnológica
 
-| Camada            | Tecnologia                                 |
-| ----------------- | ------------------------------------------ |
-| **Frontend**      | React 18 + TypeScript + Vite + TailwindCSS |
-| **Estado**        | TanStack Query v5                          |
-| **Backend**       | FastAPI + SQLAlchemy + Alembic             |
-| **Auth**          | Keycloak + OIDC + JWT                      |
-| **Cache**         | Redis (com circuit breaker)                |
-| **Infra**         | Docker Compose + GitHub Actions            |
-| **i18n**          | i18next (pt-BR + en-US)                    |
-| **Testes**        | Vitest + Playwright + pytest               |
-| **Design System** | Custom + Storybook 8.6                     |
-| **PWA**           | Service Worker + Offline fallback          |
+| Camada             | Tecnologia                                 |
+| ------------------ | ------------------------------------------ |
+| **Frontend**       | React 18 + TypeScript + Vite + TailwindCSS |
+| **Estado**         | TanStack Query v5                          |
+| **Backend**        | Next.js API Routes + Supabase              |
+| **Auth**           | Supabase Auth (JWT)                        |
+| **Banco de Dados** | Supabase (PostgreSQL)                      |
+| **Infra**          | Docker Compose + GitHub Actions            |
+| **i18n**           | i18next (pt-BR + en-US)                    |
+| **Testes**         | Vitest + Playwright                        |
+| **Design System**  | Custom + Storybook 8.6                     |
+| **PWA**            | Service Worker + Offline fallback          |
 
 ## Início Rápido
 

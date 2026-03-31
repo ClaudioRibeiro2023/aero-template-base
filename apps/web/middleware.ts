@@ -1,12 +1,12 @@
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 
 const publicPaths = ['/login', '/auth/callback', '/api/health']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow public paths and API routes
+  // Allow public paths
   if (publicPaths.some(p => pathname.startsWith(p))) {
     return NextResponse.next()
   }
@@ -16,9 +16,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check for Supabase session via cookie
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
     if (pathname.startsWith('/api/')) {
@@ -27,52 +26,37 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=config_missing', request.url))
   }
 
-  const supabase = createClient(supabaseUrl, supabaseKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
+  // @supabase/ssr: gerencia cookies automaticamente, incluindo refresh de tokens
+  let supabaseResponse = NextResponse.next({ request })
+
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll()
+      },
+      setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+        supabaseResponse = NextResponse.next({ request })
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options as never)
+        )
+      },
     },
   })
 
-  // Try to get session from auth header or cookie
-  const authHeader = request.headers.get('authorization')
-  if (authHeader) {
-    const token = authHeader.replace('Bearer ', '')
-    const {
-      data: { user },
-    } = await supabase.auth.getUser(token)
-    if (user) return NextResponse.next()
-  }
+  // IMPORTANTE: usar getUser() (validação server-side) — nunca getSession() no middleware
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  // Try to get session from Supabase cookie
-  const cookieHeader = request.headers.get('cookie') || ''
-  const sbAccessToken = cookieHeader
-    .split(';')
-    .map(c => c.trim())
-    .find(c => c.startsWith('sb-') && c.includes('-auth-token'))
-
-  if (sbAccessToken) {
-    const tokenValue = sbAccessToken.split('=').slice(1).join('=')
-    try {
-      const parsed = JSON.parse(decodeURIComponent(tokenValue))
-      const accessToken = typeof parsed === 'string' ? parsed : parsed?.[0]
-      if (accessToken) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser(accessToken)
-        if (user) return NextResponse.next()
-      }
-    } catch {
-      // Invalid cookie format, continue to redirect
+  if (!user) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-  }
-
-  // No valid session — redirect to login
-  if (!pathname.startsWith('/api/')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  return supabaseResponse
 }
 
 export const config = {

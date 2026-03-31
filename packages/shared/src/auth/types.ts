@@ -1,33 +1,5 @@
-// User roles - customize these for your application
-export type UserRole = 'ADMIN' | 'GESTOR' | 'OPERADOR' | 'VIEWER'
+// Re-export canônico de @template/types — não definir aqui
+// Fonte da verdade: packages/types/src/auth.ts
+export type { UserRole, Role, AuthUser, AuthContextType } from '@template/types'
 
-// Alias for backwards compatibility
-export type Role = UserRole
-
-export const ALL_ROLES: UserRole[] = ['ADMIN', 'GESTOR', 'OPERADOR', 'VIEWER']
-
-export const ROLE_ADMIN: UserRole = 'ADMIN'
-export const ROLE_GESTOR: UserRole = 'GESTOR'
-export const ROLE_OPERADOR: UserRole = 'OPERADOR'
-export const ROLE_VIEWER: UserRole = 'VIEWER'
-
-// Simplified user interface for frontend consumption
-export interface AuthUser {
-  id: string
-  email: string
-  name: string
-  roles: UserRole[]
-  avatar?: string
-}
-
-// Auth context type definition
-export interface AuthContextType {
-  user: AuthUser | null
-  isAuthenticated: boolean
-  isLoading: boolean
-  login: () => Promise<void>
-  logout: () => Promise<void>
-  hasRole: (role: UserRole | UserRole[]) => boolean
-  hasAnyRole: (roles: UserRole[]) => boolean
-  getAccessToken: () => Promise<string | null>
-}
+export { ALL_ROLES, ROLE_ADMIN, ROLE_GESTOR, ROLE_OPERADOR, ROLE_VIEWER } from '@template/types'

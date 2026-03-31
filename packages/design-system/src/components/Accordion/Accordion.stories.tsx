@@ -6,7 +6,7 @@ const faqItems = [
   {
     value: 'q1',
     title: 'What is this platform?',
-    content: 'A multi-tenant SaaS template with React, FastAPI, Keycloak, and PostgreSQL.',
+    content: 'A multi-tenant SaaS template with Next.js, Supabase Auth, and PostgreSQL.',
   },
   {
     value: 'q2',

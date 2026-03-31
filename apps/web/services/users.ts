@@ -12,7 +12,6 @@ export interface User {
   id: string
   email: string
   name: string
-  keycloak_id: string | null
   avatar_url: string | null
   phone: string | null
   department: string | null
@@ -25,7 +24,6 @@ export interface User {
 export interface UserCreate {
   email: string
   name: string
-  keycloak_id?: string
   avatar_url?: string
   phone?: string
   department?: string
@@ -64,7 +62,17 @@ export interface ListUsersParams {
 // ============================================================================
 
 export const usersService = {
-  list: (params?: ListUsersParams) => get<UserList>('/users', { params }),
+  list: (params?: ListUsersParams) => {
+    const query = new URLSearchParams()
+    if (params?.active_only) query.set('active_only', 'true')
+    if (params?.tenant_id) query.set('tenant_id', params.tenant_id)
+    if (params?.department) query.set('department', params.department)
+    if (params?.search) query.set('search', params.search)
+    if (params?.page) query.set('page', String(params.page))
+    if (params?.page_size) query.set('page_size', String(params.page_size))
+    const qs = query.toString()
+    return get<UserList>(`/users${qs ? `?${qs}` : ''}`)
+  },
 
   get: (id: string) => get<User>(`/users/${id}`),
 

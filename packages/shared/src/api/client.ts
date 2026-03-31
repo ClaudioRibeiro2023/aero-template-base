@@ -1,4 +1,4 @@
-import { getUserManager } from '../auth/AuthContext'
+import { supabase } from '../supabase/client'
 
 export interface ApiClientConfig {
   baseURL: string
@@ -77,38 +77,30 @@ async function retryWithBackoff<T>(
   shouldRetry: (error: unknown) => boolean
 ): Promise<T> {
   let lastError: unknown
-  
+
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       return await fn()
     } catch (error) {
       lastError = error
-      
+
       if (attempt === maxRetries || !shouldRetry(error)) {
         throw error
       }
-      
+
       const delay = initialDelay * Math.pow(2, attempt)
-      console.warn(`[API] Request failed, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`)
+      console.warn(
+        `[API] Request failed, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`
+      )
       await sleep(delay)
     }
   }
-  
+
   throw lastError
 }
 
-type ImportMetaEnvApi = {
-  VITE_API_URL?: string
-  VITE_DEMO_MODE?: string
-}
-
-const apiEnv: ImportMetaEnvApi =
-  typeof import.meta !== 'undefined'
-    ? ((import.meta as unknown as { env?: ImportMetaEnvApi }).env ?? {})
-    : {}
-
-const DEFAULT_BASE_URL = apiEnv.VITE_API_URL || 'http://localhost:8000/api'
-const IS_DEMO = apiEnv.VITE_DEMO_MODE === 'true'
+const DEFAULT_BASE_URL =
+  (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : undefined) || '/api'
 const DEFAULT_RETRY_STATUS_CODES = [408, 429, 500, 502, 503, 504]
 
 export function createApiClient(config?: Partial<ApiClientConfig>) {
@@ -138,20 +130,17 @@ export function createApiClient(config?: Partial<ApiClientConfig>) {
   }
 
   async function getAuthHeaders(): Promise<Record<string, string>> {
-    if (IS_DEMO) {
-      return { 'X-Demo-Mode': 'true' }
-    }
-    
     try {
-      const manager = getUserManager()
-      const user = await manager.getUser()
-      if (user?.access_token) {
-        return { Authorization: `Bearer ${user.access_token}` }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (session?.access_token) {
+        return { Authorization: `Bearer ${session.access_token}` }
       }
     } catch (error) {
       console.error('[API] Failed to get auth token:', error)
     }
-    
+
     return {}
   }
 
@@ -163,7 +152,7 @@ export function createApiClient(config?: Partial<ApiClientConfig>) {
     const url = new URL(path, baseURL)
     const timeout = options?.timeout ?? defaultTimeout
     const maxRetries = options?.maxRetries ?? defaultMaxRetries
-    
+
     if (options?.params) {
       Object.entries(options.params).forEach(([key, value]) => {
         url.searchParams.append(key, value)
@@ -202,7 +191,7 @@ export function createApiClient(config?: Partial<ApiClientConfig>) {
         const durationMs = performance.now() - startTime
 
         const data = await response.json()
-        
+
         // Run response interceptors
         await runResponseInterceptors({
           method,
@@ -211,14 +200,14 @@ export function createApiClient(config?: Partial<ApiClientConfig>) {
           data,
           durationMs,
         })
-        
+
         // Throw error for retryable status codes
         if (retryStatusCodes.includes(response.status)) {
           const error = new Error(`HTTP ${response.status}: ${response.statusText}`)
           ;(error as Error & { status: number }).status = response.status
           throw error
         }
-        
+
         return {
           data,
           status: response.status,
@@ -227,7 +216,7 @@ export function createApiClient(config?: Partial<ApiClientConfig>) {
       } catch (error) {
         clearTimeout(timeoutId)
         const durationMs = performance.now() - startTime
-        
+
         // Run error interceptors
         await runErrorInterceptors({
           method,
@@ -235,46 +224,43 @@ export function createApiClient(config?: Partial<ApiClientConfig>) {
           error: error instanceof Error ? error : new Error(String(error)),
           durationMs,
         })
-        
+
         throw error
       }
     }
 
     // Use retry for GET requests only (safe to retry)
     if (method === 'GET' && maxRetries > 0) {
-      return retryWithBackoff(
-        makeRequest,
-        maxRetries,
-        retryDelay,
-        (error) => {
-          // Retry on network errors or retryable status codes
-          if (error instanceof Error && 'status' in error) {
-            return retryStatusCodes.includes((error as Error & { status: number }).status)
-          }
-          // Retry on network errors (no status)
-          return error instanceof TypeError || (error as Error)?.name === 'AbortError'
+      return retryWithBackoff(makeRequest, maxRetries, retryDelay, error => {
+        // Retry on network errors or retryable status codes
+        if (error instanceof Error && 'status' in error) {
+          return retryStatusCodes.includes((error as Error & { status: number }).status)
         }
-      )
+        // Retry on network errors (no status)
+        return error instanceof TypeError || (error as Error)?.name === 'AbortError'
+      })
     }
 
     return makeRequest()
   }
 
   return {
-    get: <T>(path: string, params?: Record<string, string>, options?: Omit<RequestOptions, 'params' | 'body'>) => 
-      request<T>('GET', path, { ...options, params }),
-    
-    post: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'body'>) => 
+    get: <T>(
+      path: string,
+      params?: Record<string, string>,
+      options?: Omit<RequestOptions, 'params' | 'body'>
+    ) => request<T>('GET', path, { ...options, params }),
+
+    post: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'body'>) =>
       request<T>('POST', path, { ...options, body }),
-    
-    put: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'body'>) => 
+
+    put: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'body'>) =>
       request<T>('PUT', path, { ...options, body }),
-    
-    patch: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'body'>) => 
+
+    patch: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'body'>) =>
       request<T>('PATCH', path, { ...options, body }),
-    
-    delete: <T>(path: string, options?: RequestOptions) => 
-      request<T>('DELETE', path, options),
+
+    delete: <T>(path: string, options?: RequestOptions) => request<T>('DELETE', path, options),
   }
 }
 

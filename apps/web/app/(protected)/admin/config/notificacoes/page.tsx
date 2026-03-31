@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Save } from 'lucide-react'
-import { useToast } from '@/components/ui/Toast'
+import { useToast } from '@template/design-system'
 
 function Toggle({
   checked,
@@ -36,11 +36,11 @@ export default function ConfigNotificacoesPage() {
   const [emailEnabled, setEmailEnabled] = useState(true)
   const [pushEnabled, setPushEnabled] = useState(false)
   const [alertsEnabled, setAlertsEnabled] = useState(true)
-  const { toast } = useToast()
+  const { success } = useToast()
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    toast('Configurações salvas com sucesso')
+    success('Configurações salvas com sucesso')
   }
 
   return (

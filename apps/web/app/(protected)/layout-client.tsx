@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/layout/AppLayout'
-import { ToastProvider } from '@/components/ui/Toast'
+import { ToastProvider } from '@template/design-system'
 
 // Rotas críticas para pré-busca antecipada
 const PREFETCH_ROUTES = ['/dashboard', '/admin/config', '/admin/usuarios', '/profile']

@@ -108,7 +108,7 @@ export const AVAILABLE_MODULES = [
 const DEFAULT_WIZARD_DATA: WizardData = {
   appName: 'Template Platform',
   logoUrl: '',
-  primaryColor: '#14b8a6',
+  primaryColor: '#0087A8',
   secondaryColor: '#6366f1',
   adminEmail: '',
   adminName: '',

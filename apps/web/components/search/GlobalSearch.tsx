@@ -312,7 +312,12 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
       {/* Modal */}
       <div className="fixed inset-0 z-[91] flex items-start justify-center pt-[15vh] px-4">
-        <div className="w-full max-w-lg rounded-xl border border-[var(--border-default)] bg-[var(--surface-raised)] shadow-2xl overflow-hidden">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Busca global"
+          className="w-full max-w-lg rounded-xl border border-[var(--border-default)] bg-[var(--surface-raised)] shadow-2xl overflow-hidden"
+        >
           {/* Header com input */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border-default)]">
             <Search className="w-5 h-5 text-[var(--text-muted)] shrink-0" />

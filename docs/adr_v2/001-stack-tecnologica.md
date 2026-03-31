@@ -1,7 +1,7 @@
 ---
 id: 'ADR-001'
 title: 'Stack Tecnológica'
-status: 'accepted'
+status: 'superseded'
 date: '2024-12-16'
 owners:
   - 'Equipe de Arquitetura'
@@ -12,10 +12,12 @@ tags:
   - 'infraestrutura'
 related: []
 supersedes: null
-superseded_by: null
+superseded_by: 'ADR-001-v2 (migração para Next.js API Routes + Supabase)'
 ---
 
 # ADR-001: Stack Tecnológica
+
+> **NOTA (Março 2026):** Esta ADR foi **superseded**. A decisão original de usar FastAPI + Vite + Keycloak foi substituída pela stack **Next.js 14 (App Router) + Supabase (Auth + Database + Storage)**. Os motivos da migração incluem: unificação da linguagem (TypeScript end-to-end), eliminação da complexidade de manter dois runtimes (Python + Node), substituição do Keycloak por Supabase Auth (mais simples, mesma segurança), e adoção de Server Actions + API Routes do Next.js para eliminar o backend separado. O restante deste documento é mantido como registro histórico.
 
 ## 1. Contexto e Problema
 
@@ -182,7 +184,8 @@ Priorização: DR1 > DR2 > DR3 > DR4
 
 1. Avaliar React 19 quando estável
 2. Considerar Bun como runtime alternativo
-3. Avaliar migração para Pydantic v3 quando disponível
+
+> **Atualização (Março 2026):** A migração para Next.js API Routes + Supabase foi concluída. FastAPI, Vite, Keycloak e Python foram removidos da stack.
 
 ## 8. Referências
 
@@ -202,10 +205,11 @@ Priorização: DR1 > DR2 > DR3 > DR4
 
 ## Histórico
 
-| Data       | Autor                 | Mudança              |
-| ---------- | --------------------- | -------------------- |
-| 2024-12-16 | Equipe de Arquitetura | Criação              |
-| 2024-12-16 | Cascade               | Migração para ADR v2 |
+| Data       | Autor                 | Mudança                                                |
+| ---------- | --------------------- | ------------------------------------------------------ |
+| 2024-12-16 | Equipe de Arquitetura | Criação                                                |
+| 2024-12-16 | Cascade               | Migração para ADR v2                                   |
+| 2026-03-30 | Aero Factory          | Status → Superseded (migração para Next.js + Supabase) |
 
 ---
 

@@ -6,7 +6,7 @@
  */
 import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiClient } from '../services/api-client'
+import { get, patch, post } from '../services/api-client'
 import type { PlatformConfig, PartialPlatformConfig, BrandingConfig } from '../services/adminConfig'
 
 // ============================================================================
@@ -56,9 +56,9 @@ export function clearPlatformConfigCache(): void {
 
 async function fetchPublicConfig(): Promise<PlatformConfig> {
   try {
-    const res = await apiClient.get<PlatformConfig>('/platform/public-config')
-    savePlatformConfigCache(res.data)
-    return res.data
+    const data = await get<PlatformConfig>('/platform/public-config')
+    savePlatformConfigCache(data)
+    return data
   } catch (err) {
     const cached = loadPlatformConfigCache()
     if (cached) return cached
@@ -67,18 +67,15 @@ async function fetchPublicConfig(): Promise<PlatformConfig> {
 }
 
 async function fetchAdminConfig(): Promise<PlatformConfig> {
-  const res = await apiClient.get<PlatformConfig>('/admin/platform-config')
-  return res.data
+  return get<PlatformConfig>('/admin/platform-config')
 }
 
 async function updateAdminConfig(partial: PartialPlatformConfig): Promise<PlatformConfig> {
-  const res = await apiClient.patch<PlatformConfig>('/admin/platform-config', partial)
-  return res.data
+  return patch<PlatformConfig>('/admin/platform-config', partial)
 }
 
 async function resetAdminConfig(): Promise<PlatformConfig> {
-  const res = await apiClient.post<PlatformConfig>('/admin/platform-config/reset')
-  return res.data
+  return post<PlatformConfig>('/admin/platform-config/reset')
 }
 
 // ============================================================================
