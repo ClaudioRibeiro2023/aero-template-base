@@ -1,8 +1,8 @@
 {
   "framework": "nextjs",
-  "installCommand": "cd ../.. && pnpm install",
-  "buildCommand": "cd ../.. && pnpm build",
-  "outputDirectory": ".next",
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "buildCommand": "pnpm run build:packages && pnpm run build:app",
+  "outputDirectory": "apps/web/.next",
   "regions": ["gru1"],
   "git": {
     "deploymentEnabled": {
