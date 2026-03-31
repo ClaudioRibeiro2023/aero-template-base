@@ -1,31 +1,70 @@
-'use client'
-
-import { BarChart3, Plus } from 'lucide-react'
+import { BarChart3, Plus, FileText, TrendingUp } from 'lucide-react'
 
 export default function RelatoriosPage() {
   return (
-    <main className="page-enter">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">{'Relat\u00f3rios'}</h1>
-        <p className="text-sm text-[var(--text-secondary)]">
-          {'An\u00e1lises e relat\u00f3rios do sistema'}
-        </p>
+    <main className="page-enter ambient-gradient max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      <div className="relative z-10">
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Relatorios</h1>
+        <p className="text-sm text-[var(--text-secondary)]">Analises e relatorios do sistema</p>
       </div>
 
-      <div className="flex flex-col items-center justify-center py-20 rounded-xl border-2 border-dashed border-[var(--border-default)]">
-        <BarChart3 className="w-12 h-12 text-[var(--text-muted)] mb-4" />
-        <h2 className="text-lg font-semibold text-[var(--text-secondary)] mb-2">
-          {'Nenhum relat\u00f3rio ainda'}
+      {/* Empty State — Glass Premium */}
+      <div className="relative z-10 glass-panel flex flex-col items-center justify-center py-20 px-6">
+        {/* Decorative glow */}
+        <div
+          className="absolute inset-0 rounded-[var(--radius-lg)] pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 50% 40% at 50% 40%, var(--glow-brand), transparent)',
+            opacity: 0.15,
+          }}
+        />
+
+        <div className="relative p-4 rounded-2xl bg-[var(--brand-primary)]/10 mb-5">
+          <BarChart3 className="w-10 h-10 text-[var(--brand-primary)]" />
+        </div>
+
+        <h2 className="relative text-lg font-semibold text-[var(--text-primary)] mb-2">
+          Nenhum relatorio ainda
         </h2>
-        <p className="text-sm text-[var(--text-muted)] mb-6 text-center max-w-md">
-          {
-            'Os relat\u00f3rios aparecer\u00e3o aqui conforme o sistema for utilizado. Comece criando seu primeiro relat\u00f3rio.'
-          }
+        <p className="relative text-sm text-[var(--text-muted)] mb-8 text-center max-w-md leading-relaxed">
+          Os relatorios aparecerão aqui conforme o sistema for utilizado. Comece criando seu
+          primeiro relatorio para visualizar dados.
         </p>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--brand-primary)] text-white font-medium hover:opacity-90 transition-opacity">
+
+        <button
+          className="relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--brand-primary)] text-white font-medium text-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+          style={{ boxShadow: '0 0 20px var(--glow-brand)' }}
+        >
           <Plus className="w-4 h-4" />
-          {'Criar Relat\u00f3rio'}
+          Criar Relatorio
         </button>
+      </div>
+
+      {/* Quick Stats Row */}
+      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[
+          { label: 'Total Gerados', value: '0', icon: FileText },
+          { label: 'Este Mes', value: '0', icon: BarChart3 },
+          { label: 'Tendencia', value: '--', icon: TrendingUp },
+        ].map(stat => {
+          const Icon = stat.icon
+          return (
+            <div key={stat.label} className="glass-panel p-5">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-[var(--brand-primary)]/10">
+                  <Icon size={16} className="text-[var(--brand-primary)]" />
+                </div>
+                <div>
+                  <p className="text-xl font-bold font-mono text-[var(--text-primary)]">
+                    {stat.value}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)]">{stat.label}</p>
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </main>
   )

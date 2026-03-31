@@ -12,35 +12,36 @@ export function Footer() {
   const appVersion = env.APP_VERSION || '1.0.0'
 
   return (
-    <footer className="border-t border-border-default bg-surface-base mt-auto">
-      <div className="px-6 py-3">
+    <footer className="border-t border-[rgba(255,255,255,0.06)] bg-transparent mt-auto">
+      <div className="px-5 py-2.5">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <p className="text-xs text-text-muted truncate">
-              © {APP_YEAR} <span className="text-text-secondary font-medium">{appName}</span>
+            <p className="text-[11px] text-[var(--text-muted)] truncate">
+              © {APP_YEAR}{' '}
+              <span className="text-[var(--text-secondary)] font-medium">{appName}</span>
             </p>
-            <span className="text-xs px-1.5 py-0.5 rounded bg-surface-raised text-text-muted font-mono border border-border-default hidden sm:inline">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.03] text-[var(--text-muted)] font-mono border border-[rgba(255,255,255,0.06)] hidden sm:inline">
               v{appVersion}
             </span>
           </div>
 
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div className="flex items-center gap-0.5 flex-shrink-0">
             <Tooltip content="Documentação">
               <a
                 href="/docs"
-                className="p-2 rounded-lg hover:bg-surface-muted text-text-secondary transition-colors"
+                className="p-1.5 rounded-lg hover:bg-white/[0.04] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Documentação"
               >
-                <BookOpen className="w-4 h-4" />
+                <BookOpen className="w-3.5 h-3.5" />
               </a>
             </Tooltip>
             <Tooltip content="Configurações">
               <Link
                 href="/admin/config"
-                className="p-2 rounded-lg hover:bg-surface-muted text-text-secondary transition-colors"
+                className="p-1.5 rounded-lg hover:bg-white/[0.04] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Configurações"
               >
-                <Settings className="w-4 h-4" />
+                <Settings className="w-3.5 h-3.5" />
               </Link>
             </Tooltip>
           </div>

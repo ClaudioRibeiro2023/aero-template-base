@@ -145,7 +145,7 @@ export function TenantSwitcher({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label="Selecionar tenant"
-        className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-primary dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700"
+        className="flex items-center gap-2 rounded-[var(--radius-md)] border border-white/[0.06] bg-[var(--glass-bg)] px-3 py-1.5 text-sm font-medium shadow-[var(--shadow-sm)] hover:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] backdrop-blur-xl"
       >
         {current?.logoUrl && (
           <img src={current.logoUrl} alt="" className="h-4 w-4 rounded-sm object-contain" />
@@ -169,7 +169,7 @@ export function TenantSwitcher({
         <ul
           role="listbox"
           aria-label="Tenants disponíveis"
-          className="absolute left-0 top-full z-50 mt-1 min-w-full overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg dark:bg-gray-800 dark:border-gray-600"
+          className="absolute left-0 top-full z-50 mt-1 min-w-full overflow-hidden rounded-[var(--radius-md)] border border-white/[0.06] bg-[var(--glass-bg)] backdrop-blur-xl shadow-[var(--shadow-lg)]"
         >
           {tenants.map(tenant => {
             const isSelected = tenant.id === current?.id
@@ -182,7 +182,7 @@ export function TenantSwitcher({
                     setOpen(false)
                   }}
                   className={[
-                    'flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-surface-muted',
+                    'flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-white/[0.04]',
                     isSelected ? 'font-semibold text-brand-primary' : 'text-text-secondary',
                   ].join(' ')}
                 >

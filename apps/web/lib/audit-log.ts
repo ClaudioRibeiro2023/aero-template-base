@@ -20,7 +20,7 @@ export async function auditLog(entry: AuditEntry): Promise<void> {
   const logEntry = { ...entry, timestamp }
 
   if (process.env.NODE_ENV === 'development') {
-    console.info('[AUDIT]', JSON.stringify(logEntry))
+    console.warn('[AUDIT]', JSON.stringify(logEntry))
     return
   }
 
@@ -30,7 +30,7 @@ export async function auditLog(entry: AuditEntry): Promise<void> {
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY
     if (!url || !key) {
       console.warn('[AUDIT] Missing Supabase credentials, logging to console')
-      console.info('[AUDIT]', JSON.stringify(logEntry))
+      console.warn('[AUDIT]', JSON.stringify(logEntry))
       return
     }
     const supabase = createClient(url, key, {

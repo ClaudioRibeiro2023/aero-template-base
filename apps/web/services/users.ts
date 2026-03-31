@@ -2,7 +2,7 @@
  * Users API service.
  * Sprint 15: Users CRUD API.
  */
-import { get, post, put, del } from './api-client'
+import { apiClient } from '@template/shared'
 
 // ============================================================================
 // Types
@@ -62,7 +62,7 @@ export interface ListUsersParams {
 // ============================================================================
 
 export const usersService = {
-  list: (params?: ListUsersParams) => {
+  list: async (params?: ListUsersParams): Promise<UserList> => {
     const query = new URLSearchParams()
     if (params?.active_only) query.set('active_only', 'true')
     if (params?.tenant_id) query.set('tenant_id', params.tenant_id)
@@ -71,16 +71,31 @@ export const usersService = {
     if (params?.page) query.set('page', String(params.page))
     if (params?.page_size) query.set('page_size', String(params.page_size))
     const qs = query.toString()
-    return get<UserList>(`/users${qs ? `?${qs}` : ''}`)
+    const res = await apiClient.get<UserList>(`/users${qs ? `?${qs}` : ''}`)
+    return res.data
   },
 
-  get: (id: string) => get<User>(`/users/${id}`),
+  get: async (id: string): Promise<User> => {
+    const res = await apiClient.get<User>(`/users/${id}`)
+    return res.data
+  },
 
-  getByEmail: (email: string) => get<User>(`/users/by-email/${encodeURIComponent(email)}`),
+  getByEmail: async (email: string): Promise<User> => {
+    const res = await apiClient.get<User>(`/users/by-email/${encodeURIComponent(email)}`)
+    return res.data
+  },
 
-  create: (data: UserCreate) => post<User>('/users', data),
+  create: async (data: UserCreate): Promise<User> => {
+    const res = await apiClient.post<User>('/users', data)
+    return res.data
+  },
 
-  update: (id: string, data: UserUpdate) => put<User>(`/users/${id}`, data),
+  update: async (id: string, data: UserUpdate): Promise<User> => {
+    const res = await apiClient.put<User>(`/users/${id}`, data)
+    return res.data
+  },
 
-  delete: (id: string) => del(`/users/${id}`),
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/users/${id}`)
+  },
 }

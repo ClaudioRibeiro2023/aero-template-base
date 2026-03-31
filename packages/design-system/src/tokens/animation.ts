@@ -1,7 +1,7 @@
 /**
  * Design Tokens - Animation
- * 
- * Durações, easings e transições padrão.
+ *
+ * Durações, easings, transições e spring presets.
  */
 
 export const duration = {
@@ -11,6 +11,11 @@ export const duration = {
   slow: '300ms',
   slower: '500ms',
   slowest: '700ms',
+  // Novas durações para micro-interactions
+  microFast: '150ms',
+  microSlow: '250ms',
+  pageTransition: '400ms',
+  modal: '350ms',
 } as const
 
 export const easing = {
@@ -21,6 +26,18 @@ export const easing = {
   // Custom easings
   spring: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
   bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+  // Expo easings — premium feel
+  expoOut: 'cubic-bezier(0.16, 1, 0.3, 1)',
+  expoIn: 'cubic-bezier(0.7, 0, 0.84, 0)',
+  expoInOut: 'cubic-bezier(0.87, 0, 0.13, 1)',
+} as const
+
+// Spring presets (para framer-motion ou CSS spring())
+export const springPresets = {
+  snappy: { stiffness: 400, damping: 30, mass: 1 },
+  smooth: { stiffness: 200, damping: 24, mass: 1 },
+  gentle: { stiffness: 120, damping: 20, mass: 1 },
+  bouncy: { stiffness: 300, damping: 15, mass: 1 },
 } as const
 
 // Transições pré-definidas
@@ -31,6 +48,10 @@ export const transitions = {
   opacity: `opacity ${duration.normal} ${easing.easeInOut}`,
   shadow: `box-shadow ${duration.normal} ${easing.easeInOut}`,
   transform: `transform ${duration.normal} ${easing.easeInOut}`,
+  // Novas transições premium
+  glass: `background-color ${duration.normal} ${easing.expoOut}, border-color ${duration.normal} ${easing.expoOut}, backdrop-filter ${duration.slow} ${easing.expoOut}`,
+  page: `opacity ${duration.pageTransition} ${easing.expoOut}, transform ${duration.pageTransition} ${easing.expoOut}`,
+  modal: `opacity ${duration.modal} ${easing.expoOut}, transform ${duration.modal} ${easing.expoOut}`,
 } as const
 
 // Keyframes para animações
@@ -79,9 +100,18 @@ export const keyframes = {
     from: { transform: 'scale(0.95)', opacity: '0' },
     to: { transform: 'scale(1)', opacity: '1' },
   },
+  shimmer: {
+    '0%': { backgroundPosition: '-200% 0' },
+    '100%': { backgroundPosition: '200% 0' },
+  },
+  glowPulse: {
+    '0%, 100%': { boxShadow: '0 0 12px rgba(0, 180, 216, 0.15)' },
+    '50%': { boxShadow: '0 0 24px rgba(0, 180, 216, 0.25)' },
+  },
 } as const
 
 export type DurationKey = keyof typeof duration
 export type EasingKey = keyof typeof easing
 export type TransitionKey = keyof typeof transitions
 export type KeyframeKey = keyof typeof keyframes
+export type SpringPresetKey = keyof typeof springPresets

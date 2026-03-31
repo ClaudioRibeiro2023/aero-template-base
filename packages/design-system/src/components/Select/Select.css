@@ -46,7 +46,7 @@
 
 .ds-select__field:focus {
   outline: none;
-  border-color: #0087a8;
+  border-color: #00b4d8;
   box-shadow: 0 0 0 3px rgba(0, 135, 168, 0.15);
 }
 

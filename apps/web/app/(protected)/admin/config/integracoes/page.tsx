@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, Save, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, Save, Plus, Trash2, Key, Webhook } from 'lucide-react'
 import { useToast } from '@template/design-system'
 
-interface Webhook {
+interface WebhookItem {
   id: string
   url: string
   events: string
@@ -13,7 +13,7 @@ interface Webhook {
 
 export default function ConfigIntegracoesPage() {
   const [apiKey] = useState('sk-template-••••••••••••••••')
-  const [webhooks, setWebhooks] = useState<Webhook[]>([
+  const [webhooks, setWebhooks] = useState<WebhookItem[]>([
     { id: '1', url: 'https://example.com/webhook', events: 'user.created, user.updated' },
   ])
   const { success } = useToast()
@@ -28,39 +28,42 @@ export default function ConfigIntegracoesPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    success('Configurações salvas com sucesso')
+    success('Configuracoes salvas com sucesso')
   }
 
   return (
-    <main className="page-enter max-w-2xl mx-auto p-4 sm:p-8">
-      <div className="mb-6 flex items-center gap-3">
+    <main className="page-enter ambient-gradient max-w-2xl mx-auto p-4 sm:p-8">
+      <div className="relative z-10 mb-6 flex items-center gap-3">
         <Link
           href="/admin/config"
-          className="p-1.5 rounded-lg hover:bg-[var(--surface-raised)] transition-colors"
+          className="p-1.5 rounded-xl hover:bg-white/[0.03] transition-colors"
           aria-label="Voltar"
         >
           <ChevronLeft size={20} className="text-[var(--text-muted)]" />
         </Link>
         <div>
-          <h1 className="text-xl font-bold">Integrações</h1>
-          <p className="text-sm text-[var(--text-secondary)]">APIs, webhooks e serviços externos</p>
+          <h1 className="text-xl font-bold text-[var(--text-primary)]">Integracoes</h1>
+          <p className="text-sm text-[var(--text-secondary)]">APIs, webhooks e servicos externos</p>
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-5">
+      <form onSubmit={handleSave} className="relative z-10 space-y-4">
         {/* API Key */}
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-raised)] p-6 space-y-3">
-          <h2 className="text-sm font-semibold">Chave de API</h2>
+        <div className="glass-panel p-6 space-y-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Key size={16} className="text-[var(--brand-primary)]" />
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">Chave de API</h2>
+          </div>
           <div className="flex items-center gap-2">
             <input
               type="text"
               value={apiKey}
               readOnly
-              className="flex-1 px-3 py-2 rounded-lg border border-[var(--border-default)] bg-[var(--surface-base)] text-sm font-mono text-[var(--text-muted)]"
+              className="flex-1 px-3 py-2.5 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-sm text-sm font-mono text-[var(--text-muted)]"
             />
             <button
               type="button"
-              className="px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm hover:bg-[var(--surface-base)] transition-colors"
+              className="px-4 py-2.5 rounded-xl border border-[var(--glass-border)] text-sm text-[var(--text-secondary)] hover:bg-white/[0.03] hover:border-[var(--glass-border-hover)] transition-all"
             >
               Copiar
             </button>
@@ -68,13 +71,16 @@ export default function ConfigIntegracoesPage() {
         </div>
 
         {/* Webhooks */}
-        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--surface-raised)] p-6 space-y-4">
+        <div className="glass-panel p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Webhooks</h2>
+            <div className="flex items-center gap-2">
+              <Webhook size={16} className="text-[var(--accent-purple)]" />
+              <h2 className="text-sm font-semibold text-[var(--text-primary)]">Webhooks</h2>
+            </div>
             <button
               type="button"
               onClick={addWebhook}
-              className="flex items-center gap-1.5 text-xs text-[var(--brand-primary)] hover:underline"
+              className="flex items-center gap-1.5 text-xs text-[var(--brand-primary)] hover:text-[var(--brand-primary)]/80 transition-colors"
             >
               <Plus size={13} /> Adicionar
             </button>
@@ -91,7 +97,7 @@ export default function ConfigIntegracoesPage() {
                       prev.map(w => (w.id === wh.id ? { ...w, url: e.target.value } : w))
                     )
                   }
-                  className="w-full px-3 py-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-base)] text-sm"
+                  className="w-full px-3 py-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-sm text-sm text-[var(--text-primary)] transition-all duration-200 focus:outline-none focus:border-[var(--brand-primary)]/50 focus:ring-1 focus:ring-[var(--brand-primary)]/20 placeholder:text-[var(--text-muted)]"
                 />
                 <input
                   type="text"
@@ -102,13 +108,13 @@ export default function ConfigIntegracoesPage() {
                       prev.map(w => (w.id === wh.id ? { ...w, events: e.target.value } : w))
                     )
                   }
-                  className="w-full px-3 py-1.5 rounded-lg border border-[var(--border-default)] bg-[var(--surface-base)] text-sm"
+                  className="w-full px-3 py-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-sm text-sm text-[var(--text-primary)] transition-all duration-200 focus:outline-none focus:border-[var(--brand-primary)]/50 focus:ring-1 focus:ring-[var(--brand-primary)]/20 placeholder:text-[var(--text-muted)]"
                 />
               </div>
               <button
                 type="button"
                 onClick={() => removeWebhook(wh.id)}
-                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-[var(--text-muted)] hover:text-red-500 transition-colors"
+                className="p-2 rounded-xl hover:bg-rose-500/10 text-[var(--text-muted)] hover:text-rose-400 transition-all"
                 aria-label="Remover webhook"
               >
                 <Trash2 size={15} />
@@ -120,7 +126,8 @@ export default function ConfigIntegracoesPage() {
         <div className="flex justify-end">
           <button
             type="submit"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--brand-primary)] text-white text-sm font-medium hover:opacity-90"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--brand-primary)] text-white text-sm font-medium transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
+            style={{ boxShadow: '0 0 16px var(--glow-brand)' }}
           >
             <Save size={15} />
             Salvar

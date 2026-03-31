@@ -116,7 +116,7 @@ export function NavigationEditor({
           <button
             type="button"
             onClick={() => setShowAddForm(v => !v)}
-            className="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            className="text-sm font-medium text-[var(--brand-primary)] hover:text-[var(--brand-secondary)]"
           >
             {showAddForm ? 'Cancelar' : '+ Adicionar item'}
           </button>
@@ -127,7 +127,7 @@ export function NavigationEditor({
       {showAddForm && (
         <div
           data-testid="nav-add-form"
-          className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-lg border border-dashed border-border-default bg-surface-muted"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-[var(--radius-lg)] border border-dashed border-white/[0.06] bg-[var(--glass-bg)]"
         >
           <input
             type="text"
@@ -135,7 +135,7 @@ export function NavigationEditor({
             onChange={e => setNewLabel(e.target.value)}
             placeholder="Label"
             aria-label="Label do item"
-            className="rounded-md border border-border-default bg-surface-elevated px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+            className="rounded-[var(--radius-md)] border border-white/[0.06] bg-[var(--bg-surface)] px-3 py-1.5 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
           />
           <input
             type="text"
@@ -143,13 +143,13 @@ export function NavigationEditor({
             onChange={e => setNewPath(e.target.value)}
             placeholder="/caminho"
             aria-label="Path do item"
-            className="rounded-md border border-border-default bg-surface-elevated px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
+            className="rounded-[var(--radius-md)] border border-white/[0.06] bg-[var(--bg-surface)] px-3 py-1.5 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
           />
           <button
             type="button"
             onClick={handleAdd}
             disabled={!newLabel.trim() || !newPath.trim()}
-            className="rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-[var(--radius-md)] bg-[var(--brand-primary)] px-4 py-1.5 text-sm font-medium text-white hover:bg-[var(--brand-secondary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Adicionar
           </button>
@@ -162,7 +162,7 @@ export function NavigationEditor({
           Nenhum item de navegação configurado
         </p>
       ) : (
-        <ul role="list" className="space-y-1">
+        <ul className="space-y-1">
           {sorted.map((item, index) => (
             <li
               key={item.id}
@@ -174,8 +174,8 @@ export function NavigationEditor({
               className={[
                 'flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors cursor-grab active:cursor-grabbing',
                 overIndex === index && dragIndex !== null
-                  ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                  : 'border-border-default bg-surface-elevated',
+                  ? 'border-[var(--brand-primary)]/40 bg-[var(--brand-primary)]/5'
+                  : 'border-white/[0.06] bg-[var(--bg-surface)]',
                 !item.enabled ? 'opacity-50' : '',
               ].join(' ')}
             >
@@ -197,7 +197,7 @@ export function NavigationEditor({
                 aria-label={item.enabled ? `Desativar ${item.label}` : `Ativar ${item.label}`}
                 className={[
                   'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors',
-                  item.enabled ? 'bg-blue-600' : 'bg-surface-muted',
+                  item.enabled ? 'bg-[var(--brand-primary)]' : 'bg-[var(--bg-muted)]',
                 ].join(' ')}
               >
                 <span
@@ -214,7 +214,7 @@ export function NavigationEditor({
                   type="button"
                   onClick={() => onRemove(item.id)}
                   aria-label={`Remover ${item.label}`}
-                  className="text-text-muted hover:text-red-500 transition-colors text-sm"
+                  className="text-[var(--text-muted)] hover:text-[var(--accent-rose)] transition-colors text-sm"
                 >
                   ✕
                 </button>

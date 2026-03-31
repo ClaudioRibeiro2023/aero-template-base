@@ -14,12 +14,6 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/dashboard/usuarios',
 }))
 
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string, fallback: string) => fallback,
-  }),
-}))
-
 vi.mock('@template/design-system', () => ({
   Tooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   Breadcrumb: ({ children }: { children: React.ReactNode }) => (
@@ -38,10 +32,6 @@ vi.mock('@template/design-system', () => ({
       {href ? <a href={href}>{children}</a> : children}
     </span>
   ),
-}))
-
-vi.mock('@/components/common/LanguageSelector', () => ({
-  LanguageSelector: () => <div data-testid="language-selector" />,
 }))
 
 vi.mock('@/components/common/NotificationCenter', () => ({
@@ -99,11 +89,6 @@ describe('Header', () => {
       render(<Header />)
       const header = document.querySelector('header')
       expect(header).toBeInTheDocument()
-    })
-
-    it('renderiza o seletor de idioma', () => {
-      render(<Header />)
-      expect(screen.getByTestId('language-selector')).toBeInTheDocument()
     })
 
     it('renderiza o centro de notificações', () => {

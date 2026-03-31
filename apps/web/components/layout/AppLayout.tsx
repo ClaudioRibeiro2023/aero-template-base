@@ -162,7 +162,7 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-[100dvh] bg-surface-base">
+    <div className="flex min-h-[100dvh] bg-[var(--bg-root)]">
       {/* ── Mobile overlay (sidebar) ── */}
       <div
         className={clsx(
@@ -200,7 +200,7 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
         style={{ marginLeft: isMobile ? undefined : getContentMargin() }}
       >
         <Header onMobileMenuToggle={() => setIsMobileMenuOpen(prev => !prev)} isMobile={isMobile} />
-        <main id="main-content" className="flex-1 p-4 md:p-6">
+        <main id="main-content" className="flex-1 p-4 md:p-6 ambient-gradient">
           {children}
         </main>
         <Footer />

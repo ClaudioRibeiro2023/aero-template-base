@@ -15,7 +15,10 @@ function mapSupabaseUser(user: User, _session: Session | null): AuthUser {
   const metadata = user.user_metadata || {}
   const appMetadata = user.app_metadata || {}
 
-  const role = (metadata.role || appMetadata.role || 'VIEWER').toUpperCase() as UserRole
+  // SECURITY: Role MUST come from app_metadata (immutable by user).
+  // NEVER read role from user_metadata — it can be modified by the user
+  // via Supabase's public API, enabling privilege escalation (P0-01).
+  const role = (appMetadata.role || 'VIEWER').toUpperCase() as UserRole
 
   return {
     id: user.id,

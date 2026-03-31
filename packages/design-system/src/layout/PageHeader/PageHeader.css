@@ -22,7 +22,7 @@
   padding: 0.75rem;
   border-radius: var(--radius-xl, 0.75rem);
   background: rgba(0, 135, 168, 0.1);
-  color: var(--brand-primary, #0087a8);
+  color: var(--brand-primary, #00b4d8);
 }
 
 .ds-page-header__title {

@@ -44,12 +44,12 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-surface-base p-4">
-          <div className="max-w-md w-full bg-surface-elevated rounded-2xl shadow-xl p-8 border border-border-default">
+        <div className="min-h-screen flex items-center justify-center bg-[var(--bg-root)] p-4">
+          <div className="max-w-md w-full bg-[var(--glass-bg)] backdrop-blur-xl rounded-2xl shadow-[var(--shadow-lg)] p-8 border border-white/[0.06]">
             <div className="flex flex-col items-center text-center">
               {/* Icon */}
-              <div className="w-16 h-16 rounded-full bg-color-error/10 flex items-center justify-center mb-6">
-                <AlertTriangle className="w-8 h-8 text-color-error" />
+              <div className="w-16 h-16 rounded-full bg-[var(--accent-rose)]/10 flex items-center justify-center mb-6">
+                <AlertTriangle className="w-8 h-8 text-[var(--accent-rose)]" />
               </div>
 
               {/* Title */}
@@ -68,7 +68,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   className="w-full mb-6 text-left"
                 >
                   {this.state.errorInfo?.componentStack && (
-                    <pre className="mt-2 text-xs overflow-auto max-h-32">
+                    <pre className="mt-2 text-xs font-mono overflow-auto max-h-32 p-3 rounded-[var(--radius-md)] bg-[var(--glass-bg)] border border-white/[0.06]">
                       {this.state.errorInfo.componentStack}
                     </pre>
                   )}
@@ -79,7 +79,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <div className="flex gap-3 w-full">
                 <button
                   onClick={this.handleGoHome}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-surface-muted text-text-primary rounded-lg hover:bg-surface-elevated transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-[var(--glass-bg)] border border-white/[0.06] text-[var(--text-primary)] rounded-lg hover:bg-white/[0.04] transition-colors"
                 >
                   <Home size={18} />
                   Início

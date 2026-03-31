@@ -1,6 +1,6 @@
 /**
  * Toast Component
- * 
+ *
  * Sistema de notificações toast com diferentes tipos e auto-dismiss.
  */
 
@@ -10,7 +10,13 @@ import clsx from 'clsx'
 import './Toast.css'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
-export type ToastPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center' | 'bottom-center'
+export type ToastPosition =
+  | 'top-right'
+  | 'top-left'
+  | 'bottom-right'
+  | 'bottom-left'
+  | 'top-center'
+  | 'bottom-center'
 
 export interface Toast {
   id: string
@@ -71,6 +77,13 @@ export function ToastItem({ id: _id, type, title, message, duration = 5000, onCl
       >
         <X size={16} />
       </button>
+      {duration > 0 && (
+        <div
+          className="ds-toast__progress"
+          style={{ animationDuration: `${duration}ms` }}
+          aria-hidden="true"
+        />
+      )}
     </div>
   )
 }
@@ -86,11 +99,7 @@ export function ToastContainer({ toasts, position = 'top-right', onRemove }: Toa
   return (
     <div className={clsx('ds-toast-container', `ds-toast-container--${position}`)}>
       {toasts.map(toast => (
-        <ToastItem
-          key={toast.id}
-          {...toast}
-          onClose={() => onRemove(toast.id)}
-        />
+        <ToastItem key={toast.id} {...toast} onClose={() => onRemove(toast.id)} />
       ))}
     </div>
   )
@@ -115,33 +124,48 @@ interface ToastProviderProps {
   maxToasts?: number
 }
 
-export function ToastProvider({ children, position = 'top-right', maxToasts = 5 }: ToastProviderProps) {
+export function ToastProvider({
+  children,
+  position = 'top-right',
+  maxToasts = 5,
+}: ToastProviderProps) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
-  const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
-    const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    setToasts(prev => {
-      const newToasts = [...prev, { ...toast, id }]
-      return newToasts.slice(-maxToasts)
-    })
-    return id
-  }, [maxToasts])
+  const addToast = useCallback(
+    (toast: Omit<Toast, 'id'>) => {
+      const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      setToasts(prev => {
+        const newToasts = [...prev, { ...toast, id }]
+        return newToasts.slice(-maxToasts)
+      })
+      return id
+    },
+    [maxToasts]
+  )
 
   const removeToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id))
   }, [])
 
-  const success = useCallback((message: string, title?: string) => 
-    addToast({ type: 'success', message, title }), [addToast])
-  
-  const error = useCallback((message: string, title?: string) => 
-    addToast({ type: 'error', message, title }), [addToast])
-  
-  const warning = useCallback((message: string, title?: string) => 
-    addToast({ type: 'warning', message, title }), [addToast])
-  
-  const info = useCallback((message: string, title?: string) => 
-    addToast({ type: 'info', message, title }), [addToast])
+  const success = useCallback(
+    (message: string, title?: string) => addToast({ type: 'success', message, title }),
+    [addToast]
+  )
+
+  const error = useCallback(
+    (message: string, title?: string) => addToast({ type: 'error', message, title }),
+    [addToast]
+  )
+
+  const warning = useCallback(
+    (message: string, title?: string) => addToast({ type: 'warning', message, title }),
+    [addToast]
+  )
+
+  const info = useCallback(
+    (message: string, title?: string) => addToast({ type: 'info', message, title }),
+    [addToast]
+  )
 
   return (
     <ToastContext.Provider value={{ toasts, addToast, removeToast, success, error, warning, info }}>

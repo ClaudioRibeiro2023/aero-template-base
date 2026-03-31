@@ -168,6 +168,7 @@ export function NotificationCenter({
       </Tooltip>
 
       {isOpen && (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <div
           role="dialog"
           aria-label="Centro de notificações"
@@ -219,10 +220,11 @@ export function NotificationCenter({
               notifications.map((notif, index) => (
                 <div
                   key={notif.id}
-                  role="listitem"
+                  role="button"
                   tabIndex={0}
                   data-notification-item
                   aria-label={`${SEVERITY_LABEL[notif.severity]}: ${notif.title} — ${notif.message}`}
+                  aria-pressed={notif.read}
                   className={clsx(
                     'flex items-start gap-2.5 px-3 py-2.5 border-b border-white/[0.06] last:border-0 transition-colors cursor-pointer',
                     'focus:outline-none focus:bg-white/[0.06]',

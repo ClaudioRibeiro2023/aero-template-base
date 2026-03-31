@@ -32,15 +32,17 @@ export function SkipLink({
         'focus:z-[9999]',
         'focus:px-4',
         'focus:py-2',
-        'focus:bg-white',
-        'focus:text-gray-900',
-        'focus:rounded',
-        'focus:shadow-lg',
+        'focus:bg-[var(--bg-surface)]',
+        'focus:text-[var(--text-primary)]',
+        'focus:rounded-[var(--radius-md)]',
+        'focus:shadow-[var(--shadow-lg)]',
         'focus:outline',
         'focus:outline-2',
-        'focus:outline-blue-600',
+        'focus:outline-[var(--brand-primary)]',
         'focus:text-sm',
         'focus:font-medium',
+        'focus:border',
+        'focus:border-white/[0.06]',
       ].join(' ')}
     >
       {label}

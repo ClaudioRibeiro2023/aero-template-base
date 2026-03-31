@@ -21,10 +21,10 @@ export function ProtectedRoute({
   // Show loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-surface-base">
+      <div className="flex items-center justify-center min-h-screen bg-[var(--bg-root)]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-text-secondary">Verificando autenticação...</p>
+          <div className="w-12 h-12 rounded-full shimmer" />
+          <div className="h-4 w-48 rounded shimmer" />
         </div>
       </div>
     )
@@ -43,10 +43,10 @@ export function ProtectedRoute({
     // Trigger login redirect
     login()
     return (
-      <div className="flex items-center justify-center min-h-screen bg-surface-base">
+      <div className="flex items-center justify-center min-h-screen bg-[var(--bg-root)]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-text-secondary">Redirecionando para login...</p>
+          <div className="w-12 h-12 rounded-full shimmer" />
+          <div className="h-4 w-44 rounded shimmer" />
         </div>
       </div>
     )
@@ -58,11 +58,11 @@ export function ProtectedRoute({
 
     if (!hasAccess) {
       return (
-        <div className="flex items-center justify-center min-h-screen bg-surface-base">
-          <div className="max-w-md p-8 text-center bg-surface-elevated rounded-xl shadow-lg">
-            <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-red-100 rounded-full">
+        <div className="flex items-center justify-center min-h-screen bg-[var(--bg-root)]">
+          <div className="max-w-md p-8 text-center bg-[var(--glass-bg)] backdrop-blur-xl border border-white/[0.06] rounded-xl shadow-[var(--shadow-lg)]">
+            <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-[var(--accent-rose)]/10 rounded-full">
               <svg
-                className="w-8 h-8 text-red-600"
+                className="w-8 h-8 text-[var(--accent-rose)]"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

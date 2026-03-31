@@ -12,7 +12,7 @@
   --color-brand-primary-200: #99e0eb;
   --color-brand-primary-300: #66d1e0;
   --color-brand-primary-400: #33c1d6;
-  --color-brand-primary-500: #0087a8;
+  --color-brand-primary-500: #00b4d8;
   --color-brand-primary-600: #006c86;
   --color-brand-primary-700: #005165;
   --color-brand-primary-800: #003643;
@@ -167,7 +167,7 @@
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
   --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
-  --shadow-focus: 0 0 0 3px rgba(0, 135, 168, 0.2);
+  --shadow-focus: 0 0 0 3px rgba(0, 180, 216, 0.2);
   --shadow-focus-error: 0 0 0 3px rgba(239, 68, 68, 0.2);
 
   /* ===== Z-INDEX ===== */

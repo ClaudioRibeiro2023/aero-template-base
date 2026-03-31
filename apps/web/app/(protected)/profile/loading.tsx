@@ -1,5 +1,5 @@
 function Sk({ className }: { className?: string }) {
-  return <div className={`animate-pulse rounded bg-[var(--surface-muted)] ${className ?? ''}`} />
+  return <div className={`rounded shimmer ${className ?? ''}`} />
 }
 
 export default function ProfileLoading() {

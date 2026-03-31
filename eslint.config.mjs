@@ -3,6 +3,7 @@ import globals from 'globals'
 import tsPlugin from '@typescript-eslint/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
 import reactHooks from 'eslint-plugin-react-hooks'
+import jsxA11y from 'eslint-plugin-jsx-a11y'
 import prettier from 'eslint-config-prettier'
 
 /** @type {import('eslint').Linter.Config[]} */
@@ -37,10 +38,12 @@ export default [
     plugins: {
       '@typescript-eslint': tsPlugin,
       'react-hooks': reactHooks,
+      'jsx-a11y': jsxA11y,
     },
     rules: {
       ...tsPlugin.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
+      ...jsxA11y.configs.recommended.rules,
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],

@@ -5,7 +5,7 @@
 
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) {
-    console.log('[SW] Service workers not supported')
+    console.warn('[SW] Service workers not supported')
     return null
   }
 
@@ -19,13 +19,13 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
       if (newWorker) {
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
-            console.log('[SW] New version available — refresh to update')
+            console.warn('[SW] New version available — refresh to update')
           }
         })
       }
     })
 
-    console.log('[SW] Registered successfully, scope:', registration.scope)
+    console.warn('[SW] Registered successfully, scope:', registration.scope)
     return registration
   } catch (error) {
     console.error('[SW] Registration failed:', error)

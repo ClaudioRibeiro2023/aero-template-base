@@ -24,3 +24,6 @@ export * from './branding'
 
 // Collaboration (presence, editing indicators)
 export * from './collaboration'
+
+// Zod Validation Schemas
+export * from './schemas'

@@ -28,9 +28,9 @@
 }
 
 .ds-pagination__button--active {
-  background-color: #0087a8;
+  background-color: #00b4d8;
   color: #fff;
-  border-color: #0087a8;
+  border-color: #00b4d8;
 }
 
 .ds-pagination__button--active:hover:not(:disabled) {

@@ -74,10 +74,10 @@ export default function FileUpload({
         role="button"
         tabIndex={0}
         aria-label={`${label} drop zone`}
-        className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors cursor-pointer
-          ${dragActive ? 'border-primary-500 bg-primary-50' : 'border-gray-300 bg-gray-50'}
-          ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-primary-400'}
-          ${displayError ? 'border-red-400' : ''}`}
+        className={`flex flex-col items-center justify-center rounded-[var(--radius-lg)] border-2 border-dashed p-6 transition-colors cursor-pointer backdrop-blur-xl
+          ${dragActive ? 'border-[var(--brand-primary)] bg-[var(--brand-primary)]/5' : 'border-white/[0.06] bg-[var(--glass-bg)]'}
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-white/[0.1]'}
+          ${displayError ? 'border-[var(--accent-rose)]/40' : ''}`}
         onClick={() => !disabled && inputRef.current?.click()}
         onKeyDown={e => {
           if ((e.key === 'Enter' || e.key === ' ') && !disabled) inputRef.current?.click()
@@ -88,7 +88,8 @@ export default function FileUpload({
         data-testid="file-drop-zone"
       >
         <p className="text-sm text-text-secondary">
-          Drag & drop or <span className="text-primary-600 font-medium underline">browse</span>
+          Drag & drop or{' '}
+          <span className="text-[var(--brand-primary)] font-medium underline">browse</span>
         </p>
         <p className="text-xs text-text-secondary mt-1">
           Max {maxSizeMB}MB{accept ? ` · ${accept}` : ''}
@@ -106,7 +107,7 @@ export default function FileUpload({
       />
       {hint && !displayError && <p className="text-xs text-text-secondary">{hint}</p>}
       {displayError && (
-        <p className="text-xs text-red-600" role="alert">
+        <p className="text-xs text-[var(--accent-rose)]" role="alert">
           {displayError}
         </p>
       )}

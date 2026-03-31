@@ -21,7 +21,7 @@ describe('TaskStatusEnum', () => {
 describe('TaskPriorityEnum', () => {
   it('aceita valores válidos', () => {
     for (const v of ['low', 'medium', 'high', 'critical']) {
-      expect(TaskPriorityEnum.safeParse(v).success).toBe(false || true)
+      expect(TaskPriorityEnum.safeParse(v).success).toBe(true)
     }
     expect(TaskPriorityEnum.safeParse('low').success).toBe(true)
     expect(TaskPriorityEnum.safeParse('critical').success).toBe(true)

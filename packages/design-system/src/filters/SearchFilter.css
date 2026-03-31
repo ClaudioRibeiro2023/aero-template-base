@@ -37,7 +37,7 @@
 
 .ds-search-filter__input:focus {
   outline: none;
-  border-color: #0087a8;
+  border-color: #00b4d8;
   box-shadow: 0 0 0 3px rgba(0, 135, 168, 0.15);
 }
 
@@ -92,7 +92,7 @@
 .ds-filter-chip--active {
   background-color: rgba(0, 135, 168, 0.08);
   border-color: rgba(0, 135, 168, 0.3);
-  color: #0087a8;
+  color: #00b4d8;
 }
 
 .ds-filter-chip__remove {

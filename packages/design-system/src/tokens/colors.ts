@@ -1,7 +1,7 @@
 /**
  * Design Tokens - Colors
- * 
- * Paleta de cores semântica para o design system.
+ *
+ * Dark Glass Engineering — paleta dark-first com superfícies glass.
  * Customize estes valores para cada projeto derivado.
  */
 
@@ -9,16 +9,16 @@ export const colors = {
   // Brand Colors - Cores principais da marca
   brand: {
     primary: {
-      50: '#E6F7FA',
-      100: '#CCF0F5',
-      200: '#99E0EB',
-      300: '#66D1E0',
-      400: '#33C1D6',
-      500: '#0087A8', // Default
-      600: '#006C86',
-      700: '#005165',
-      800: '#003643',
-      900: '#001B22',
+      50: '#E6F8FC',
+      100: '#CCF1F9',
+      200: '#99E3F3',
+      300: '#66D5ED',
+      400: '#33C7E7',
+      500: '#00b4d8', // Default — cyan vibrante
+      600: '#0090AD',
+      700: '#006C82',
+      800: '#004856',
+      900: '#00242B',
     },
     secondary: {
       50: '#E6F2F4',
@@ -44,6 +44,14 @@ export const colors = {
       800: '#3B544B',
       900: '#1E2A26',
     },
+  },
+
+  // Accent Colors — paleta complementar para gráficos e destaques
+  accents: {
+    purple: '#a78bfa',
+    amber: '#fbbf24',
+    emerald: '#34d399',
+    rose: '#fb7185',
   },
 
   // Semantic Colors - Estados e feedback
@@ -98,24 +106,40 @@ export const colors = {
     },
   },
 
-  // Neutral Colors - Grays
+  // Neutral Colors - Zinc scale (dark-first)
   neutral: {
     0: '#FFFFFF',
-    50: '#F8FAFC',
-    100: '#F1F5F9',
-    200: '#E2E8F0',
-    300: '#CBD5E1',
-    400: '#94A3B8',
-    500: '#64748B',
-    600: '#475569',
-    700: '#334155',
-    800: '#1E293B',
-    900: '#0F172A',
-    950: '#020617',
+    50: '#fafafa',
+    100: '#f4f4f5',
+    200: '#e4e4e7',
+    300: '#d4d4d8',
+    400: '#a1a1aa',
+    500: '#71717a',
+    600: '#52525b',
+    700: '#3f3f46',
+    800: '#27272a',
+    900: '#18181b',
+    950: '#09090b',
+  },
+
+  // Glass surfaces — tokens para efeitos glassmorphism
+  glass: {
+    bg: 'rgba(255, 255, 255, 0.03)',
+    border: 'rgba(255, 255, 255, 0.06)',
+    borderHover: 'rgba(255, 255, 255, 0.1)',
+    blur: '12px',
+  },
+
+  // Glow shadows
+  glow: {
+    brand: 'rgba(0, 180, 216, 0.15)',
+    brandStrong: 'rgba(0, 180, 216, 0.25)',
+    purple: 'rgba(167, 139, 250, 0.15)',
+    error: 'rgba(239, 68, 68, 0.15)',
   },
 } as const
 
-// Tokens semânticos para surfaces
+// Tokens semânticos para surfaces (dark-first)
 export const surfaces = {
   light: {
     base: colors.neutral[50],
@@ -125,29 +149,30 @@ export const surfaces = {
     overlay: 'rgba(15, 23, 42, 0.5)',
   },
   dark: {
-    base: colors.neutral[900],
-    elevated: colors.neutral[800],
-    muted: colors.neutral[700],
-    subtle: colors.neutral[600],
+    root: colors.neutral[950], // #09090b — fundo principal
+    base: colors.neutral[900], // #18181b — cards base
+    elevated: colors.neutral[800], // #27272a — cards elevados
+    muted: colors.neutral[700], // #3f3f46 — elementos recuados
+    subtle: colors.neutral[600], // #52525b
     overlay: 'rgba(0, 0, 0, 0.7)',
   },
 } as const
 
-// Tokens semânticos para texto
+// Tokens semânticos para texto (dark-first)
 export const textColors = {
   light: {
     primary: colors.neutral[900],
     secondary: colors.neutral[600],
-    muted: colors.neutral[400],
+    muted: colors.neutral[500],
     disabled: colors.neutral[300],
     inverse: colors.neutral[0],
     link: colors.brand.primary[500],
     linkHover: colors.brand.primary[600],
   },
   dark: {
-    primary: colors.neutral[50],
-    secondary: colors.neutral[300],
-    muted: colors.neutral[500],
+    primary: '#fafafa', // zinc-50
+    secondary: '#a1a1aa', // zinc-400
+    muted: '#71717a', // zinc-500
     disabled: colors.neutral[600],
     inverse: colors.neutral[900],
     link: colors.brand.primary[400],
@@ -174,3 +199,5 @@ export const borderColors = {
 export type ColorScale = typeof colors.brand.primary
 export type SemanticColor = keyof typeof colors.semantic
 export type NeutralColor = keyof typeof colors.neutral
+export type AccentColor = keyof typeof colors.accents
+export type GlowColor = keyof typeof colors.glow
