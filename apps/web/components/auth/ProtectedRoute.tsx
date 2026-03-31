@@ -1,6 +1,6 @@
-import { env } from '@/lib/env'
-;('use client')
+'use client'
 
+import { env } from '@/lib/env'
 import type { ReactNode } from 'react'
 // React Router available for redirects if needed
 import { useAuth, type Role } from '@template/shared'

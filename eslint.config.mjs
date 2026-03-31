@@ -1,4 +1,5 @@
 import js from '@eslint/js'
+import globals from 'globals'
 import tsPlugin from '@typescript-eslint/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
 import reactHooks from 'eslint-plugin-react-hooks'
@@ -24,6 +25,14 @@ export default [
         sourceType: 'module',
         ecmaFeatures: { jsx: true },
       },
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        ...globals.es2021,
+        React: 'readonly',
+        RequestInit: 'readonly',
+        RequestInfo: 'readonly',
+      },
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
@@ -38,6 +47,18 @@ export default [
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'prefer-const': 'error',
       'no-var': 'error',
+    },
+  },
+
+  // CommonJS config files (postcss.config.js, etc.)
+  {
+    files: ['**/*.cjs', '**/*.config.js', 'postcss.config.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.commonjs,
+      },
+      sourceType: 'commonjs',
     },
   },
 
