@@ -52,6 +52,20 @@ export interface PlatformConfig {
   defaultTimezone: string
   setupComplete: boolean
   updatedAt: string | null
+  webhooks?: WebhookConfig[]
+  apiKeys?: ApiKeyConfig[]
+}
+
+export interface WebhookConfig {
+  id: string
+  url: string
+  events: string
+}
+
+export interface ApiKeyConfig {
+  id: string
+  name: string
+  maskedKey: string
 }
 
 export type PartialPlatformConfig = Partial<{
@@ -63,6 +77,8 @@ export type PartialPlatformConfig = Partial<{
   defaultLanguage: string
   defaultTimezone: string
   setupComplete: boolean
+  webhooks: WebhookConfig[]
+  apiKeys: ApiKeyConfig[]
 }>
 
 // ============================================================================

@@ -1,7 +1,9 @@
 'use client'
 
 import { useAuth } from '@/hooks/useAuth'
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useUsers, useCreateUser, useUpdateUser, type Profile } from '@/hooks/useUsers'
+import { useRoles } from '@/hooks/useRoles'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Search,
   UserPlus,
@@ -12,54 +14,8 @@ import {
   Pencil,
   Users,
   ShieldAlert,
+  Loader2,
 } from 'lucide-react'
-
-interface Profile {
-  id: string
-  display_name: string
-  email: string
-  role: string
-  is_active: boolean
-}
-
-// Mock data (em produção: buscar do Supabase)
-const INITIAL_USERS: Profile[] = [
-  {
-    id: '1',
-    display_name: 'Admin Demo',
-    email: 'admin@template.dev',
-    role: 'ADMIN',
-    is_active: true,
-  },
-  {
-    id: '2',
-    display_name: 'Gestor Teste',
-    email: 'gestor@template.dev',
-    role: 'GESTOR',
-    is_active: true,
-  },
-  {
-    id: '3',
-    display_name: 'Operador 1',
-    email: 'op1@template.dev',
-    role: 'OPERADOR',
-    is_active: true,
-  },
-  {
-    id: '4',
-    display_name: 'Viewer A',
-    email: 'viewer@template.dev',
-    role: 'VIEWER',
-    is_active: false,
-  },
-  {
-    id: '5',
-    display_name: 'Operador 2',
-    email: 'op2@template.dev',
-    role: 'OPERADOR',
-    is_active: true,
-  },
-]
 
 const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
   ADMIN: { bg: 'rgba(167,139,250,0.10)', text: '#a78bfa' },
@@ -76,6 +32,13 @@ type ModalMode = 'create' | 'edit' | null
 /* Modal de Usuário — "Focus Overlay" glass                                    */
 /* ========================================================================== */
 
+interface UserModalData {
+  display_name: string
+  email: string
+  role: string
+  is_active: boolean
+}
+
 function UserModal({
   mode,
   user,
@@ -85,11 +48,13 @@ function UserModal({
   mode: ModalMode
   user: Profile | null
   onClose: () => void
-  onSave: (data: Omit<Profile, 'id'>) => void
+  onSave: (data: UserModalData) => void
 }) {
+  const { data: rolesData } = useRoles()
+  const availableRoles = rolesData?.items ?? []
   const [displayName, setDisplayName] = useState(user?.display_name || '')
   const [email, setEmail] = useState(user?.email || '')
-  const [role, setRole] = useState(user?.role || 'VIEWER')
+  const [role, setRole] = useState<string>(user?.role || 'VIEWER')
   const [isActive, setIsActive] = useState(user?.is_active ?? true)
   const [saving, setSaving] = useState(false)
   const [visible, setVisible] = useState(false)
@@ -114,9 +79,13 @@ function UserModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
-    await new Promise(r => setTimeout(r, 500))
-    onSave({ display_name: displayName, email, role, is_active: isActive })
-    setSaving(false)
+    try {
+      await onSave({ display_name: displayName, email, role, is_active: isActive })
+    } catch {
+      // Error handling feito pelo React Query
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -261,10 +230,21 @@ function UserModal({
                 e.currentTarget.style.boxShadow = 'none'
               }}
             >
-              <option value="VIEWER">Viewer — somente leitura</option>
-              <option value="OPERADOR">Operador — leitura e operação</option>
-              <option value="GESTOR">Gestor — gestão de módulos</option>
-              <option value="ADMIN">Admin — acesso total</option>
+              {availableRoles.length > 0 ? (
+                availableRoles.map(r => (
+                  <option key={r.id} value={r.name}>
+                    {r.display_name}
+                    {r.description ? ` — ${r.description}` : ''}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option value="VIEWER">Viewer — somente leitura</option>
+                  <option value="OPERADOR">Operador — leitura e operação</option>
+                  <option value="GESTOR">Gestor — gestão de módulos</option>
+                  <option value="ADMIN">Admin — acesso total</option>
+                </>
+              )}
             </select>
           </div>
 
@@ -342,7 +322,6 @@ function UserModal({
 
 export default function UsersPage() {
   const { hasRole } = useAuth()
-  const [users, setUsers] = useState<Profile[]>(INITIAL_USERS)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -350,23 +329,24 @@ export default function UsersPage() {
   const [modalMode, setModalMode] = useState<ModalMode>(null)
   const [editTarget, setEditTarget] = useState<Profile | null>(null)
 
-  const filtered = useMemo(() => {
-    return users.filter(u => {
-      const matchSearch =
-        !search ||
-        u.display_name.toLowerCase().includes(search.toLowerCase()) ||
-        u.email.toLowerCase().includes(search.toLowerCase())
-      const matchRole = roleFilter === 'all' || u.role === roleFilter
-      const matchStatus =
-        statusFilter === 'all' ||
-        (statusFilter === 'active' && u.is_active) ||
-        (statusFilter === 'inactive' && !u.is_active)
-      return matchSearch && matchRole && matchStatus
-    })
-  }, [users, search, roleFilter, statusFilter])
+  const {
+    data: usersData,
+    isLoading,
+    isError,
+  } = useUsers({
+    search: search || undefined,
+    role: roleFilter !== 'all' ? roleFilter : undefined,
+    active_only: statusFilter === 'active' ? true : statusFilter === 'inactive' ? false : undefined,
+    page,
+    page_size: PAGE_SIZE,
+  })
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const createUser = useCreateUser()
+  const updateUser = useUpdateUser()
+
+  const items = usersData?.items ?? []
+  const totalUsers = usersData?.total ?? 0
+  const totalPages = usersData?.pages ?? 1
 
   function openCreate() {
     setEditTarget(null)
@@ -383,11 +363,23 @@ export default function UsersPage() {
     setEditTarget(null)
   }
 
-  function handleSave(data: Omit<Profile, 'id'>) {
+  async function handleSave(data: UserModalData) {
     if (modalMode === 'create') {
-      setUsers(prev => [...prev, { id: Date.now().toString(), ...data }])
+      await createUser.mutateAsync({
+        display_name: data.display_name,
+        email: data.email,
+        role: data.role as Profile['role'],
+        is_active: data.is_active,
+      })
     } else if (editTarget) {
-      setUsers(prev => prev.map(u => (u.id === editTarget.id ? { ...u, ...data } : u)))
+      await updateUser.mutateAsync({
+        id: editTarget.id,
+        data: {
+          display_name: data.display_name,
+          role: data.role as Profile['role'],
+          is_active: data.is_active,
+        },
+      })
     }
     closeModal()
   }
@@ -419,8 +411,9 @@ export default function UsersPage() {
           <div>
             <h1 className="text-xl font-bold text-zinc-100">Usuários</h1>
             <p className="text-[13px] text-zinc-500 mt-0.5">
-              {filtered.length} usuário{filtered.length !== 1 ? 's' : ''} encontrado
-              {filtered.length !== 1 ? 's' : ''}
+              {isLoading
+                ? 'Carregando...'
+                : `${totalUsers} usuário${totalUsers !== 1 ? 's' : ''} encontrado${totalUsers !== 1 ? 's' : ''}`}
             </p>
           </div>
           <button
@@ -546,7 +539,30 @@ export default function UsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {paginated.length === 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="py-16">
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 size={32} className="text-zinc-600 animate-spin" />
+                        <p className="text-sm text-zinc-500">Carregando usuarios...</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : isError ? (
+                  <tr>
+                    <td colSpan={5} className="py-16">
+                      <div className="flex flex-col items-center gap-3 text-center">
+                        <ShieldAlert size={48} className="text-zinc-700" />
+                        <p className="text-sm font-medium text-zinc-400">
+                          Erro ao carregar usuarios
+                        </p>
+                        <p className="text-[13px] text-zinc-600">
+                          Verifique sua conexao e tente novamente
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : items.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-16">
                       <div className="flex flex-col items-center gap-3 text-center">
@@ -576,7 +592,7 @@ export default function UsersPage() {
                     </td>
                   </tr>
                 ) : (
-                  paginated.map(u => {
+                  items.map(u => {
                     const roleStyle = ROLE_COLORS[u.role] || ROLE_COLORS.VIEWER
                     return (
                       <tr
@@ -680,7 +696,7 @@ export default function UsersPage() {
             }}
           >
             <p className="text-[13px] text-zinc-600">
-              Mostrando {paginated.length} de {users.length} usuários
+              Mostrando {items.length} de {totalUsers} usuários
             </p>
             <div className="flex items-center gap-2">
               <button

@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Save } from 'lucide-react'
 import { useToast } from '@template/design-system'
+import { useAdminPlatformConfig } from '@/hooks/usePlatformConfig'
+import type { PartialPlatformConfig } from '@/services/adminConfig'
 
 function Toggle({
   checked,
@@ -43,14 +45,30 @@ function Toggle({
 }
 
 export default function ConfigNotificacoesPage() {
+  const { config, updateAsync } = useAdminPlatformConfig()
   const [emailEnabled, setEmailEnabled] = useState(true)
   const [pushEnabled, setPushEnabled] = useState(false)
   const [alertsEnabled, setAlertsEnabled] = useState(true)
-  const { success } = useToast()
+  const { success, error: toastError } = useToast()
+
+  useEffect(() => {
+    if (config) {
+      setEmailEnabled(config.notifications.emailEnabled ?? true)
+      setPushEnabled(config.notifications.pushEnabled ?? false)
+      setAlertsEnabled(config.notifications.systemAlertsEnabled ?? true)
+    }
+  }, [config])
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    success('Configuracoes salvas com sucesso')
+    try {
+      await updateAsync({
+        notifications: { emailEnabled, pushEnabled, systemAlertsEnabled: alertsEnabled },
+      } as PartialPlatformConfig)
+      success('Configuracoes salvas com sucesso')
+    } catch {
+      toastError('Erro ao salvar configuracoes')
+    }
   }
 
   return (

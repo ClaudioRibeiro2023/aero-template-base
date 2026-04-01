@@ -1,43 +1,46 @@
 /**
  * Users API service.
- * Sprint 15: Users CRUD API.
+ * Megaplan V4 Sprint A: Users CRUD real via /api/users.
  */
-import { apiClient } from '@template/shared'
+import { fetchJson } from '@/lib/fetch-json'
 
 // ============================================================================
 // Types
 // ============================================================================
 
+export type UserRole = 'ADMIN' | 'GESTOR' | 'OPERADOR' | 'VIEWER'
+
 export interface User {
   id: string
   email: string
-  name: string
+  display_name: string
   avatar_url: string | null
   phone: string | null
   department: string | null
+  role: UserRole
   is_active: boolean
-  email_verified: boolean
   tenant_id: string | null
-  is_deleted: boolean
+  metadata: Record<string, unknown>
+  created_at: string
+  updated_at: string
 }
 
 export interface UserCreate {
   email: string
-  name: string
-  avatar_url?: string
+  display_name: string
+  role?: UserRole
+  is_active?: boolean
   phone?: string
   department?: string
-  tenant_id?: string
 }
 
 export interface UserUpdate {
-  name?: string
-  avatar_url?: string
+  display_name?: string
+  email?: string
+  role?: UserRole
+  is_active?: boolean
   phone?: string
   department?: string
-  is_active?: boolean
-  email_verified?: boolean
-  tenant_id?: string
 }
 
 export interface UserList {
@@ -50,9 +53,8 @@ export interface UserList {
 
 export interface ListUsersParams {
   active_only?: boolean
-  tenant_id?: string
-  department?: string
   search?: string
+  role?: string
   page?: number
   page_size?: number
 }
@@ -65,37 +67,48 @@ export const usersService = {
   list: async (params?: ListUsersParams): Promise<UserList> => {
     const query = new URLSearchParams()
     if (params?.active_only) query.set('active_only', 'true')
-    if (params?.tenant_id) query.set('tenant_id', params.tenant_id)
-    if (params?.department) query.set('department', params.department)
     if (params?.search) query.set('search', params.search)
+    if (params?.role) query.set('role', params.role)
     if (params?.page) query.set('page', String(params.page))
     if (params?.page_size) query.set('page_size', String(params.page_size))
     const qs = query.toString()
-    const res = await apiClient.get<UserList>(`/users${qs ? `?${qs}` : ''}`)
-    return res.data
+    const res = await fetchJson<{
+      data: User[]
+      meta: { page: number; page_size: number; total: number; pages: number }
+    }>(`/api/users${qs ? `?${qs}` : ''}`)
+    return {
+      items: res.data,
+      total: res.meta.total,
+      page: res.meta.page,
+      page_size: res.meta.page_size,
+      pages: res.meta.pages,
+    }
   },
 
   get: async (id: string): Promise<User> => {
-    const res = await apiClient.get<User>(`/users/${id}`)
-    return res.data
-  },
-
-  getByEmail: async (email: string): Promise<User> => {
-    const res = await apiClient.get<User>(`/users/by-email/${encodeURIComponent(email)}`)
+    const res = await fetchJson<{ data: User }>(`/api/users/${id}`)
     return res.data
   },
 
   create: async (data: UserCreate): Promise<User> => {
-    const res = await apiClient.post<User>('/users', data)
+    const res = await fetchJson<{ data: User }>('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
     return res.data
   },
 
   update: async (id: string, data: UserUpdate): Promise<User> => {
-    const res = await apiClient.put<User>(`/users/${id}`, data)
+    const res = await fetchJson<{ data: User }>(`/api/users/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
     return res.data
   },
 
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/users/${id}`)
+    await fetchJson(`/api/users/${id}`, { method: 'DELETE' })
   },
 }

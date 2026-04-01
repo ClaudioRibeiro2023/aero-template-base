@@ -1,20 +1,37 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Save } from 'lucide-react'
 import { useToast } from '@template/design-system'
+import { useAdminPlatformConfig } from '@/hooks/usePlatformConfig'
+import type { PartialPlatformConfig } from '@/services/adminConfig'
 
 export default function ConfigAparenciaPage() {
+  const { config, updateAsync } = useAdminPlatformConfig()
   const [primaryColor, setPrimaryColor] = useState('#00b4d8')
   const [secondaryColor, setSecondaryColor] = useState('#005f73')
   const [logoUrl, setLogoUrl] = useState('')
-  const { success } = useToast()
+  const { success, error: toastError } = useToast()
+
+  useEffect(() => {
+    if (config) {
+      if (config.branding.primaryColor) setPrimaryColor(config.branding.primaryColor)
+      if (config.branding.secondaryColor) setSecondaryColor(config.branding.secondaryColor)
+      if (config.branding.logoUrl) setLogoUrl(config.branding.logoUrl)
+    }
+  }, [config])
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    // Em producao: salvar em admin_config.branding no Supabase
-    success('Configuracoes salvas com sucesso')
+    try {
+      await updateAsync({
+        branding: { primaryColor, secondaryColor, logoUrl: logoUrl || undefined },
+      } as PartialPlatformConfig)
+      success('Configuracoes salvas com sucesso')
+    } catch {
+      toastError('Erro ao salvar configuracoes')
+    }
   }
 
   return (

@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Save, Plus, Trash2, Key, Webhook } from 'lucide-react'
 import { useToast } from '@template/design-system'
+import { useAdminPlatformConfig } from '@/hooks/usePlatformConfig'
+import type { PartialPlatformConfig } from '@/services/adminConfig'
 
 interface WebhookItem {
   id: string
@@ -12,11 +14,16 @@ interface WebhookItem {
 }
 
 export default function ConfigIntegracoesPage() {
+  const { config, updateAsync } = useAdminPlatformConfig()
   const [apiKey] = useState('sk-template-••••••••••••••••')
-  const [webhooks, setWebhooks] = useState<WebhookItem[]>([
-    { id: '1', url: 'https://example.com/webhook', events: 'user.created, user.updated' },
-  ])
-  const { success } = useToast()
+  const [webhooks, setWebhooks] = useState<WebhookItem[]>([])
+  const { success, error: toastError } = useToast()
+
+  useEffect(() => {
+    if (config?.webhooks?.length) {
+      setWebhooks(config.webhooks)
+    }
+  }, [config])
 
   function addWebhook() {
     setWebhooks(prev => [...prev, { id: Date.now().toString(), url: '', events: '' }])
@@ -28,7 +35,12 @@ export default function ConfigIntegracoesPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    success('Configuracoes salvas com sucesso')
+    try {
+      await updateAsync({ webhooks } as PartialPlatformConfig)
+      success('Configuracoes salvas com sucesso')
+    } catch {
+      toastError('Erro ao salvar configuracoes')
+    }
   }
 
   return (

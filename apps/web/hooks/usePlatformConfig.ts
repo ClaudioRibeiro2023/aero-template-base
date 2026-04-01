@@ -6,8 +6,14 @@
  */
 import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiClient } from '@template/shared'
-import type { PlatformConfig, PartialPlatformConfig, BrandingConfig } from '../services/adminConfig'
+import { fetchJson } from '@/lib/fetch-json'
+import type {
+  PlatformConfig,
+  PartialPlatformConfig,
+  BrandingConfig,
+  NavigationItem,
+  WebhookConfig,
+} from '../services/adminConfig'
 
 // ============================================================================
 // Query Keys
@@ -51,14 +57,84 @@ export function clearPlatformConfigCache(): void {
 }
 
 // ============================================================================
+// DB row → PlatformConfig transform (snake_case → camelCase + JSONB parsing)
+// ============================================================================
+
+interface AdminConfigRow {
+  id: string
+  tenant_id: string
+  branding: Record<string, string>
+  theme: Record<string, string>
+  navigation: unknown[]
+  notifications: Record<string, boolean>
+  maintenance_mode: boolean
+  default_language: string
+  default_timezone: string
+  webhooks?: unknown[]
+  api_keys?: unknown[]
+  setup_complete?: boolean
+  created_at: string
+  updated_at: string
+}
+
+function isAdminConfigRow(data: unknown): data is AdminConfigRow {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    ('maintenance_mode' in data || 'default_language' in data || 'default_timezone' in data)
+  )
+}
+
+function transformConfig(row: AdminConfigRow): PlatformConfig {
+  return {
+    branding: {
+      appName: row.branding?.appName || '',
+      logoUrl: row.branding?.logoUrl || null,
+      faviconUrl: row.branding?.faviconUrl || null,
+      primaryColor: row.branding?.primaryColor || '#0087A8',
+      secondaryColor: row.branding?.secondaryColor || '#6366f1',
+    },
+    theme: {
+      mode: (row.theme?.mode as 'light' | 'dark' | 'system') || 'system',
+      density: (row.theme?.density as 'comfortable' | 'compact' | 'spacious') || 'comfortable',
+      borderRadius: (row.theme?.borderRadius as 'none' | 'sm' | 'md' | 'lg') || 'md',
+      fontFamily: row.theme?.fontFamily || 'Inter, sans-serif',
+    },
+    navigation: (row.navigation || []) as NavigationItem[],
+    notifications: {
+      emailEnabled: row.notifications?.emailEnabled ?? true,
+      pushEnabled: row.notifications?.pushEnabled ?? false,
+      systemAlertsEnabled: row.notifications?.systemAlertsEnabled ?? true,
+      weeklyReportsEnabled: row.notifications?.weeklyReportsEnabled ?? false,
+    },
+    maintenanceMode: row.maintenance_mode ?? false,
+    defaultLanguage: row.default_language || 'pt-BR',
+    defaultTimezone: row.default_timezone || 'America/Sao_Paulo',
+    setupComplete: row.setup_complete ?? true,
+    updatedAt: row.updated_at,
+    webhooks: (row.webhooks as WebhookConfig[]) || [],
+    apiKeys: row.api_keys as PlatformConfig['apiKeys'],
+  }
+}
+
+/** Normalizes API response: snake_case DB row → camelCase PlatformConfig */
+function normalizeConfig(data: unknown): PlatformConfig {
+  if (isAdminConfigRow(data)) {
+    return transformConfig(data)
+  }
+  return data as PlatformConfig
+}
+
+// ============================================================================
 // API calls
 // ============================================================================
 
 async function fetchPublicConfig(): Promise<PlatformConfig> {
   try {
-    const res = await apiClient.get<PlatformConfig>('/platform/public-config')
-    savePlatformConfigCache(res.data)
-    return res.data
+    const data = await fetchJson<unknown>('/api/platform/public-config')
+    const config = normalizeConfig(data)
+    savePlatformConfigCache(config)
+    return config
   } catch (err) {
     const cached = loadPlatformConfigCache()
     if (cached) return cached
@@ -67,18 +143,24 @@ async function fetchPublicConfig(): Promise<PlatformConfig> {
 }
 
 async function fetchAdminConfig(): Promise<PlatformConfig> {
-  const res = await apiClient.get<PlatformConfig>('/admin/platform-config')
-  return res.data
+  const data = await fetchJson<unknown>('/api/admin/config')
+  return normalizeConfig(data)
 }
 
 async function updateAdminConfig(partial: PartialPlatformConfig): Promise<PlatformConfig> {
-  const res = await apiClient.patch<PlatformConfig>('/admin/platform-config', partial)
-  return res.data
+  return fetchJson<PlatformConfig>('/api/admin/config', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(partial),
+  })
 }
 
 async function resetAdminConfig(): Promise<PlatformConfig> {
-  const res = await apiClient.post<PlatformConfig>('/admin/platform-config/reset')
-  return res.data
+  return fetchJson<PlatformConfig>('/api/admin/config', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  })
 }
 
 // ============================================================================

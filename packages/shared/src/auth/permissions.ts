@@ -181,6 +181,24 @@ export function can(
 }
 
 /**
+ * Verificar permissão contra role_definitions carregadas do banco (RBAC dinâmico)
+ * Útil quando roles customizadas estão disponíveis no frontend.
+ */
+export function hasPermissionDynamic(
+  roleDefinitions: Array<{ name: string; permissions: string[] }>,
+  roleName: string,
+  permission: Permission
+): boolean {
+  const def = roleDefinitions.find(r => r.name === roleName)
+  if (!def) {
+    // Fallback para roles do sistema
+    const sysRole = roleName as UserRole
+    return hasPermission([sysRole], permission)
+  }
+  return def.permissions.includes(permission)
+}
+
+/**
  * Obter permissões faltantes
  */
 export function getMissingPermissions(

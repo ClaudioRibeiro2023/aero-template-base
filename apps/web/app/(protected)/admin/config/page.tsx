@@ -2,7 +2,16 @@
 
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
-import { ChevronRight, Sliders, Paintbrush, Bell, Plug, ShieldAlert } from 'lucide-react'
+import {
+  ChevronRight,
+  Sliders,
+  Paintbrush,
+  Bell,
+  Plug,
+  Menu,
+  ToggleLeft,
+  ShieldAlert,
+} from 'lucide-react'
 
 const SECTIONS = [
   {
@@ -32,6 +41,20 @@ const SECTIONS = [
     description: 'APIs, webhooks e servicos externos',
     icon: Plug,
     path: '/admin/config/integracoes',
+  },
+  {
+    id: 'navegacao',
+    title: 'Navegacao',
+    description: 'Configure menus, ordem e visibilidade do sidebar',
+    icon: Menu,
+    path: '/admin/config/navegacao',
+  },
+  {
+    id: 'feature-flags',
+    title: 'Feature Flags',
+    description: 'Ative ou desative funcionalidades em tempo real',
+    icon: ToggleLeft,
+    path: '/admin/config/feature-flags',
   },
 ]
 

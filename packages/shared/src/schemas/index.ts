@@ -32,3 +32,28 @@ export {
   type TaskCreateFormValues,
   type TaskUpdateFormValues,
 } from './task'
+
+// User schemas
+export {
+  UserRoleEnum,
+  userCreateSchema,
+  userUpdateSchema,
+  type UserCreateFormValues,
+  type UserUpdateFormValues,
+} from './user'
+
+// Role schemas
+export {
+  roleCreateSchema,
+  roleUpdateSchema,
+  type RoleCreateFormValues,
+  type RoleUpdateFormValues,
+} from './role'
+
+// Feature flag schemas
+export {
+  featureFlagCreateSchema,
+  featureFlagUpdateSchema,
+  type FeatureFlagCreateFormValues,
+  type FeatureFlagUpdateFormValues,
+} from './feature-flag'

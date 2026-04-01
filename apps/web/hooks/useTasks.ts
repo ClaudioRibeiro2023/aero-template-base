@@ -9,6 +9,7 @@
  */
 import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
 import type { TaskCreateFormValues, TaskUpdateFormValues } from '@template/shared/schemas'
+import { fetchJson, fetchJsonRaw } from '@/lib/fetch-json'
 
 // ── Types ──
 export type TaskStatus = 'todo' | 'in_progress' | 'done' | 'cancelled'
@@ -48,16 +49,6 @@ export const taskKeys = {
   detail: (id: string) => [...taskKeys.all, 'detail', id] as QueryKey,
 }
 
-// ── Helpers ──
-async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, options)
-  const json = await res.json()
-  if (!res.ok) {
-    throw new Error(json?.error?.message ?? `HTTP ${res.status}`)
-  }
-  return json
-}
-
 // ── Hooks ──
 
 /** Lista tasks com filtros e paginação. */
@@ -71,7 +62,7 @@ export function useTasks(filters: TaskFilters = {}) {
 
   return useQuery<TasksResponse>({
     queryKey: taskKeys.list(filters),
-    queryFn: () => fetchJson<TasksResponse>(`/api/tasks${qs}`),
+    queryFn: () => fetchJsonRaw<TasksResponse>(`/api/tasks${qs}`),
   })
 }
 

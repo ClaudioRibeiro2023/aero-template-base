@@ -7,6 +7,49 @@ aderindo a [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [3.0.0] — 2026-04-01
+
+### Sprint A — Users CRUD Real
+
+- API routes `/api/users` e `/api/users/[id]` com CRUD completo (auth, Zod, audit log)
+- Hook `useUsers` com React Query (paginação, filtros, mutations)
+- Schema Zod `userCreateSchema` / `userUpdateSchema` em `@template/shared/schemas`
+- Página `/admin/usuarios` conectada ao Supabase (removido mock INITIAL_USERS)
+
+### Sprint B — Admin Config Wiring
+
+- API `/api/admin/config` migrada de Bearer token para cookie auth
+- Endpoint público `/api/platform/public-config` para branding na tela de login
+- Páginas geral, aparência, notificações, integrações conectadas ao banco
+- Migration `00010_add_webhooks_column.sql` (webhooks + api_keys em admin_config)
+
+### Sprint C — Navegação + Feature Flags + Audit Log
+
+- API `/api/config/navigation` GET/PUT com audit log
+- API `/api/feature-flags` CRUD + `/api/feature-flags/[id]` PATCH/DELETE
+- API `/api/audit-logs` paginada com filtros (action, resource, date range, user)
+- Hooks: `useNavigationConfig` (conectado à API), `useFeatureFlagsAdmin`, `useAuditLogs`
+- Páginas: `/admin/config/navegacao`, `/admin/config/feature-flags`, `/admin/auditoria`
+- Schema Zod `featureFlagCreateSchema` / `featureFlagUpdateSchema`
+
+### Sprint D — RBAC Configurável em Runtime
+
+- 4 migrations SQL: role_definitions, seed system roles, profiles.role_name, RLS custom roles
+- API `/api/admin/roles` e `/api/admin/roles/[id]` com proteção de system roles
+- Hook `useRoles` com CRUD completo
+- Página `/admin/roles` com matrix visual de permissões (13 recursos × 7 ações)
+- `hasPermissionDynamic()` para RBAC contra definições carregadas do banco
+- Dropdown de roles dinâmico na página de usuários
+- Schema Zod `roleCreateSchema` / `roleUpdateSchema`
+
+### Correções Pós-Squad
+
+- PostgREST filter injection sanitizado em `/api/users` e `/api/audit-logs`
+- Async params (`Promise<{id}>`) em feature-flags/[id] e admin/roles/[id]
+- Labels a11y adicionadas na página de auditoria
+
+---
+
 ## [2.1.0] — 2026-03-30
 
 ### Sprint 1 — Exorcismo da Stack Anterior

@@ -1,6 +1,6 @@
 /**
  * TanStack Query hooks for Users CRUD.
- * Sprint 15: Users CRUD API.
+ * Megaplan V4 Sprint A: Users CRUD real via /api/users.
  */
 import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from '@tanstack/react-query'
 import {
@@ -12,6 +12,16 @@ import {
   type ListUsersParams,
 } from '../services/users'
 
+// Re-export types for consumers
+export type {
+  User as Profile,
+  UserCreate,
+  UserUpdate,
+  UserList,
+  ListUsersParams,
+} from '../services/users'
+export type { UserRole } from '../services/users'
+
 // ============================================================================
 // Query Keys
 // ============================================================================
@@ -22,7 +32,6 @@ export const userKeys = {
   list: (params?: ListUsersParams) => [...userKeys.lists(), params] as const,
   details: () => [...userKeys.all, 'detail'] as const,
   detail: (id: string) => [...userKeys.details(), id] as const,
-  byEmail: (email: string) => [...userKeys.all, 'by-email', email] as const,
 }
 
 // ============================================================================
@@ -43,16 +52,6 @@ export function useUser(id: string, options?: Partial<UseQueryOptions<User>>) {
     queryKey: userKeys.detail(id),
     queryFn: () => usersService.get(id),
     enabled: !!id,
-    staleTime: 60_000,
-    ...options,
-  })
-}
-
-export function useUserByEmail(email: string, options?: Partial<UseQueryOptions<User>>) {
-  return useQuery<User>({
-    queryKey: userKeys.byEmail(email),
-    queryFn: () => usersService.getByEmail(email),
-    enabled: !!email,
     staleTime: 60_000,
     ...options,
   })

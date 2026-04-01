@@ -1,22 +1,40 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Save } from 'lucide-react'
 import { useToast } from '@template/design-system'
 import { useFormDirty } from '@/hooks/useFormDirty'
+import { useAdminPlatformConfig } from '@/hooks/usePlatformConfig'
+import type { PartialPlatformConfig } from '@/services/adminConfig'
 
 export default function ConfigGeralPage() {
-  const [appName, setAppName] = useState(process.env.NEXT_PUBLIC_APP_NAME || 'Template Platform')
+  const { config, updateAsync } = useAdminPlatformConfig()
+  const [appName, setAppName] = useState('')
   const [language, setLanguage] = useState('pt-BR')
-  const { success } = useToast()
+  const { success, error: toastError } = useToast()
   const { isDirty, markDirty, markClean } = useFormDirty()
+
+  // Sync form state quando config carrega
+  useEffect(() => {
+    if (config) {
+      setAppName(config.branding.appName || process.env.NEXT_PUBLIC_APP_NAME || 'Template Platform')
+      setLanguage(config.defaultLanguage || 'pt-BR')
+    }
+  }, [config])
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    // Em producao: salvar em admin_config no Supabase
-    markClean()
-    success('Configuracoes salvas com sucesso')
+    try {
+      await updateAsync({
+        branding: { appName },
+        defaultLanguage: language,
+      } as PartialPlatformConfig)
+      markClean()
+      success('Configuracoes salvas com sucesso')
+    } catch {
+      toastError('Erro ao salvar configuracoes')
+    }
   }
 
   return (

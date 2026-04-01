@@ -96,14 +96,21 @@ export function useNavigationConfig(): UseNavigationConfigReturn {
         }
       }
 
-      // TODO: Quando API estiver pronta, descomentar:
-      // const response = await fetch('/api/config/navigation')
-      // if (response.ok) {
-      //   const data = await response.json()
-      //   setConfig(data)
-      //   localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }))
-      //   return
-      // }
+      // Buscar config da API
+      const response = await fetch('/api/config/navigation')
+      if (response.ok) {
+        const json = (await response.json()) as { data?: { navigation: unknown } }
+        const nav = json?.data?.navigation
+        if (nav) {
+          const merged = {
+            ...DEFAULT_NAVIGATION_CONFIG,
+            modules: nav as typeof DEFAULT_NAVIGATION_CONFIG.modules,
+          }
+          setConfig(merged)
+          localStorage.setItem(CACHE_KEY, JSON.stringify({ data: merged, timestamp: Date.now() }))
+          return
+        }
+      }
 
       // Fallback para config local
       setConfig(DEFAULT_NAVIGATION_CONFIG)
