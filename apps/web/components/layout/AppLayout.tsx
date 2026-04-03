@@ -35,19 +35,14 @@ const WIZARD_DISMISSED_KEY = 'wizard-dismissed'
 type ScreenMode = 'mobile' | 'tablet' | 'desktop'
 
 function useScreenMode(): ScreenMode {
-  const [mode, setMode] = useState<ScreenMode>(() => {
-    if (typeof window === 'undefined') return 'desktop'
-    const w = window.innerWidth
-    if (w < 768) return 'mobile'
-    if (w < 1024) return 'tablet'
-    return 'desktop'
-  })
+  const [mode, setMode] = useState<ScreenMode>('desktop')
 
   useEffect(() => {
     const update = () => {
       const w = window.innerWidth
       setMode(w < 768 ? 'mobile' : w < 1024 ? 'tablet' : 'desktop')
     }
+    update()
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
   }, [])
@@ -110,11 +105,13 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
   const { isComplete: isSetupComplete, isLoading: isSetupLoading } = useIsSetupComplete()
   const [showWizard, setShowWizard] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    if (typeof window === 'undefined') return false
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+
+  // Restore sidebar collapsed state from localStorage after mount (avoids hydration mismatch)
+  useEffect(() => {
     const saved = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
-    return saved === 'true'
-  })
+    if (saved === 'true') setIsSidebarCollapsed(true)
+  }, [])
 
   // Tablet auto-collapse sidebar
   const effectiveCollapsed = isTablet ? true : isSidebarCollapsed

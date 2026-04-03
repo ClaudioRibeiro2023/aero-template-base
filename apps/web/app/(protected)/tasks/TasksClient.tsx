@@ -39,7 +39,7 @@ import {
   type TaskStatus,
   type TaskFilters,
 } from '@/hooks/useTasks'
-import { ToastItem, Modal } from '@template/design-system'
+import { ToastItem, Modal, useToast } from '@template/design-system'
 
 // ── Helpers ──
 const STATUS_LABELS: Record<TaskStatus, string> = {
@@ -83,6 +83,7 @@ function TaskFormModal({ task, onClose }: { task?: Task; onClose: () => void }) 
   const createTask = useCreateTask()
   const updateTask = useUpdateTask(task?.id ?? '')
   const isPending = createTask.isPending || updateTask.isPending
+  const { error: toastError } = useToast()
 
   const schema = isEdit ? taskUpdateSchema : taskCreateSchema
   const {
@@ -102,12 +103,17 @@ function TaskFormModal({ task, onClose }: { task?: Task; onClose: () => void }) 
   })
 
   async function onSubmit(values: TaskCreateFormValues) {
-    if (isEdit) {
-      await updateTask.mutateAsync(values)
-    } else {
-      await createTask.mutateAsync(values)
+    try {
+      if (isEdit) {
+        await updateTask.mutateAsync(values)
+      } else {
+        await createTask.mutateAsync(values)
+      }
+      onClose()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar task'
+      toastError(msg === 'Unauthorized' ? 'Sessão expirada. Faça login novamente.' : msg)
     }
-    onClose()
   }
 
   const inputClass =

@@ -1,7 +1,7 @@
 'use client'
 
-import { supabase } from '@template/shared/supabase'
-import { useState, forwardRef } from 'react'
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { useState, useMemo, forwardRef } from 'react'
 import { Mail, Lock, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -63,6 +63,7 @@ export interface LoginFormProps {
 }
 
 export function LoginForm({ appName, logoUrl }: LoginFormProps) {
+  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
   const [socialLoading, setSocialLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
   const [mode, setMode] = useState<AuthMode>('password')

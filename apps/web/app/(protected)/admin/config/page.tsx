@@ -17,34 +17,34 @@ const SECTIONS = [
   {
     id: 'geral',
     title: 'Geral',
-    description: 'Nome do sistema, idioma e configuracoes basicas',
+    description: 'Nome do sistema, idioma e configurações básicas',
     icon: Sliders,
     path: '/admin/config/geral',
   },
   {
     id: 'aparencia',
-    title: 'Aparencia',
+    title: 'Aparência',
     description: 'Tema, cores e branding da plataforma',
     icon: Paintbrush,
     path: '/admin/config/aparencia',
   },
   {
     id: 'notificacoes',
-    title: 'Notificacoes',
-    description: 'Email, push e configuracao de alertas',
+    title: 'Notificações',
+    description: 'Email, push e configuração de alertas',
     icon: Bell,
     path: '/admin/config/notificacoes',
   },
   {
     id: 'integracoes',
-    title: 'Integracoes',
-    description: 'APIs, webhooks e servicos externos',
+    title: 'Integrações',
+    description: 'APIs, webhooks e serviços externos',
     icon: Plug,
     path: '/admin/config/integracoes',
   },
   {
     id: 'navegacao',
-    title: 'Navegacao',
+    title: 'Navegação',
     description: 'Configure menus, ordem e visibilidade do sidebar',
     icon: Menu,
     path: '/admin/config/navegacao',
@@ -71,7 +71,7 @@ export default function ConfigPage() {
           </div>
           <h1 className="text-xl font-bold text-rose-400">Acesso negado</h1>
           <p className="mt-2 text-sm text-[var(--text-secondary)] max-w-md">
-            Voce precisa de permissao ADMIN ou GESTOR para acessar esta pagina.
+            Você precisa de permissão ADMIN ou GESTOR para acessar esta página.
           </p>
         </div>
       </main>
@@ -81,9 +81,9 @@ export default function ConfigPage() {
   return (
     <main className="page-enter ambient-gradient max-w-3xl mx-auto p-4 sm:p-8">
       <div className="relative z-10 mb-6">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Configuracoes</h1>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Configurações</h1>
         <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Gerencie as configuracoes do sistema
+          Gerencie as configurações do sistema
         </p>
       </div>
 

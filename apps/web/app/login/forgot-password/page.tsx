@@ -1,7 +1,7 @@
 'use client'
 
-import { supabase } from '@template/shared/supabase'
-import { useState } from 'react'
+import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Mail, Loader2, CheckCircle, ArrowLeft } from 'lucide-react'
 import { useForm } from 'react-hook-form'
@@ -12,6 +12,7 @@ import { ResetPasswordSchema } from '@/schemas/auth'
 type ResetPasswordFormData = z.infer<typeof ResetPasswordSchema>
 
 export default function ForgotPasswordPage() {
+  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
   const [sent, setSent] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Template Platform'
