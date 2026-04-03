@@ -1,25 +1,14 @@
 /**
  * useFeatureFlagsAdmin — React Query hooks para gerenciar feature flags.
+ *
+ * Sprint 5: Refactored to delegate to featureFlagsService.
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchJson } from '@/lib/fetch-json'
+import { featureFlagsService } from '@/services/featureFlags'
+import type { FeatureFlag, FeatureFlagCreate, FeatureFlagUpdate } from '@/services/featureFlags'
 
-// ── Types ──
-
-export interface FeatureFlag {
-  id: string
-  tenant_id: string | null
-  flag_name: string
-  description: string
-  enabled: boolean
-  created_at: string
-  updated_at: string
-}
-
-interface FeatureFlagsResponse {
-  data: { items: FeatureFlag[]; total: number }
-  error: null
-}
+// Re-export types for backwards compatibility
+export type { FeatureFlag, FeatureFlagCreate, FeatureFlagUpdate } from '@/services/featureFlags'
 
 // ── Query keys ──
 
@@ -33,7 +22,7 @@ const featureFlagKeys = {
 export function useFeatureFlags() {
   return useQuery<{ items: FeatureFlag[]; total: number }>({
     queryKey: featureFlagKeys.list(),
-    queryFn: () => fetchJson<FeatureFlagsResponse['data']>('/api/feature-flags'),
+    queryFn: () => featureFlagsService.list(),
     staleTime: 30_000,
   })
 }
@@ -41,12 +30,7 @@ export function useFeatureFlags() {
 export function useCreateFeatureFlag() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: { flag_name: string; description?: string; enabled?: boolean }) =>
-      fetchJson<FeatureFlag>('/api/feature-flags', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      }),
+    mutationFn: (data: FeatureFlagCreate) => featureFlagsService.create(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: featureFlagKeys.all }),
   })
 }
@@ -54,12 +38,7 @@ export function useCreateFeatureFlag() {
 export function useUpdateFeatureFlag(id: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: { enabled?: boolean; description?: string }) =>
-      fetchJson<FeatureFlag>(`/api/feature-flags/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      }),
+    mutationFn: (data: FeatureFlagUpdate) => featureFlagsService.update(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: featureFlagKeys.all }),
   })
 }
@@ -67,8 +46,7 @@ export function useUpdateFeatureFlag(id: string) {
 export function useDeleteFeatureFlag() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) =>
-      fetchJson<{ deleted: boolean }>(`/api/feature-flags/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => featureFlagsService.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: featureFlagKeys.all }),
   })
 }

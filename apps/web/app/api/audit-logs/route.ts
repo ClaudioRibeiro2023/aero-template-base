@@ -32,7 +32,9 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('audit_logs')
-    .select('*', { count: 'exact' })
+    .select('id, user_id, action, resource, resource_id, ip_address, created_at', {
+      count: 'exact',
+    })
     .order('created_at', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1)
 

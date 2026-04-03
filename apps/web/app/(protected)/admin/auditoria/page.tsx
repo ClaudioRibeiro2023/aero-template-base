@@ -2,20 +2,20 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight, Filter } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Filter, FileSearch } from 'lucide-react'
 import { useAuditLogs, type AuditLog } from '@/hooks/useAuditLogs'
 
 const ACTION_COLORS: Record<string, string> = {
   CREATE: 'text-emerald-400 bg-emerald-400/10',
   UPDATE: 'text-sky-400 bg-sky-400/10',
   DELETE: 'text-rose-400 bg-rose-400/10',
-  READ: 'text-gray-400 bg-gray-400/10',
+  READ: 'text-gray-300 bg-gray-400/10',
   LOGIN: 'text-violet-400 bg-violet-400/10',
   LOGOUT: 'text-orange-400 bg-orange-400/10',
 }
 
 function AuditRow({ log }: { log: AuditLog }) {
-  const actionClass = ACTION_COLORS[log.action] ?? 'text-gray-400 bg-gray-400/10'
+  const actionClass = ACTION_COLORS[log.action] ?? 'text-gray-300 bg-gray-400/10'
   const date = new Date(log.created_at).toLocaleString('pt-BR', {
     day: '2-digit',
     month: '2-digit',
@@ -85,7 +85,7 @@ export default function AuditoriaPage() {
 
       {/* Filtros */}
       <div className="relative z-10 mb-4 glass-panel p-4 flex flex-wrap items-center gap-3">
-        <Filter size={15} className="text-[var(--text-muted)]" />
+        <Filter size={15} className="text-[var(--text-muted)]" aria-hidden="true" />
         <select
           aria-label="Filtrar por acao"
           value={action}
@@ -124,6 +124,7 @@ export default function AuditoriaPage() {
       <div className="relative z-10 glass-panel overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
+            <caption className="sr-only">Registro de auditoria do sistema</caption>
             <thead>
               <tr className="border-b border-[var(--glass-border)] bg-white/[0.02]">
                 <th className="px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
@@ -159,11 +160,35 @@ export default function AuditoriaPage() {
               )}
               {!isLoading && logs.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-8 text-center text-sm text-[var(--text-muted)]"
-                  >
-                    Nenhum registro encontrado
+                  <td colSpan={6} className="py-16">
+                    <div className="flex flex-col items-center gap-3 text-center">
+                      <FileSearch
+                        size={40}
+                        className="text-[var(--text-muted)]"
+                        aria-hidden="true"
+                      />
+                      <p className="text-sm font-medium text-[var(--text-secondary)]">
+                        Nenhum registro encontrado
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)]">
+                        {action || resource
+                          ? 'Tente ajustar os filtros de busca'
+                          : 'O historico de auditoria aparecera aqui'}
+                      </p>
+                      {(action || resource) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAction('')
+                            setResource('')
+                            setPage(1)
+                          }}
+                          className="mt-1 px-4 py-1.5 rounded-lg text-xs text-[var(--text-secondary)] border border-[var(--glass-border)] hover:bg-white/[0.03] transition-colors"
+                        >
+                          Limpar filtros
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )}

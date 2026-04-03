@@ -44,14 +44,22 @@ export async function GET(request: NextRequest) {
   if (!success) return tooManyRequests()
 
   try {
+    const url = new URL(request.url)
+    const tenantId = url.searchParams.get('tenant_id')
+
+    // Without a tenant_id, return defaults — never query DB unfiltered
+    if (!tenantId) {
+      return ok(DEFAULT_PUBLIC_CONFIG)
+    }
+
     const supabase = createServerSupabase()
 
-    // Buscar config do primeiro tenant (ou default)
     const { data, error } = await supabase
       .from('admin_config')
       .select(
         'branding, theme, notifications, default_language, default_timezone, maintenance_mode'
       )
+      .eq('tenant_id', tenantId)
       .limit(1)
       .single()
 

@@ -21,7 +21,7 @@ export default function RelatoriosPage() {
         />
 
         <div className="relative p-4 rounded-2xl bg-[var(--brand-primary)]/10 mb-5">
-          <BarChart3 className="w-10 h-10 text-[var(--brand-primary)]" />
+          <BarChart3 className="w-10 h-10 text-[var(--brand-primary)]" aria-hidden="true" />
         </div>
 
         <h2 className="relative text-lg font-semibold text-[var(--text-primary)] mb-2">
@@ -36,7 +36,7 @@ export default function RelatoriosPage() {
           className="relative flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--brand-primary)] text-white font-medium text-sm transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5"
           style={{ boxShadow: '0 0 20px var(--glow-brand)' }}
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4" aria-hidden="true" />
           Criar Relatorio
         </button>
       </div>
@@ -53,7 +53,7 @@ export default function RelatoriosPage() {
             <div key={stat.label} className="glass-panel p-5">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-[var(--brand-primary)]/10">
-                  <Icon size={16} className="text-[var(--brand-primary)]" />
+                  <Icon size={16} className="text-[var(--brand-primary)]" aria-hidden="true" />
                 </div>
                 <div>
                   <p className="text-xl font-bold font-mono text-[var(--text-primary)]">

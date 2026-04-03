@@ -3,61 +3,11 @@
  * Megaplan V4 Sprint A: Users CRUD real via /api/users.
  */
 import { fetchJson } from '@/lib/fetch-json'
+import type { User, UserCreate, UserUpdate, UserList, ListUsersParams } from '@template/types'
 
-// ============================================================================
-// Types
-// ============================================================================
-
-export type UserRole = 'ADMIN' | 'GESTOR' | 'OPERADOR' | 'VIEWER'
-
-export interface User {
-  id: string
-  email: string
-  display_name: string
-  avatar_url: string | null
-  phone: string | null
-  department: string | null
-  role: UserRole
-  is_active: boolean
-  tenant_id: string | null
-  metadata: Record<string, unknown>
-  created_at: string
-  updated_at: string
-}
-
-export interface UserCreate {
-  email: string
-  display_name: string
-  role?: UserRole
-  is_active?: boolean
-  phone?: string
-  department?: string
-}
-
-export interface UserUpdate {
-  display_name?: string
-  email?: string
-  role?: UserRole
-  is_active?: boolean
-  phone?: string
-  department?: string
-}
-
-export interface UserList {
-  items: User[]
-  total: number
-  page: number
-  page_size: number
-  pages: number
-}
-
-export interface ListUsersParams {
-  active_only?: boolean
-  search?: string
-  role?: string
-  page?: number
-  page_size?: number
-}
+// Re-export types for convenience
+export type { User, UserCreate, UserUpdate, UserList, ListUsersParams } from '@template/types'
+export type { UserRole } from '@template/types'
 
 // ============================================================================
 // API Functions

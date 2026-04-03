@@ -1,15 +1,12 @@
 /**
  * useNavigationConfig Hook
  *
- * Hook para carregar e gerenciar a configuração de navegação.
- * Preparado para:
- * - Configuração local (fallback)
- * - Configuração via API (futuro)
- * - Cache em localStorage
- * - Invalidação e refresh
+ * Hook para carregar e gerenciar a configuracao de navegacao.
+ * Sprint 5: Migrated to React Query for consistency.
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth, type UserRole } from '@template/shared'
 import type {
   NavigationConfig,
@@ -25,10 +22,10 @@ import { DEFAULT_NAVIGATION_CONFIG } from '@/config/navigation-default'
 // ═══════════════════════════════════════════════════════════════
 
 interface UseNavigationConfigReturn {
-  /** Configuração completa */
+  /** Configuracao completa */
   config: NavigationConfig
 
-  /** Módulos filtrados por permissão */
+  /** Modulos filtrados por permissao */
   authorizedModules: ModuleConfig[]
 
   /** Filtros ativos */
@@ -37,34 +34,58 @@ interface UseNavigationConfigReturn {
   /** Categorias ordenadas */
   categories: CategoryConfig[]
 
-  /** Se está carregando */
+  /** Se esta carregando */
   isLoading: boolean
 
   /** Erro ao carregar */
   error: Error | null
 
-  /** Recarregar configuração */
+  /** Recarregar configuracao */
   refresh: () => Promise<void>
 
-  /** Obter módulo por ID */
+  /** Obter modulo por ID */
   getModule: (id: string) => ModuleConfig | undefined
 
-  /** Obter módulo por path */
+  /** Obter modulo por path */
   getModuleByPath: (path: string) => ModuleConfig | undefined
 
-  /** Obter funções autorizadas de um módulo */
+  /** Obter funcoes autorizadas de um modulo */
   getModuleFunctions: (moduleId: string) => FunctionConfig[]
 
-  /** Obter filtros aplicáveis a um módulo/função */
+  /** Obter filtros aplicaveis a um modulo/funcao */
   getApplicableFilters: (moduleId?: string, functionId?: string) => FilterConfig[]
 }
 
 // ═══════════════════════════════════════════════════════════════
-// CONSTANTES
+// QUERY KEYS
 // ═══════════════════════════════════════════════════════════════
 
-const CACHE_KEY = 'navigation-config-cache'
-const CACHE_TTL = 5 * 60 * 1000 // 5 minutos
+const navKeys = {
+  config: ['navigation-config'] as const,
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FETCH FUNCTION
+// ═══════════════════════════════════════════════════════════════
+
+async function fetchNavigationConfig(): Promise<NavigationConfig> {
+  try {
+    const response = await fetch('/api/config/navigation')
+    if (response.ok) {
+      const json = (await response.json()) as { data?: { navigation: unknown } }
+      const nav = json?.data?.navigation
+      if (nav) {
+        return {
+          ...DEFAULT_NAVIGATION_CONFIG,
+          modules: nav as typeof DEFAULT_NAVIGATION_CONFIG.modules,
+        }
+      }
+    }
+  } catch {
+    // Silently fall back to default config
+  }
+  return DEFAULT_NAVIGATION_CONFIG
+}
 
 // ═══════════════════════════════════════════════════════════════
 // HOOK
@@ -72,65 +93,29 @@ const CACHE_TTL = 5 * 60 * 1000 // 5 minutos
 
 export function useNavigationConfig(): UseNavigationConfigReturn {
   const { hasAnyRole } = useAuth()
-  const [config, setConfig] = useState<NavigationConfig>(DEFAULT_NAVIGATION_CONFIG)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<Error | null>(null)
+  const queryClient = useQueryClient()
+
+  const {
+    data: config = DEFAULT_NAVIGATION_CONFIG,
+    isLoading,
+    error,
+  } = useQuery<NavigationConfig>({
+    queryKey: navKeys.config,
+    queryFn: fetchNavigationConfig,
+    staleTime: 5 * 60 * 1000,
+    initialData: DEFAULT_NAVIGATION_CONFIG,
+  })
 
   // ─────────────────────────────────────────────────────────────
-  // Carregar configuração
+  // Refresh via invalidation
   // ─────────────────────────────────────────────────────────────
 
-  const loadConfig = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      // Tentar carregar do cache primeiro
-      const cached = localStorage.getItem(CACHE_KEY)
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached)
-        if (Date.now() - timestamp < CACHE_TTL) {
-          setConfig(data)
-          setIsLoading(false)
-          return
-        }
-      }
-
-      // Buscar config da API
-      const response = await fetch('/api/config/navigation')
-      if (response.ok) {
-        const json = (await response.json()) as { data?: { navigation: unknown } }
-        const nav = json?.data?.navigation
-        if (nav) {
-          const merged = {
-            ...DEFAULT_NAVIGATION_CONFIG,
-            modules: nav as typeof DEFAULT_NAVIGATION_CONFIG.modules,
-          }
-          setConfig(merged)
-          localStorage.setItem(CACHE_KEY, JSON.stringify({ data: merged, timestamp: Date.now() }))
-          return
-        }
-      }
-
-      // Fallback para config local
-      setConfig(DEFAULT_NAVIGATION_CONFIG)
-    } catch (err) {
-      console.error('[useNavigationConfig] Erro ao carregar:', err)
-      setError(err instanceof Error ? err : new Error('Erro ao carregar configuração'))
-      // Usar config padrão em caso de erro
-      setConfig(DEFAULT_NAVIGATION_CONFIG)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  // Carregar na montagem
-  useEffect(() => {
-    loadConfig()
-  }, [loadConfig])
+  const refresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: navKeys.config })
+  }, [queryClient])
 
   // ─────────────────────────────────────────────────────────────
-  // Filtrar módulos por permissão
+  // Filtrar modulos por permissao
   // ─────────────────────────────────────────────────────────────
 
   const authorizedModules = useMemo(() => {
@@ -173,12 +158,10 @@ export function useNavigationConfig(): UseNavigationConfigReturn {
   const getModuleByPath = useCallback(
     (path: string) => {
       // Match the most specific (longest path) module first
-      // e.g. /admin/config matches Configurações, not Administração (/admin)
       const candidates = config.modules.filter(
         m => path === m.path || path.startsWith(m.path + '/')
       )
       if (candidates.length === 0) return undefined
-      // Sort by path length descending → most specific wins
       return candidates.sort((a, b) => b.path.length - a.path.length)[0]
     },
     [config.modules]
@@ -203,15 +186,9 @@ export function useNavigationConfig(): UseNavigationConfigReturn {
   const getApplicableFilters = useCallback(
     (moduleId?: string, functionId?: string): FilterConfig[] => {
       return filters.filter(filter => {
-        // Filtros globais
         if (filter.appliesTo.global) return true
-
-        // Filtros de módulo
         if (moduleId && filter.appliesTo.modules?.includes(moduleId)) return true
-
-        // Filtros de função
         if (functionId && filter.appliesTo.functions?.includes(functionId)) return true
-
         return false
       })
     },
@@ -228,8 +205,8 @@ export function useNavigationConfig(): UseNavigationConfigReturn {
     filters,
     categories,
     isLoading,
-    error,
-    refresh: loadConfig,
+    error: error ?? null,
+    refresh,
     getModule,
     getModuleByPath,
     getModuleFunctions,

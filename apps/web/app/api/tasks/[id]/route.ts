@@ -6,8 +6,6 @@
  * Sprint 7 (P1-01): CRUD de referência.
  */
 import type { NextRequest } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { taskUpdateSchema } from '@template/shared/schemas'
 import {
   ok,
@@ -19,23 +17,9 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
 
 export const dynamic = 'force-dynamic'
-
-function createSupabaseServer() {
-  const cookieStore = cookies() as unknown as Awaited<ReturnType<typeof cookies>>
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (c: { name: string; value: string; options?: Record<string, unknown> }[]) =>
-          c.forEach(({ name, value, options }) => cookieStore.set(name, value, options as never)),
-      },
-    }
-  )
-}
 
 // ── GET /api/tasks/[id] ──
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -43,17 +27,26 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
 
-  const supabase = createSupabaseServer()
+  const supabase = createSupabaseCookieClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return unauthorized()
 
   const { id } = await params
-  const { data, error } = await supabase.from('tasks').select('*').eq('id', id).single()
+  const { data, error } = await supabase
+    .from('tasks')
+    .select(
+      'id, title, description, status, priority, assignee_id, created_by, tenant_id, created_at, updated_at'
+    )
+    .eq('id', id)
+    .single()
 
   if (error?.code === 'PGRST116') return notFound()
-  if (error) return serverError(error.message)
+  if (error) {
+    console.error('[tasks/GET:id]', error)
+    return serverError()
+  }
   return ok(data)
 }
 
@@ -63,7 +56,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (!success) return tooManyRequests()
 
-  const supabase = createSupabaseServer()
+  const supabase = createSupabaseCookieClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -96,7 +89,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     .single()
 
   if (error?.code === 'PGRST116') return notFound()
-  if (error) return serverError(error.message)
+  if (error) {
+    console.error('[tasks/PUT:id]', error)
+    return serverError()
+  }
   return ok(data)
 }
 
@@ -109,7 +105,7 @@ export async function DELETE(
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()
 
-  const supabase = createSupabaseServer()
+  const supabase = createSupabaseCookieClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -118,6 +114,9 @@ export async function DELETE(
   const { id } = await params
   const { error } = await supabase.from('tasks').delete().eq('id', id)
 
-  if (error) return serverError(error.message)
+  if (error) {
+    console.error('[tasks/DELETE:id]', error)
+    return serverError()
+  }
   return noContent()
 }

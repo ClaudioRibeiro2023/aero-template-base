@@ -1,29 +1,14 @@
 /**
  * useRoles — React Query hooks para CRUD de role_definitions.
+ *
+ * Sprint 5: Refactored to delegate to rolesService.
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchJson } from '@/lib/fetch-json'
+import { rolesService } from '@/services/roles'
+import type { RoleDefinition, RoleCreate, RoleUpdate, RolesResponse } from '@/services/roles'
 
-// ── Types ──
-
-export interface RoleDefinition {
-  id: string
-  tenant_id: string | null
-  name: string
-  display_name: string
-  description: string
-  permissions: string[]
-  is_system: boolean
-  hierarchy_level: number
-  created_at: string
-  updated_at: string
-  user_count?: number
-}
-
-export interface RolesResponse {
-  items: RoleDefinition[]
-  total: number
-}
+// Re-export types for backwards compatibility
+export type { RoleDefinition, RoleCreate, RoleUpdate, RolesResponse } from '@/services/roles'
 
 // ── Query keys ──
 
@@ -38,7 +23,7 @@ const roleKeys = {
 export function useRoles() {
   return useQuery<RolesResponse>({
     queryKey: roleKeys.list(),
-    queryFn: () => fetchJson<RolesResponse>('/api/admin/roles'),
+    queryFn: () => rolesService.list(),
     staleTime: 30_000,
   })
 }
@@ -46,7 +31,7 @@ export function useRoles() {
 export function useRole(id: string) {
   return useQuery<RoleDefinition>({
     queryKey: roleKeys.detail(id),
-    queryFn: () => fetchJson<RoleDefinition>(`/api/admin/roles/${id}`),
+    queryFn: () => rolesService.get(id),
     enabled: Boolean(id),
   })
 }
@@ -54,18 +39,7 @@ export function useRole(id: string) {
 export function useCreateRole() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: {
-      name: string
-      display_name: string
-      description?: string
-      permissions?: string[]
-      hierarchy_level?: number
-    }) =>
-      fetchJson<RoleDefinition>('/api/admin/roles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      }),
+    mutationFn: (data: RoleCreate) => rolesService.create(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: roleKeys.all }),
   })
 }
@@ -73,17 +47,7 @@ export function useCreateRole() {
 export function useUpdateRole(id: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: {
-      display_name?: string
-      description?: string
-      permissions?: string[]
-      hierarchy_level?: number
-    }) =>
-      fetchJson<RoleDefinition>(`/api/admin/roles/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      }),
+    mutationFn: (data: RoleUpdate) => rolesService.update(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: roleKeys.all }),
   })
 }
@@ -91,8 +55,7 @@ export function useUpdateRole(id: string) {
 export function useDeleteRole() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) =>
-      fetchJson<{ deleted: boolean }>(`/api/admin/roles/${id}`, { method: 'DELETE' }),
+    mutationFn: (id: string) => rolesService.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: roleKeys.all }),
   })
 }

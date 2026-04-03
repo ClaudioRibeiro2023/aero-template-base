@@ -1,7 +1,6 @@
 import { ProtectedLayoutClient } from './layout-client'
 
-// Force dynamic rendering for all protected pages (they need auth context)
-export const dynamic = 'force-dynamic'
+// Auth is handled by middleware.ts (getUser() validation) — no need for force-dynamic here.
 
 export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   return <ProtectedLayoutClient>{children}</ProtectedLayoutClient>

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Plus, Trash2, Shield, ShieldCheck, Lock } from 'lucide-react'
-import { useToast } from '@template/design-system'
+import { useToast, Modal } from '@template/design-system'
 import {
   useRoles,
   useCreateRole,
@@ -82,90 +82,77 @@ function CreateRoleModal({
   }
 
   return (
-    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.70)', backdropFilter: 'blur(8px)' }}
-      onClick={e => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Criar role"
-    >
-      <div className="w-full max-w-md glass-panel p-6 space-y-4">
-        <h2 className="text-base font-semibold text-[var(--text-primary)]">Nova Role</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="role-name"
-              className="block text-xs font-medium text-[var(--text-muted)] mb-1"
-            >
-              Nome (slug) <span className="text-rose-400">*</span>
-            </label>
-            <input
-              id="role-name"
-              type="text"
-              required
-              value={name}
-              onChange={e => setName(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
-              placeholder="EX: SUPERVISOR"
-              className="w-full px-3 py-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary)]/50 placeholder:text-[var(--text-muted)]"
-            />
-            <p className="text-xs text-[var(--text-muted)] mt-1">Letras maiúsculas, números e _</p>
-          </div>
-          <div>
-            <label
-              htmlFor="role-display-name"
-              className="block text-xs font-medium text-[var(--text-muted)] mb-1"
-            >
-              Nome de exibição <span className="text-rose-400">*</span>
-            </label>
-            <input
-              id="role-display-name"
-              type="text"
-              required
-              value={displayName}
-              onChange={e => setDisplayName(e.target.value)}
-              placeholder="Ex: Supervisor"
-              className="w-full px-3 py-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary)]/50 placeholder:text-[var(--text-muted)]"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="role-description"
-              className="block text-xs font-medium text-[var(--text-muted)] mb-1"
-            >
-              Descrição
-            </label>
-            <input
-              id="role-description"
-              type="text"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="Descrição opcional"
-              className="w-full px-3 py-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary)]/50 placeholder:text-[var(--text-muted)]"
-            />
-          </div>
-          <div className="flex gap-2 justify-end pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-[var(--glass-border)] text-sm text-[var(--text-secondary)] hover:bg-white/[0.03] transition-all"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={!name || !displayName || create.isPending}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--brand-primary)] text-white text-sm font-medium disabled:opacity-60 transition-all"
-            >
-              <Plus size={14} /> Criar
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <Modal isOpen onClose={onClose} title="Nova Role" size="md">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label
+            htmlFor="role-name"
+            className="block text-xs font-medium text-[var(--text-muted)] mb-1"
+          >
+            Nome (slug) <span className="text-rose-400">*</span>
+          </label>
+          <input
+            id="role-name"
+            type="text"
+            required
+            value={name}
+            onChange={e => setName(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
+            placeholder="EX: SUPERVISOR"
+            className="w-full px-3 py-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary)]/50 placeholder:text-[var(--text-muted)]"
+          />
+          <p className="text-xs text-[var(--text-muted)] mt-1">Letras maiúsculas, números e _</p>
+        </div>
+        <div>
+          <label
+            htmlFor="role-display-name"
+            className="block text-xs font-medium text-[var(--text-muted)] mb-1"
+          >
+            Nome de exibição <span className="text-rose-400">*</span>
+          </label>
+          <input
+            id="role-display-name"
+            type="text"
+            required
+            value={displayName}
+            onChange={e => setDisplayName(e.target.value)}
+            placeholder="Ex: Supervisor"
+            className="w-full px-3 py-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary)]/50 placeholder:text-[var(--text-muted)]"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="role-description"
+            className="block text-xs font-medium text-[var(--text-muted)] mb-1"
+          >
+            Descrição
+          </label>
+          <input
+            id="role-description"
+            type="text"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="Descrição opcional"
+            className="w-full px-3 py-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary)]/50 placeholder:text-[var(--text-muted)]"
+          />
+        </div>
+        <div className="flex gap-2 justify-end pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl border border-[var(--glass-border)] text-sm text-[var(--text-secondary)] hover:bg-white/[0.03] transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={!name || !displayName || create.isPending}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--brand-primary)] text-white text-sm font-medium disabled:opacity-60 transition-all"
+          >
+            <Plus size={14} aria-hidden="true" /> Criar
+          </button>
+        </div>
+      </form>
+    </Modal>
   )
 }
 
@@ -186,6 +173,7 @@ function PermissionMatrix({
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left select-none">
+        <caption className="sr-only">Matriz de permissões por recurso</caption>
         <thead>
           <tr className="border-b border-[var(--glass-border)]">
             <th className="py-3 pr-4 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[140px]">
@@ -251,8 +239,8 @@ function PermissionMatrix({
 
       {isSystem && (
         <p className="flex items-center gap-1.5 mt-4 text-xs text-[var(--text-muted)]">
-          <Lock size={12} /> Roles do sistema têm permissões fixas. Apenas nome e descrição são
-          editáveis.
+          <Lock size={12} aria-hidden="true" /> Roles do sistema têm permissões fixas. Apenas nome e
+          descrição são editáveis.
         </p>
       )}
     </div>
@@ -327,7 +315,7 @@ export default function RolesPage() {
           onClick={() => setShowCreate(true)}
           className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[var(--glass-border)] text-sm text-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/5 transition-all"
         >
-          <Plus size={14} /> Nova role
+          <Plus size={14} aria-hidden="true" /> Nova role
         </button>
       </div>
 

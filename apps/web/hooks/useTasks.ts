@@ -1,45 +1,21 @@
 /**
  * useTasks — React Query hooks para o CRUD de tasks.
  *
- * Sprint 7 (P1-01): Demonstra padrão completo com:
+ * Sprint 7 (P1-01): Demonstra padrao completo com:
  * - useQuery para listagem com filtros
  * - useMutation para criar/atualizar/deletar
  * - Optimistic updates para UX responsiva
- * - Invalidação automática de cache
+ * - Invalidacao automatica de cache
+ *
+ * Sprint 5: Refactored to delegate to tasksService.
  */
 import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
 import type { TaskCreateFormValues, TaskUpdateFormValues } from '@template/shared/schemas'
-import { fetchJson, fetchJsonRaw } from '@/lib/fetch-json'
+import { tasksService } from '@/services/tasks'
+import type { Task, TaskFilters, TasksResponse } from '@/services/tasks'
 
-// ── Types ──
-export type TaskStatus = 'todo' | 'in_progress' | 'done' | 'cancelled'
-export type TaskPriority = 'low' | 'medium' | 'high' | 'critical'
-
-export interface Task {
-  id: string
-  title: string
-  description: string | null
-  status: TaskStatus
-  priority: TaskPriority
-  assignee_id: string | null
-  created_by: string
-  tenant_id: string | null
-  created_at: string
-  updated_at: string
-}
-
-export interface TasksResponse {
-  data: Task[]
-  error: null
-  meta: { page: number; page_size: number; total: number; pages: number }
-}
-
-export interface TaskFilters {
-  status?: TaskStatus
-  priority?: TaskPriority
-  page?: number
-  page_size?: number
-}
+// Re-export types from service for backwards compatibility
+export type { Task, TaskStatus, TaskPriority, TaskFilters, TasksResponse } from '@/services/tasks'
 
 // ── Query keys ──
 export const taskKeys = {
@@ -51,18 +27,12 @@ export const taskKeys = {
 
 // ── Hooks ──
 
-/** Lista tasks com filtros e paginação. */
+/** Lista tasks com filtros e paginacao. */
 export function useTasks(filters: TaskFilters = {}) {
-  const params = new URLSearchParams()
-  if (filters.status) params.set('status', filters.status)
-  if (filters.priority) params.set('priority', filters.priority)
-  if (filters.page) params.set('page', String(filters.page))
-  if (filters.page_size) params.set('page_size', String(filters.page_size))
-  const qs = params.toString() ? `?${params}` : ''
-
   return useQuery<TasksResponse>({
     queryKey: taskKeys.list(filters),
-    queryFn: () => fetchJsonRaw<TasksResponse>(`/api/tasks${qs}`),
+    queryFn: () => tasksService.list(filters),
+    staleTime: 30_000,
   })
 }
 
@@ -70,8 +40,9 @@ export function useTasks(filters: TaskFilters = {}) {
 export function useTask(id: string) {
   return useQuery<{ data: Task }>({
     queryKey: taskKeys.detail(id),
-    queryFn: () => fetchJson(`/api/tasks/${id}`),
+    queryFn: async () => ({ data: await tasksService.get(id) }),
     enabled: !!id,
+    staleTime: 30_000,
   })
 }
 
@@ -80,12 +51,7 @@ export function useCreateTask() {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: TaskCreateFormValues) =>
-      fetchJson<{ data: Task }>('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }),
+    mutationFn: (payload: TaskCreateFormValues) => tasksService.create(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: taskKeys.lists() })
     },
@@ -97,12 +63,7 @@ export function useUpdateTask(id: string) {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: (payload: TaskUpdateFormValues) =>
-      fetchJson<{ data: Task }>(`/api/tasks/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      }),
+    mutationFn: (payload: TaskUpdateFormValues) => tasksService.update(id, payload),
     onMutate: async payload => {
       // Optimistic update no cache de detalhe
       await qc.cancelQueries({ queryKey: taskKeys.detail(id) })
@@ -132,10 +93,7 @@ export function useDeleteTask() {
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: (id: string) =>
-      fetch(`/api/tasks/${id}`, { method: 'DELETE' }).then(res => {
-        if (!res.ok && res.status !== 204) throw new Error(`HTTP ${res.status}`)
-      }),
+    mutationFn: (id: string) => tasksService.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: taskKeys.lists() })
     },

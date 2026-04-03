@@ -6,8 +6,6 @@
  * Demonstra: server client, RLS, Zod validation, ApiResponse padrão.
  */
 import type { NextRequest } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { taskCreateSchema } from '@template/shared/schemas'
 import {
   ok,
@@ -18,23 +16,9 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
 
 export const dynamic = 'force-dynamic'
-
-function createSupabaseServer() {
-  const cookieStore = cookies() as unknown as Awaited<ReturnType<typeof cookies>>
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (c: { name: string; value: string; options?: Record<string, unknown> }[]) =>
-          c.forEach(({ name, value, options }) => cookieStore.set(name, value, options as never)),
-      },
-    }
-  )
-}
 
 // ── GET /api/tasks ──
 export async function GET(request: NextRequest) {
@@ -42,7 +26,7 @@ export async function GET(request: NextRequest) {
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
 
-  const supabase = createSupabaseServer()
+  const supabase = createSupabaseCookieClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -59,7 +43,10 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('tasks')
-    .select('*', { count: 'exact' })
+    .select(
+      'id, title, description, status, priority, assignee_id, created_by, tenant_id, created_at, updated_at',
+      { count: 'exact' }
+    )
     .order('updated_at', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1)
 
@@ -67,7 +54,10 @@ export async function GET(request: NextRequest) {
   if (priority) query = query.eq('priority', priority)
 
   const { data, error, count } = await query
-  if (error) return serverError(error.message)
+  if (error) {
+    console.error('[tasks/GET]', error)
+    return serverError()
+  }
 
   return ok(data, {
     page,
@@ -83,7 +73,7 @@ export async function POST(request: NextRequest) {
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()
 
-  const supabase = createSupabaseServer()
+  const supabase = createSupabaseCookieClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -112,6 +102,9 @@ export async function POST(request: NextRequest) {
     .select()
     .single()
 
-  if (error) return serverError(error.message)
+  if (error) {
+    console.error('[tasks/POST]', error)
+    return serverError()
+  }
   return created(data)
 }

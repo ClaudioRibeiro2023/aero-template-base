@@ -8,14 +8,13 @@
  */
 import { useState, useEffect, useRef } from 'react'
 import {
-  Settings,
-  Palette,
-  User,
-  LayoutGrid,
-  CheckCircle,
-  ChevronRight,
-  ChevronLeft,
-} from 'lucide-react'
+  WizardLayout,
+  WizardStepBranding,
+  WizardStepColors,
+  WizardStepAdmin,
+  WizardStepModules,
+  WizardStepSummary,
+} from './wizard'
 
 // Focus trap: mantém o foco dentro do dialog enquanto está aberto
 function useFocusTrap(active: boolean) {
@@ -143,25 +142,6 @@ export function validateWizardStep(step: string, data: WizardData): string[] {
 }
 
 // ============================================================================
-// Shared input style helper
-// ============================================================================
-
-const inputBaseStyle: React.CSSProperties = {
-  background: 'rgba(255,255,255,0.02)',
-  border: '1px solid rgba(255,255,255,0.06)',
-}
-
-function handleInputFocus(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) {
-  e.currentTarget.style.borderColor = '#00b4d8'
-  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,180,216,0.15)'
-}
-
-function handleInputBlur(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) {
-  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'
-  e.currentTarget.style.boxShadow = 'none'
-}
-
-// ============================================================================
 // Component
 // ============================================================================
 
@@ -235,404 +215,25 @@ export function FirstRunWizard({ onComplete, onSkip, initialData }: FirstRunWiza
             '0 0 0 1px rgba(255,255,255,0.06), 0 0 40px rgba(0,0,0,0.5), 0 25px 50px rgba(0,0,0,0.4)',
         }}
       >
-        {/* Header */}
-        <div
-          className="flex items-center gap-3 p-6"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        <WizardLayout
+          currentStep={currentStep}
+          isFirst={isFirst}
+          isLast={isLast}
+          errors={errors}
+          onNext={handleNext}
+          onBack={handleBack}
+          onSkip={onSkip}
+          stepTitle={step.title}
+          stepDescription={step.description}
         >
-          <div
-            className="flex items-center justify-center rounded-lg"
-            style={{
-              width: 40,
-              height: 40,
-              background: 'rgba(0,180,216,0.10)',
-            }}
-          >
-            <Settings size={20} style={{ color: '#00b4d8' }} />
-          </div>
-          <div>
-            <h2 id="wizard-title" className="text-lg font-bold text-zinc-100">
-              Configuração Inicial
-            </h2>
-            <p className="text-[13px] text-zinc-500">Configure sua plataforma antes de começar</p>
-          </div>
-        </div>
-
-        {/* Step indicators — glass bars */}
-        <div className="flex gap-1.5 px-6 pt-5" role="list" aria-label="Etapas do wizard">
-          {WIZARD_STEPS.map((s, i) => (
-            <div
-              key={s.id}
-              role="listitem"
-              aria-current={i === currentStep ? 'step' : undefined}
-              className="flex-1 rounded-full transition-all duration-300"
-              style={{
-                height: 4,
-                background:
-                  i < currentStep
-                    ? '#00b4d8'
-                    : i === currentStep
-                      ? 'rgba(0,180,216,0.5)'
-                      : 'rgba(255,255,255,0.06)',
-                boxShadow: i <= currentStep ? '0 0 8px rgba(0,180,216,0.15)' : 'none',
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Step content */}
-        <div className="p-6 min-h-[280px]">
-          <div className="mb-5">
-            <h3 className="text-[15px] font-semibold text-zinc-100">{step.title}</h3>
-            <p className="text-[13px] text-zinc-500">{step.description}</p>
-          </div>
-
-          {/* Errors */}
-          {errors.length > 0 && (
-            <div
-              id="wizard-errors"
-              role="alert"
-              className="mb-4 p-3 rounded-lg"
-              style={{
-                background: 'rgba(251,113,133,0.08)',
-                border: '1px solid rgba(251,113,133,0.15)',
-              }}
-            >
-              {errors.map((e, i) => (
-                <p key={i} className="text-[13px]" style={{ color: '#fb7185' }}>
-                  {e}
-                </p>
-              ))}
-            </div>
-          )}
-
-          {/* Step: Branding */}
           {step.id === 'branding' && (
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="app-name"
-                  className="block text-[13px] font-medium text-zinc-400 mb-1.5"
-                >
-                  Nome da Plataforma *
-                </label>
-                <input
-                  id="app-name"
-                  type="text"
-                  value={data.appName}
-                  onChange={e => update({ appName: e.target.value })}
-                  aria-required="true"
-                  aria-describedby={errors.length > 0 ? 'wizard-errors' : undefined}
-                  className="w-full h-10 px-3 rounded-lg text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-all duration-150"
-                  style={inputBaseStyle}
-                  onFocus={handleInputFocus}
-                  onBlur={handleInputBlur}
-                  placeholder="Minha Plataforma"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="logo-url"
-                  className="block text-[13px] font-medium text-zinc-400 mb-1.5"
-                >
-                  URL do Logo (opcional)
-                </label>
-                <input
-                  id="logo-url"
-                  type="url"
-                  value={data.logoUrl}
-                  onChange={e => update({ logoUrl: e.target.value })}
-                  className="w-full h-10 px-3 rounded-lg text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-all duration-150"
-                  style={inputBaseStyle}
-                  onFocus={handleInputFocus}
-                  onBlur={handleInputBlur}
-                  placeholder="https://exemplo.com/logo.png"
-                />
-              </div>
-            </div>
+            <WizardStepBranding data={data} errors={errors} onUpdate={update} />
           )}
-
-          {/* Step: Colors */}
-          {step.id === 'colors' && (
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="flex-1">
-                  <label
-                    htmlFor="primary-color"
-                    className="block text-[13px] font-medium text-zinc-400 mb-1.5"
-                  >
-                    Cor Primária
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      id="primary-color"
-                      type="color"
-                      value={data.primaryColor}
-                      onChange={e => update({ primaryColor: e.target.value })}
-                      className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0.5"
-                      style={{ background: 'rgba(255,255,255,0.02)' }}
-                    />
-                    <input
-                      type="text"
-                      value={data.primaryColor}
-                      onChange={e => update({ primaryColor: e.target.value })}
-                      className="flex-1 h-10 px-3 rounded-lg text-sm text-zinc-100 font-mono outline-none transition-all duration-150"
-                      style={inputBaseStyle}
-                      onFocus={handleInputFocus}
-                      onBlur={handleInputBlur}
-                    />
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <label
-                    htmlFor="secondary-color"
-                    className="block text-[13px] font-medium text-zinc-400 mb-1.5"
-                  >
-                    Cor Secundária
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      id="secondary-color"
-                      type="color"
-                      value={data.secondaryColor}
-                      onChange={e => update({ secondaryColor: e.target.value })}
-                      className="w-10 h-10 rounded-lg cursor-pointer border-0 p-0.5"
-                      style={{ background: 'rgba(255,255,255,0.02)' }}
-                    />
-                    <input
-                      type="text"
-                      value={data.secondaryColor}
-                      onChange={e => update({ secondaryColor: e.target.value })}
-                      className="flex-1 h-10 px-3 rounded-lg text-sm text-zinc-100 font-mono outline-none transition-all duration-150"
-                      style={inputBaseStyle}
-                      onFocus={handleInputFocus}
-                      onBlur={handleInputBlur}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div
-                className="p-4 rounded-lg"
-                style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                  borderLeftWidth: 3,
-                  borderLeftColor: data.primaryColor,
-                }}
-              >
-                <p className="text-sm font-medium" style={{ color: data.primaryColor }}>
-                  Prévia: {data.appName}
-                </p>
-                <p className="text-[12px] text-zinc-600 mt-1">
-                  As cores serão aplicadas em toda a plataforma
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Step: Admin */}
-          {step.id === 'admin' && (
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="admin-name"
-                  className="block text-[13px] font-medium text-zinc-400 mb-1.5"
-                >
-                  Nome Completo *
-                </label>
-                <input
-                  id="admin-name"
-                  type="text"
-                  value={data.adminName}
-                  onChange={e => update({ adminName: e.target.value })}
-                  aria-required="true"
-                  aria-describedby={errors.length > 0 ? 'wizard-errors' : undefined}
-                  className="w-full h-10 px-3 rounded-lg text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-all duration-150"
-                  style={inputBaseStyle}
-                  onFocus={handleInputFocus}
-                  onBlur={handleInputBlur}
-                  placeholder="João Silva"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="admin-email"
-                  className="block text-[13px] font-medium text-zinc-400 mb-1.5"
-                >
-                  Email *
-                </label>
-                <input
-                  id="admin-email"
-                  type="email"
-                  value={data.adminEmail}
-                  onChange={e => update({ adminEmail: e.target.value })}
-                  aria-required="true"
-                  aria-describedby={errors.length > 0 ? 'wizard-errors' : undefined}
-                  className="w-full h-10 px-3 rounded-lg text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition-all duration-150"
-                  style={inputBaseStyle}
-                  onFocus={handleInputFocus}
-                  onBlur={handleInputBlur}
-                  placeholder="admin@empresa.com"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Step: Modules — responsive grid with glass toggles */}
-          {step.id === 'modules' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {AVAILABLE_MODULES.map(mod => {
-                const enabled = data.enabledModules.includes(mod.id)
-                return (
-                  <button
-                    key={mod.id}
-                    type="button"
-                    onClick={() => toggleModule(mod.id)}
-                    aria-pressed={enabled}
-                    className="p-4 rounded-xl text-left transition-all duration-200"
-                    style={{
-                      background: enabled ? 'rgba(0,180,216,0.08)' : 'rgba(255,255,255,0.02)',
-                      border: enabled
-                        ? '1px solid rgba(0,180,216,0.3)'
-                        : '1px solid rgba(255,255,255,0.06)',
-                      boxShadow: enabled ? '0 0 12px rgba(0,180,216,0.08)' : 'none',
-                    }}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium text-zinc-200">{mod.label}</p>
-                      {/* Toggle indicator */}
-                      <div
-                        className="rounded-full transition-colors duration-200"
-                        style={{
-                          width: 32,
-                          height: 18,
-                          background: enabled ? '#00b4d8' : 'rgba(63,63,70,1)',
-                          boxShadow: enabled ? '0 0 8px rgba(0,180,216,0.3)' : 'none',
-                          position: 'relative',
-                        }}
-                      >
-                        <div
-                          className="absolute top-[2px] rounded-full bg-white shadow-sm transition-transform duration-200"
-                          style={{
-                            width: 14,
-                            height: 14,
-                            left: 2,
-                            transform: enabled ? 'translateX(14px)' : 'translateX(0)',
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <p className="text-[12px] text-zinc-500">{mod.description}</p>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-
-          {/* Step: Summary */}
-          {step.id === 'summary' && (
-            <div className="space-y-3">
-              <div
-                className="flex items-center gap-3 p-3 rounded-lg"
-                style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                }}
-              >
-                <Palette size={16} style={{ color: '#00b4d8', flexShrink: 0 }} />
-                <div>
-                  <p className="text-sm font-medium text-zinc-200">{data.appName}</p>
-                  <p className="text-[12px] text-zinc-600 font-mono">
-                    {data.primaryColor} / {data.secondaryColor}
-                  </p>
-                </div>
-              </div>
-              <div
-                className="flex items-center gap-3 p-3 rounded-lg"
-                style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                }}
-              >
-                <User size={16} style={{ color: '#00b4d8', flexShrink: 0 }} />
-                <div>
-                  <p className="text-sm font-medium text-zinc-200">{data.adminName}</p>
-                  <p className="text-[12px] text-zinc-600">{data.adminEmail}</p>
-                </div>
-              </div>
-              <div
-                className="flex items-center gap-3 p-3 rounded-lg"
-                style={{
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.06)',
-                }}
-              >
-                <LayoutGrid size={16} style={{ color: '#00b4d8', flexShrink: 0 }} />
-                <div>
-                  <p className="text-sm font-medium text-zinc-200">
-                    {data.enabledModules.length} módulo(s) habilitado(s)
-                  </p>
-                  <p className="text-[12px] text-zinc-600">{data.enabledModules.join(', ')}</p>
-                </div>
-              </div>
-              <div
-                className="flex items-center gap-2 p-3 rounded-lg"
-                style={{
-                  background: 'rgba(52,211,153,0.06)',
-                  border: '1px solid rgba(52,211,153,0.15)',
-                }}
-              >
-                <CheckCircle size={16} style={{ color: '#34d399' }} />
-                <p className="text-[13px]" style={{ color: '#34d399' }}>
-                  Tudo pronto! Clique em &ldquo;Iniciar Plataforma&rdquo; para continuar.
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div
-          className="flex items-center justify-between p-6"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
-        >
-          <div className="flex gap-2">
-            {!isFirst && (
-              <button
-                type="button"
-                onClick={handleBack}
-                className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-zinc-400 rounded-lg transition-colors duration-150"
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-              >
-                <ChevronLeft size={16} />
-                Voltar
-              </button>
-            )}
-            {onSkip && isFirst && (
-              <button
-                type="button"
-                onClick={onSkip}
-                className="px-4 py-2 text-sm font-medium text-zinc-600 transition-colors duration-150"
-                onMouseEnter={e => (e.currentTarget.style.color = '#a1a1aa')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#52525b')}
-              >
-                Pular por agora
-              </button>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={handleNext}
-            className="flex items-center gap-1 px-6 py-2 text-sm font-medium text-white rounded-lg transition-opacity duration-150"
-            style={{ background: '#00b4d8' }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
-          >
-            {isLast ? 'Iniciar Plataforma' : 'Próximo'}
-            {!isLast && <ChevronRight size={16} />}
-          </button>
-        </div>
+          {step.id === 'colors' && <WizardStepColors data={data} onUpdate={update} />}
+          {step.id === 'admin' && <WizardStepAdmin data={data} errors={errors} onUpdate={update} />}
+          {step.id === 'modules' && <WizardStepModules data={data} onToggleModule={toggleModule} />}
+          {step.id === 'summary' && <WizardStepSummary data={data} />}
+        </WizardLayout>
       </div>
     </div>
   )

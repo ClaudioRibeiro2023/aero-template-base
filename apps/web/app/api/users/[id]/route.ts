@@ -33,10 +33,19 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const supabase = createServerSupabase()
   const { id } = await params
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single()
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(
+      'id, email, display_name, avatar_url, phone, department, role, is_active, tenant_id, metadata, created_at, updated_at'
+    )
+    .eq('id', id)
+    .single()
 
   if (error?.code === 'PGRST116') return notFound('Usuario nao encontrado')
-  if (error) return serverError(error.message)
+  if (error) {
+    console.error('[users/GET:id]', error)
+    return serverError()
+  }
   return ok(data)
 }
 
@@ -98,7 +107,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     .single()
 
   if (error?.code === 'PGRST116') return notFound('Usuario nao encontrado')
-  if (error) return serverError(error.message)
+  if (error) {
+    console.error('[users/PUT:id]', error)
+    return serverError()
+  }
 
   // Sync role to app_metadata if changed by admin
   if (updateData.role) {
@@ -137,6 +149,9 @@ export async function DELETE(
     .single()
 
   if (error?.code === 'PGRST116') return notFound('Usuario nao encontrado')
-  if (error) return serverError(error.message)
+  if (error) {
+    console.error('[users/DELETE:id]', error)
+    return serverError()
+  }
   return ok(data)
 }

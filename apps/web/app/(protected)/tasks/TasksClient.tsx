@@ -39,7 +39,7 @@ import {
   type TaskStatus,
   type TaskFilters,
 } from '@/hooks/useTasks'
-import { ToastItem } from '@template/design-system'
+import { ToastItem, Modal } from '@template/design-system'
 
 // ── Helpers ──
 const STATUS_LABELS: Record<TaskStatus, string> = {
@@ -114,120 +114,108 @@ function TaskFormModal({ task, onClose }: { task?: Task; onClose: () => void }) 
     'w-full px-3 py-2 text-sm rounded-lg bg-white/[0.03] border border-[rgba(255,255,255,0.08)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)]/30 transition-colors'
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="task-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
-    >
-      <div className="w-full max-w-md glass-panel p-6 space-y-5">
-        <h2 id="task-modal-title" className="text-base font-semibold text-[var(--text-primary)]">
-          {isEdit ? 'Editar Task' : 'Nova Task'}
-        </h2>
+    <Modal isOpen onClose={onClose} title={isEdit ? 'Editar Task' : 'Nova Task'} size="md">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        {/* Title */}
+        <div>
+          <label
+            htmlFor="task-title"
+            className="block text-xs font-medium text-[var(--text-secondary)] mb-1"
+          >
+            Título <span aria-hidden="true">*</span>
+          </label>
+          <input
+            id="task-title"
+            type="text"
+            className={inputClass}
+            placeholder="Ex: Implementar autenticação"
+            aria-required="true"
+            aria-describedby={errors.title ? 'task-title-error' : undefined}
+            {...register('title')}
+          />
+          {errors.title && (
+            <p id="task-title-error" role="alert" className="mt-1 text-xs text-rose-400">
+              {errors.title.message}
+            </p>
+          )}
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-          {/* Title */}
+        {/* Description */}
+        <div>
+          <label
+            htmlFor="task-description"
+            className="block text-xs font-medium text-[var(--text-secondary)] mb-1"
+          >
+            Descrição
+          </label>
+          <textarea
+            id="task-description"
+            rows={3}
+            className={`${inputClass} resize-none`}
+            placeholder="Detalhes da task (opcional)"
+            aria-describedby={errors.description ? 'task-description-error' : undefined}
+            {...register('description')}
+          />
+          {errors.description && (
+            <p id="task-description-error" role="alert" className="mt-1 text-xs text-rose-400">
+              {errors.description.message}
+            </p>
+          )}
+        </div>
+
+        {/* Status + Priority */}
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label
-              htmlFor="task-title"
+              htmlFor="task-status"
               className="block text-xs font-medium text-[var(--text-secondary)] mb-1"
             >
-              Título <span aria-hidden="true">*</span>
+              Status
             </label>
-            <input
-              id="task-title"
-              type="text"
-              className={inputClass}
-              placeholder="Ex: Implementar autenticação"
-              aria-required="true"
-              aria-describedby={errors.title ? 'task-title-error' : undefined}
-              {...register('title')}
-            />
-            {errors.title && (
-              <p id="task-title-error" role="alert" className="mt-1 text-xs text-rose-400">
-                {errors.title.message}
-              </p>
-            )}
+            <select id="task-status" className={inputClass} {...register('status')}>
+              <option value="todo">A Fazer</option>
+              <option value="in_progress">Em Andamento</option>
+              <option value="done">Concluída</option>
+              <option value="cancelled">Cancelada</option>
+            </select>
           </div>
-
-          {/* Description */}
           <div>
             <label
-              htmlFor="task-description"
+              htmlFor="task-priority"
               className="block text-xs font-medium text-[var(--text-secondary)] mb-1"
             >
-              Descrição
+              Prioridade
             </label>
-            <textarea
-              id="task-description"
-              rows={3}
-              className={`${inputClass} resize-none`}
-              placeholder="Detalhes da task (opcional)"
-              aria-describedby={errors.description ? 'task-description-error' : undefined}
-              {...register('description')}
-            />
-            {errors.description && (
-              <p id="task-description-error" role="alert" className="mt-1 text-xs text-rose-400">
-                {errors.description.message}
-              </p>
-            )}
+            <select id="task-priority" className={inputClass} {...register('priority')}>
+              <option value="low">Baixa</option>
+              <option value="medium">Média</option>
+              <option value="high">Alta</option>
+              <option value="critical">Crítica</option>
+            </select>
           </div>
+        </div>
 
-          {/* Status + Priority */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label
-                htmlFor="task-status"
-                className="block text-xs font-medium text-[var(--text-secondary)] mb-1"
-              >
-                Status
-              </label>
-              <select id="task-status" className={inputClass} {...register('status')}>
-                <option value="todo">A Fazer</option>
-                <option value="in_progress">Em Andamento</option>
-                <option value="done">Concluída</option>
-                <option value="cancelled">Cancelada</option>
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="task-priority"
-                className="block text-xs font-medium text-[var(--text-secondary)] mb-1"
-              >
-                Prioridade
-              </label>
-              <select id="task-priority" className={inputClass} {...register('priority')}>
-                <option value="low">Baixa</option>
-                <option value="medium">Média</option>
-                <option value="high">Alta</option>
-                <option value="critical">Crítica</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isPending}
-              className="flex-1 py-2 text-sm font-medium rounded-lg border border-[rgba(255,255,255,0.08)] text-[var(--text-secondary)] hover:bg-white/[0.03] transition-colors disabled:opacity-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="flex-1 py-2 text-sm font-semibold rounded-lg bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary)]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isPending && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}
-              {isEdit ? 'Salvar' : 'Criar'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Actions */}
+        <div className="flex gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isPending}
+            className="flex-1 py-2 text-sm font-medium rounded-lg border border-[rgba(255,255,255,0.08)] text-[var(--text-secondary)] hover:bg-white/[0.03] transition-colors disabled:opacity-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={isPending}
+            className="flex-1 py-2 text-sm font-semibold rounded-lg bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary)]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isPending && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}
+            {isEdit ? 'Salvar' : 'Criar'}
+          </button>
+        </div>
+      </form>
+    </Modal>
   )
 }
 

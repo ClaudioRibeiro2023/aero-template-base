@@ -11,6 +11,7 @@ import {
   forbidden,
   notFound,
   tooManyRequests,
+  serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthUser } from '@/lib/auth-guard'
@@ -84,7 +85,10 @@ export async function DELETE(
 
   const { error: dbError } = await supabase.from('feature_flags').delete().eq('id', id)
 
-  if (dbError) return badRequest(dbError.message)
+  if (dbError) {
+    console.error('[feature-flags/DELETE:id]', dbError)
+    return serverError()
+  }
 
   await auditLog({
     userId: user.id,

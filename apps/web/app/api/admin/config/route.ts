@@ -93,7 +93,10 @@ export async function GET(request: NextRequest) {
     .eq('tenant_id', tenantId)
     .single()
 
-  if (error) return notFound(error.message)
+  if (error) {
+    console.error('[admin/config/GET]', error)
+    return notFound('Nenhuma configuracao encontrada')
+  }
   return ok(data)
 }
 
@@ -146,6 +149,9 @@ export async function PATCH(request: NextRequest) {
 
   const { data, error } = await query.select().single()
 
-  if (error) return serverError(error.message)
+  if (error) {
+    console.error('[admin/config/PATCH]', error)
+    return serverError()
+  }
   return ok(data)
 }

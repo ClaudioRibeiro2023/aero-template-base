@@ -103,7 +103,7 @@ export default function ConfigPage() {
               />
 
               <div className="relative p-2.5 rounded-xl bg-[var(--brand-primary)]/10 flex-shrink-0 group-hover:bg-[var(--brand-primary)]/20 transition-colors">
-                <Icon size={20} className="text-[var(--brand-primary)]" />
+                <Icon size={20} className="text-[var(--brand-primary)]" aria-hidden="true" />
               </div>
               <div className="relative flex-1 min-w-0">
                 <p className="font-semibold text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] transition-colors">
@@ -114,6 +114,7 @@ export default function ConfigPage() {
               <ChevronRight
                 size={18}
                 className="relative text-[var(--text-muted)] group-hover:text-[var(--brand-primary)] group-hover:translate-x-0.5 transition-all flex-shrink-0"
+                aria-hidden="true"
               />
             </Link>
           )

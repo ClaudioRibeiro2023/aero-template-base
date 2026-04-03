@@ -200,7 +200,7 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
         style={{ marginLeft: isMobile ? undefined : getContentMargin() }}
       >
         <Header onMobileMenuToggle={() => setIsMobileMenuOpen(prev => !prev)} isMobile={isMobile} />
-        <main id="main-content" className="flex-1 p-4 md:p-6 ambient-gradient">
+        <main id="main-content" className="flex-1 ambient-gradient">
           {children}
         </main>
         <Footer />

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@template/shared'
@@ -334,9 +335,12 @@ export function AppSidebar({
           >
             {/* Logo: image if available, fallback to initial letter */}
             {(collapsed ? logoCompactUrl : logoUrl) ? (
-              <img
+              <Image
                 src={(collapsed ? logoCompactUrl : logoUrl)!}
                 alt={appName}
+                width={collapsed ? 28 : 32}
+                height={collapsed ? 28 : 32}
+                unoptimized
                 className={clsx(
                   'rounded-lg object-contain',
                   collapsed ? 'w-7 h-7' : 'w-8 h-8 min-w-[32px] rounded-xl'
@@ -467,7 +471,7 @@ export function AppSidebar({
                             )}
                           >
                             <span className="flex-shrink-0">
-                              <ItemIcon size={18} />
+                              <ItemIcon size={18} aria-hidden="true" />
                             </span>
                             {!collapsed && (
                               <>
@@ -523,7 +527,7 @@ export function AppSidebar({
                           href={item.path}
                           isActive={isActive}
                           collapsed={collapsed}
-                          icon={<ItemIcon size={18} />}
+                          icon={<ItemIcon size={18} aria-hidden="true" />}
                           label={item.label}
                           badge={item.badge}
                           notificationCount={item.notificationCount}

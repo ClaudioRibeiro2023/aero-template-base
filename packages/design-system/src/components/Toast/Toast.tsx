@@ -97,7 +97,11 @@ interface ToastContainerProps {
 
 export function ToastContainer({ toasts, position = 'top-right', onRemove }: ToastContainerProps) {
   return (
-    <div className={clsx('ds-toast-container', `ds-toast-container--${position}`)}>
+    <div
+      className={clsx('ds-toast-container', `ds-toast-container--${position}`)}
+      aria-live="polite"
+      role="status"
+    >
       {toasts.map(toast => (
         <ToastItem key={toast.id} {...toast} onClose={() => onRemove(toast.id)} />
       ))}

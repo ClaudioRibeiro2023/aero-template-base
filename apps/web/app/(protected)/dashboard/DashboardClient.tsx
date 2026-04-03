@@ -238,12 +238,8 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 900)
-    return () => clearTimeout(timer)
-  }, [])
+  // Data is static (KPI_CARDS, CHART_DATA, QUICK_ACTIONS are constants) — no loading needed
+  const loading = false
 
   return (
     <main className="page-enter ambient-gradient max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">

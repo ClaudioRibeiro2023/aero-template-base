@@ -11,6 +11,7 @@ import {
   unauthorized,
   forbidden,
   tooManyRequests,
+  serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthUser } from '@/lib/auth-guard'
@@ -46,7 +47,10 @@ export async function GET(request: NextRequest) {
     .eq('tenant_id', tenantId)
     .order('hierarchy_level', { ascending: false })
 
-  if (dbError) return badRequest(dbError.message)
+  if (dbError) {
+    console.error('[admin/roles/GET]', dbError)
+    return serverError()
+  }
 
   return ok({ items: data ?? [], total: data?.length ?? 0 })
 }
@@ -98,7 +102,10 @@ export async function POST(request: NextRequest) {
     .select()
     .single()
 
-  if (dbError) return badRequest(dbError.message)
+  if (dbError) {
+    console.error('[admin/roles/POST]', dbError)
+    return serverError()
+  }
 
   await auditLog({
     userId: user.id,

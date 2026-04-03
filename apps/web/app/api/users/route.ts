@@ -46,7 +46,10 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('profiles')
-    .select('*', { count: 'exact' })
+    .select(
+      'id, email, display_name, avatar_url, phone, department, role, is_active, tenant_id, created_at, updated_at',
+      { count: 'exact' }
+    )
     .order('created_at', { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1)
 
@@ -59,7 +62,10 @@ export async function GET(request: NextRequest) {
   if (activeOnly === 'true') query = query.eq('is_active', true)
 
   const { data, error, count } = await query
-  if (error) return serverError(error.message)
+  if (error) {
+    console.error('[users/GET]', error)
+    return serverError()
+  }
 
   return ok(data, {
     page,
@@ -106,7 +112,8 @@ export async function POST(request: NextRequest) {
     if (authErr.message.includes('already been registered')) {
       return badRequest('Este email ja esta cadastrado')
     }
-    return serverError(authErr.message)
+    console.error('[users/POST] auth', authErr)
+    return serverError()
   }
 
   // 2. Atualizar profile (trigger handle_new_user ja criou o basico)
@@ -123,7 +130,10 @@ export async function POST(request: NextRequest) {
     .select()
     .single()
 
-  if (profileErr) return serverError(profileErr.message)
+  if (profileErr) {
+    console.error('[users/POST] profile', profileErr)
+    return serverError()
+  }
 
   return created(profile)
 }
