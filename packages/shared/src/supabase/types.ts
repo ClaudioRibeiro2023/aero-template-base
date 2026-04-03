@@ -53,6 +53,7 @@ export interface Database {
           updated_at?: string
           deleted_at?: string | null
         }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -92,6 +93,7 @@ export interface Database {
           is_active?: boolean
           metadata?: Json
         }
+        Relationships: []
       }
       admin_config: {
         Row: {
@@ -127,6 +129,7 @@ export interface Database {
           default_language?: string
           default_timezone?: string
         }
+        Relationships: []
       }
       feature_flags: {
         Row: {
@@ -153,6 +156,7 @@ export interface Database {
           description?: string | null
           metadata?: Json
         }
+        Relationships: []
       }
       audit_logs: {
         Row: {
@@ -179,7 +183,46 @@ export interface Database {
           user_agent?: string | null
         }
         Update: never
+        Relationships: []
       }
+      tasks: {
+        Row: {
+          id: string
+          tenant_id: string | null
+          title: string
+          description: string | null
+          status: 'todo' | 'in_progress' | 'done' | 'cancelled'
+          priority: 'low' | 'medium' | 'high' | 'critical'
+          assignee_id: string | null
+          created_by: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id?: string | null
+          title: string
+          description?: string | null
+          status?: 'todo' | 'in_progress' | 'done' | 'cancelled'
+          priority?: 'low' | 'medium' | 'high' | 'critical'
+          assignee_id?: string | null
+          created_by: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          title?: string
+          description?: string | null
+          status?: 'todo' | 'in_progress' | 'done' | 'cancelled'
+          priority?: 'low' | 'medium' | 'high' | 'critical'
+          assignee_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
     }
     Functions: {
       get_user_tenant_id: {

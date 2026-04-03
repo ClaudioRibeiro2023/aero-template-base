@@ -70,7 +70,7 @@ export function UsersTable({
               <tr>
                 <td colSpan={5} className="py-16">
                   <div className="flex flex-col items-center gap-3">
-                    <Loader2 size={32} className="text-zinc-600 animate-spin" />
+                    <Loader2 size={32} className="text-zinc-600 animate-spin" aria-hidden="true" />
                     <p className="text-sm text-zinc-500">Carregando usuarios...</p>
                   </div>
                 </td>
@@ -79,7 +79,7 @@ export function UsersTable({
               <tr>
                 <td colSpan={5} className="py-16">
                   <div className="flex flex-col items-center gap-3 text-center">
-                    <ShieldAlert size={48} className="text-zinc-700" />
+                    <ShieldAlert size={48} className="text-zinc-700" aria-hidden="true" />
                     <p className="text-sm font-medium text-zinc-400">Erro ao carregar usuarios</p>
                     <p className="text-[13px] text-zinc-600">
                       Verifique sua conexao e tente novamente
@@ -91,7 +91,7 @@ export function UsersTable({
               <tr>
                 <td colSpan={5} className="py-16">
                   <div className="flex flex-col items-center gap-3 text-center">
-                    <Users size={48} className="text-zinc-700" />
+                    <Users size={48} className="text-zinc-700" aria-hidden="true" />
                     <p className="text-sm font-medium text-zinc-400">Nenhum usuário encontrado</p>
                     <p className="text-[13px] text-zinc-600">Tente ajustar os filtros de busca</p>
                     <button
@@ -179,7 +179,7 @@ export function UsersTable({
                         style={{ width: 28, height: 28 }}
                         aria-label={`Editar ${u.display_name}`}
                       >
-                        <Pencil size={14} />
+                        <Pencil size={14} aria-hidden="true" />
                       </button>
                     </td>
                   </tr>

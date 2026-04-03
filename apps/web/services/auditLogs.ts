@@ -2,6 +2,7 @@
  * Audit Logs API service.
  * Sprint 5: Architecture Consistency — service layer extraction.
  */
+import { fetchJson } from '@/lib/fetch-json'
 import type { AuditLogFilters, AuditLogsResponse } from '@template/types'
 
 // Re-export types for convenience
@@ -22,9 +23,6 @@ export const auditLogsService = {
     if (filters.page) params.set('page', String(filters.page))
     if (filters.page_size) params.set('page_size', String(filters.page_size))
 
-    const res = await fetch(`/api/audit-logs?${params.toString()}`)
-    const json = (await res.json()) as { data?: AuditLogsResponse; error?: { message?: string } }
-    if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`)
-    return (json.data ?? json) as AuditLogsResponse
+    return fetchJson<AuditLogsResponse>(`/api/audit-logs?${params.toString()}`)
   },
 }

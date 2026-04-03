@@ -208,7 +208,7 @@ export default function AuditoriaPage() {
               disabled={page === 1}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-sm text-[var(--text-secondary)] disabled:opacity-40 hover:bg-white/[0.03] transition-all"
             >
-              <ChevronLeft size={14} /> Anterior
+              <ChevronLeft size={14} aria-hidden="true" /> Anterior
             </button>
             <span className="text-xs text-[var(--text-muted)]">
               Pagina {page} de {totalPages}
@@ -219,7 +219,7 @@ export default function AuditoriaPage() {
               disabled={page === totalPages}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[var(--glass-border)] text-sm text-[var(--text-secondary)] disabled:opacity-40 hover:bg-white/[0.03] transition-all"
             >
-              Proxima <ChevronRight size={14} />
+              Proxima <ChevronRight size={14} aria-hidden="true" />
             </button>
           </div>
         )}

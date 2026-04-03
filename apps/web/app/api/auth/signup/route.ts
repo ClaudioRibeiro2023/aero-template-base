@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   const { data, error: parseError } = await parseBody(request, SignupSchema)
   if (parseError) return parseError
 
-  const supabase = createSupabaseCookieClient()
+  const supabase = await createSupabaseCookieClient()
 
   const { data: authData, error } = await supabase.auth.signUp({
     email: data.email,

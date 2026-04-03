@@ -72,20 +72,16 @@ export default function Error({
         <div className="flex gap-3 mt-1">
           <button
             onClick={reset}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-opacity duration-150"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition-opacity duration-150 hover:opacity-90"
             style={{ background: '#00b4d8' }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '0.9')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
           >
             <RotateCcw size={14} />
             Tentar novamente
           </button>
           <a
             href="/dashboard"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 transition-colors duration-150"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-zinc-400 transition-colors duration-150 hover:bg-white/[0.04]"
             style={{ border: '1px solid rgba(255,255,255,0.08)' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
             <Home size={14} />
             Dashboard

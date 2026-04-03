@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
 
-  const supabase = createSupabaseCookieClient()
+  const supabase = await createSupabaseCookieClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()
 
-  const supabase = createSupabaseCookieClient()
+  const supabase = await createSupabaseCookieClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -99,7 +99,9 @@ export async function POST(request: NextRequest) {
       assignee_id: assignee_id || null,
       created_by: user.id,
     })
-    .select()
+    .select(
+      'id, title, description, status, priority, assignee_id, created_by, tenant_id, created_at, updated_at'
+    )
     .single()
 
   if (error) {

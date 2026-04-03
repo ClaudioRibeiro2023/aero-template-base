@@ -103,7 +103,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     .from('profiles')
     .update(profilePayload)
     .eq('id', id)
-    .select()
+    .select(
+      'id, email, display_name, avatar_url, phone, department, role, is_active, tenant_id, metadata, created_at, updated_at'
+    )
     .single()
 
   if (error?.code === 'PGRST116') return notFound('Usuario nao encontrado')
@@ -145,7 +147,7 @@ export async function DELETE(
     .from('profiles')
     .update({ is_active: false })
     .eq('id', id)
-    .select()
+    .select('id, email, display_name, role, is_active, updated_at')
     .single()
 
   if (error?.code === 'PGRST116') return notFound('Usuario nao encontrado')

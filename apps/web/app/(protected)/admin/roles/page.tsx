@@ -302,7 +302,7 @@ export default function RolesPage() {
           className="p-1.5 rounded-xl hover:bg-white/[0.03] transition-colors"
           aria-label="Voltar"
         >
-          <ChevronLeft size={20} className="text-[var(--text-muted)]" />
+          <ChevronLeft size={20} className="text-[var(--text-muted)]" aria-hidden="true" />
         </Link>
         <div className="flex-1">
           <h1 className="text-xl font-bold text-[var(--text-primary)]">Perfis e Roles</h1>
@@ -344,6 +344,7 @@ export default function RolesPage() {
                 {role.is_system ? (
                   <ShieldCheck
                     size={14}
+                    aria-hidden="true"
                     className={
                       isActive ? 'text-[var(--brand-primary)]' : 'text-[var(--text-muted)]'
                     }
@@ -351,6 +352,7 @@ export default function RolesPage() {
                 ) : (
                   <Shield
                     size={14}
+                    aria-hidden="true"
                     className={
                       isActive ? 'text-[var(--brand-primary)]' : 'text-[var(--text-muted)]'
                     }
@@ -403,7 +405,7 @@ export default function RolesPage() {
                   aria-label="Remover role"
                   className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                 >
-                  <Trash2 size={15} />
+                  <Trash2 size={15} aria-hidden="true" />
                 </button>
               )}
             </div>

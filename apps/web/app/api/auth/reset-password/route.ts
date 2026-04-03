@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
   const { data, error: parseError } = await parseBody(request, ResetPasswordSchema)
   if (parseError) return parseError
 
-  const supabase = createSupabaseCookieClient()
+  const supabase = await createSupabaseCookieClient()
 
   const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/auth/callback?next=/login/update-password`
   const { error } = await supabase.auth.resetPasswordForEmail(data.email, { redirectTo })

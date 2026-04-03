@@ -127,7 +127,9 @@ export async function POST(request: NextRequest) {
       department: department || null,
     })
     .eq('id', authData.user.id)
-    .select()
+    .select(
+      'id, email, display_name, avatar_url, phone, department, role, is_active, tenant_id, created_at, updated_at'
+    )
     .single()
 
   if (profileErr) {

@@ -4,7 +4,7 @@ import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
 export const dynamic = 'force-dynamic'
 
 export async function POST() {
-  const supabase = createSupabaseCookieClient()
+  const supabase = await createSupabaseCookieClient()
 
   const { error } = await supabase.auth.signOut()
   if (error) {

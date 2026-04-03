@@ -56,7 +56,7 @@ export default function ProfilePage() {
               aria-label="Alterar foto"
               style={{ boxShadow: '0 0 12px var(--glow-brand)' }}
             >
-              <Camera size={13} />
+              <Camera size={13} aria-hidden="true" />
             </button>
           </div>
           <div>
@@ -152,7 +152,7 @@ export default function ProfilePage() {
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--brand-primary)] text-white text-sm font-medium transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
             style={{ boxShadow: '0 0 16px var(--glow-brand)' }}
           >
-            <Save size={15} />
+            <Save size={15} aria-hidden="true" />
             {saving ? 'Salvando...' : 'Salvar alteracoes'}
           </button>
         </div>

@@ -27,7 +27,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
 
-  const supabase = createSupabaseCookieClient()
+  const supabase = await createSupabaseCookieClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -56,7 +56,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (!success) return tooManyRequests()
 
-  const supabase = createSupabaseCookieClient()
+  const supabase = await createSupabaseCookieClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -85,7 +85,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     .from('tasks')
     .update(updatePayload)
     .eq('id', id)
-    .select()
+    .select(
+      'id, title, description, status, priority, assignee_id, created_by, tenant_id, created_at, updated_at'
+    )
     .single()
 
   if (error?.code === 'PGRST116') return notFound()
@@ -105,7 +107,7 @@ export async function DELETE(
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()
 
-  const supabase = createSupabaseCookieClient()
+  const supabase = await createSupabaseCookieClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
