@@ -100,7 +100,7 @@ interface NavItem {
   children?: { label: string; path: string; icon?: LucideIcon }[]
 }
 
-/** SidebarLink — replaces react-router NavLink with Next.js Link + active detection */
+/** SidebarLink — Adaptive Glass nav item with translateX hover and radial glow active state */
 function SidebarLink({
   href,
   isActive,
@@ -109,6 +109,7 @@ function SidebarLink({
   label,
   badge,
   notificationCount,
+  prefetch,
 }: {
   href: string
   isActive: boolean
@@ -117,55 +118,57 @@ function SidebarLink({
   label: string
   badge?: string
   notificationCount?: number
+  /** Set to false to skip route prefetching for rarely-visited pages. Defaults to undefined (Next.js default: prefetch visible links). */
+  prefetch?: boolean
 }) {
   return (
-    <Link
-      href={href}
-      className={clsx(
-        'flex items-center gap-2.5 rounded-lg transition-all duration-150 ease-out relative',
-        'text-[var(--sidebar-text)] hover:text-[var(--sidebar-text-hover)]',
-        'hover:bg-white/[0.04]',
-        collapsed ? 'p-2 justify-center' : 'px-2.5 py-1.5',
-        isActive && 'bg-[rgba(0,180,216,0.12)] text-[#00b4d8]'
-      )}
-    >
-      {isActive && (
-        <span
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 rounded-r-full bg-[var(--brand-primary)] transition-all duration-200"
-          aria-hidden="true"
-        />
-      )}
-      <span className="relative flex-shrink-0">
-        {icon}
-        {notificationCount != null && notificationCount > 0 && (
-          <span
-            className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-full bg-rose-500 text-white text-[9px] font-bold px-0.5 ring-2 ring-[rgba(9,9,11,0.85)]"
-            aria-label={`${notificationCount} notificacoes`}
-          >
-            {notificationCount > 99 ? '99+' : notificationCount}
-          </span>
+    <div className="group relative">
+      <Link
+        href={href}
+        prefetch={prefetch}
+        className={clsx(
+          'sidebar-nav-item flex items-center gap-2.5 rounded-lg transition-all duration-150 ease-out relative',
+          'text-[var(--sidebar-text)] hover:text-[var(--sidebar-text-hover)]',
+          'hover:bg-white/[0.04]',
+          collapsed ? 'p-2 justify-center min-w-[44px] min-h-[44px]' : 'px-2.5 py-1.5',
+          isActive && 'sidebar-nav-item-active bg-[rgba(0,180,216,0.12)] text-[#00b4d8]'
         )}
-      </span>
-      {!collapsed && (
-        <>
-          <span className="text-[13px] font-medium flex-1 truncate">{label}</span>
-          {badge && (
+      >
+        {isActive && (
+          <span className="sidebar-active-bar top-1/2 -translate-y-1/2" aria-hidden="true" />
+        )}
+        <span className="relative flex-shrink-0 group-hover:text-[var(--brand-primary)] transition-colors">
+          {icon}
+          {notificationCount != null && notificationCount > 0 && (
             <span
-              className={clsx(
-                'text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full tracking-wide',
-                BADGE_COLORS[badge] || 'bg-white/10 text-white/50'
-              )}
+              className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-full bg-rose-500 text-white text-[9px] font-bold px-0.5 ring-2 ring-[rgba(9,9,11,0.85)]"
+              aria-label={`${notificationCount} notificacoes`}
             >
-              {badge}
+              {notificationCount > 99 ? '99+' : notificationCount}
             </span>
           )}
-          <ChevronRight
-            size={14}
-            className="opacity-0 group-hover:opacity-40 transition-opacity flex-shrink-0 text-white/30"
-          />
-        </>
-      )}
-    </Link>
+        </span>
+        {!collapsed && (
+          <>
+            <span className="text-[13px] font-medium flex-1 truncate">{label}</span>
+            {badge && (
+              <span
+                className={clsx(
+                  'text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full tracking-wide',
+                  BADGE_COLORS[badge] || 'bg-white/10 text-white/50'
+                )}
+              >
+                {badge}
+              </span>
+            )}
+            <ChevronRight
+              size={14}
+              className="opacity-0 group-hover:opacity-40 transition-opacity flex-shrink-0 text-white/30"
+            />
+          </>
+        )}
+      </Link>
+    </div>
   )
 }
 
@@ -310,11 +313,9 @@ export function AppSidebar({
         role="navigation"
         aria-label="Menu principal"
         className={clsx(
-          'fixed left-0 top-0 h-screen flex flex-col sidebar-gradient border-r border-[rgba(255,255,255,0.06)] z-50',
+          'flex flex-col sidebar-island',
           'transition-[width,transform] duration-250 ease-[cubic-bezier(0.4,0,0.2,1)]',
-          // Desktop: posição estática pelo width
           collapsed ? 'w-[var(--sidebar-collapsed-width,56px)]' : 'w-[var(--sidebar-width)]',
-          // Mobile: drawer — escondido por padrão, visível quando aberto
           'lg:translate-x-0',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
@@ -329,7 +330,7 @@ export function AppSidebar({
           <Link
             href="/dashboard"
             className={clsx(
-              'flex items-center overflow-hidden rounded-lg transition-all duration-200 hover:shadow-[0_0_12px_rgba(0,180,216,0.15)]',
+              'flex items-center overflow-hidden rounded-lg transition-all duration-200',
               collapsed ? 'justify-center' : 'gap-2.5'
             )}
           >
@@ -340,16 +341,17 @@ export function AppSidebar({
                 alt={appName}
                 width={collapsed ? 28 : 32}
                 height={collapsed ? 28 : 32}
+                fetchPriority="high"
                 unoptimized
                 className={clsx(
-                  'rounded-lg object-contain',
+                  'rounded-lg object-contain shadow-[0_0_12px_rgba(0,180,216,0.15)]',
                   collapsed ? 'w-7 h-7' : 'w-8 h-8 min-w-[32px] rounded-xl'
                 )}
               />
             ) : (
               <div
                 className={clsx(
-                  'rounded-lg bg-[var(--brand-primary)] flex items-center justify-center shadow-lg shadow-[var(--brand-primary)]/20',
+                  'rounded-lg bg-[var(--brand-primary)] flex items-center justify-center shadow-lg shadow-[var(--brand-primary)]/20 shadow-[0_0_12px_rgba(0,180,216,0.15)]',
                   collapsed ? 'w-7 h-7' : 'w-8 h-8 min-w-[32px] rounded-xl'
                 )}
               >
@@ -391,7 +393,7 @@ export function AppSidebar({
           <button
             onClick={() => globalSearch.open()}
             className={clsx(
-              'w-full flex items-center gap-2 rounded-lg transition-all duration-150 ease-out',
+              'group w-full flex items-center gap-2 rounded-lg transition-all duration-150 ease-out',
               'bg-[rgba(255,255,255,0.03)] hover:bg-white/[0.06] border border-[rgba(255,255,255,0.06)]',
               'text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text)]',
               collapsed ? 'p-2 justify-center' : 'px-2.5 py-1.5'
@@ -399,7 +401,10 @@ export function AppSidebar({
             title={collapsed ? `Buscar (${MOD_KEY}K)` : undefined}
             aria-label="Abrir busca global"
           >
-            <Search size={15} className="flex-shrink-0" />
+            <Search
+              size={15}
+              className="flex-shrink-0 group-hover:rotate-12 transition-transform"
+            />
             {!collapsed && (
               <>
                 <span className="text-xs flex-1 text-left">Buscar...</span>
@@ -421,10 +426,7 @@ export function AppSidebar({
               {/* Group divider + label */}
               {groupIdx > 0 && (
                 <div
-                  className={clsx(
-                    'border-t border-[rgba(255,255,255,0.04)]',
-                    collapsed ? 'mx-2 mb-1.5' : 'mx-2.5 mb-1.5'
-                  )}
+                  className={clsx('sidebar-divider', collapsed ? 'mx-2 mb-1.5' : 'mx-2.5 mb-1.5')}
                 />
               )}
               {!collapsed ? (
@@ -463,14 +465,16 @@ export function AppSidebar({
                               })
                             }}
                             className={clsx(
-                              'w-full flex items-center gap-2.5 rounded-lg transition-all duration-150 ease-out',
+                              'sidebar-nav-item w-full flex items-center gap-2.5 rounded-lg transition-all duration-150 ease-out',
                               'text-[var(--sidebar-text)] hover:text-[var(--sidebar-text-hover)]',
                               'hover:bg-white/[0.04]',
-                              collapsed ? 'p-2 justify-center' : 'px-2.5 py-1.5',
-                              isActive && 'text-[#00b4d8]'
+                              collapsed
+                                ? 'p-2 justify-center min-w-[44px] min-h-[44px]'
+                                : 'px-2.5 py-1.5',
+                              isActive && 'sidebar-nav-item-active text-[#00b4d8]'
                             )}
                           >
-                            <span className="flex-shrink-0">
+                            <span className="flex-shrink-0 group-hover:text-[var(--brand-primary)] transition-colors">
                               <ItemIcon size={18} aria-hidden="true" />
                             </span>
                             {!collapsed && (
@@ -500,7 +504,7 @@ export function AppSidebar({
                           </button>
                           {/* Children */}
                           {!collapsed && expandedModules.has(item.path) && (
-                            <div className="ml-4 mt-0.5 space-y-0.5 border-l border-[var(--sidebar-border)] pl-2">
+                            <div className="ml-4 mt-0.5 space-y-0.5 pl-2 border-l border-[rgba(0,135,168,0.15)]">
                               {item.children!.map(child => {
                                 const childActive =
                                   pathname === child.path || pathname.startsWith(child.path + '/')
@@ -508,8 +512,9 @@ export function AppSidebar({
                                   <Link
                                     key={child.path}
                                     href={child.path}
+                                    prefetch={groupName === 'Principal' ? undefined : false}
                                     className={clsx(
-                                      'flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] transition-colors',
+                                      'sidebar-nav-item flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] transition-all',
                                       childActive
                                         ? 'text-[var(--brand-primary)] font-medium bg-[var(--brand-primary)]/10'
                                         : 'text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text)] hover:bg-[var(--sidebar-item-hover)]'
@@ -531,6 +536,7 @@ export function AppSidebar({
                           label={item.label}
                           badge={item.badge}
                           notificationCount={item.notificationCount}
+                          prefetch={groupName === 'Principal' ? undefined : false}
                         />
                       )}
 
@@ -575,7 +581,7 @@ export function AppSidebar({
           {collapsed ? (
             <div className="flex flex-col items-center gap-1.5">
               <div
-                className="w-7 h-7 rounded-full bg-[rgba(0,180,216,0.15)] border-2 border-[rgba(255,255,255,0.1)] flex items-center justify-center text-[var(--brand-primary)] text-[10px] font-semibold"
+                className="avatar-gradient-border w-7 h-7 rounded-full bg-[rgba(0,180,216,0.15)] flex items-center justify-center text-[var(--brand-primary)] text-[10px] font-semibold"
                 title={user?.name || 'Usuário'}
               >
                 {userInitials}
@@ -590,8 +596,8 @@ export function AppSidebar({
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-[rgba(0,180,216,0.15)] border-2 border-[rgba(255,255,255,0.1)] flex items-center justify-center text-[var(--brand-primary)] text-[10px] font-semibold flex-shrink-0">
+            <div className="group flex items-center gap-2.5">
+              <div className="avatar-gradient-border w-7 h-7 rounded-full bg-[rgba(0,180,216,0.15)] flex items-center justify-center text-[var(--brand-primary)] text-[10px] font-semibold flex-shrink-0">
                 {userInitials}
               </div>
               <div className="flex-1 min-w-0">
@@ -601,7 +607,7 @@ export function AppSidebar({
               </div>
               <Link
                 href="/admin/config"
-                className="p-1 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Configurações"
                 aria-label="Configurações"
               >
@@ -609,7 +615,7 @@ export function AppSidebar({
               </Link>
               <button
                 onClick={logout}
-                className="p-1 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-rose-400 transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-rose-400 flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Sair"
                 aria-label="Sair"
               >

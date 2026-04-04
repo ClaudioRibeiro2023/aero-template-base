@@ -1,10 +1,16 @@
 /**
  * Table Component
- * 
+ *
  * Tabela reutilizável com suporte a ordenação, seleção e responsividade.
  */
 
-import { useState, type ReactNode, type HTMLAttributes, type ThHTMLAttributes, type TdHTMLAttributes } from 'react'
+import {
+  useState,
+  type ReactNode,
+  type HTMLAttributes,
+  type ThHTMLAttributes,
+  type TdHTMLAttributes,
+} from 'react'
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import clsx from 'clsx'
 import './Table.css'
@@ -25,6 +31,30 @@ export interface TableProps extends HTMLAttributes<HTMLTableElement> {
   children?: ReactNode
 }
 
+/**
+ * Responsive data table with optional striped rows, hover highlighting, and borders.
+ * Wraps content in a scrollable container for horizontal overflow.
+ *
+ * @example
+ * ```tsx
+ * <Table striped hoverable>
+ *   <TableHead>
+ *     <TableRow>
+ *       <TableHeaderCell sortable sortDirection={dir} onSort={() => handleSort('name')}>Nome</TableHeaderCell>
+ *       <TableHeaderCell>Email</TableHeaderCell>
+ *     </TableRow>
+ *   </TableHead>
+ *   <TableBody>
+ *     {rows.map(r => (
+ *       <TableRow key={r.id}>
+ *         <TableCell>{r.name}</TableCell>
+ *         <TableCell>{r.email}</TableCell>
+ *       </TableRow>
+ *     ))}
+ *   </TableBody>
+ * </Table>
+ * ```
+ */
 export function Table({
   size = 'md',
   striped = false,
@@ -53,7 +83,7 @@ export function Table({
   )
 }
 
-// Table Head
+/** Table `<thead>` wrapper. */
 export interface TableHeadProps extends HTMLAttributes<HTMLTableSectionElement> {
   children?: ReactNode
 }
@@ -66,7 +96,7 @@ export function TableHead({ className, children, ...props }: TableHeadProps) {
   )
 }
 
-// Table Body
+/** Table `<tbody>` wrapper. */
 export interface TableBodyProps extends HTMLAttributes<HTMLTableSectionElement> {
   children?: ReactNode
 }
@@ -79,7 +109,7 @@ export function TableBody({ className, children, ...props }: TableBodyProps) {
   )
 }
 
-// Table Row
+/** Props for the {@link TableRow} component. */
 export interface TableRowProps extends HTMLAttributes<HTMLTableRowElement> {
   /** Linha selecionada */
   selected?: boolean
@@ -88,13 +118,16 @@ export interface TableRowProps extends HTMLAttributes<HTMLTableRowElement> {
 
 export function TableRow({ selected = false, className, children, ...props }: TableRowProps) {
   return (
-    <tr className={clsx('ds-table__row', selected && 'ds-table__row--selected', className)} {...props}>
+    <tr
+      className={clsx('ds-table__row', selected && 'ds-table__row--selected', className)}
+      {...props}
+    >
       {children}
     </tr>
   )
 }
 
-// Table Header Cell
+/** Props for the {@link TableHeaderCell} component. */
 export interface TableHeaderCellProps extends ThHTMLAttributes<HTMLTableCellElement> {
   /** Permite ordenação */
   sortable?: boolean
@@ -123,7 +156,9 @@ export function TableHeaderCell({
     <th
       className={clsx('ds-table__th', sortable && 'ds-table__th--sortable', className)}
       onClick={handleClick}
-      aria-sort={sortDirection === 'asc' ? 'ascending' : sortDirection === 'desc' ? 'descending' : undefined}
+      aria-sort={
+        sortDirection === 'asc' ? 'ascending' : sortDirection === 'desc' ? 'descending' : undefined
+      }
       {...props}
     >
       <div className="ds-table__th-content">
@@ -157,7 +192,14 @@ export function TableCell({ className, children, ...props }: TableCellProps) {
   )
 }
 
-// Hook for sorting
+/**
+ * Hook that manages column sort state and returns sorted data.
+ * Cycles through: null -> asc -> desc -> null on repeated clicks of the same column.
+ *
+ * @param data - Array of row objects to sort.
+ * @param defaultKey - Optional initial sort column key.
+ * @returns Object with `sortedData`, `sortKey`, `sortDirection`, `handleSort`, and `getSortDirection`.
+ */
 export function useTableSort<T>(data: T[], defaultKey?: keyof T) {
   const [sortKey, setSortKey] = useState<keyof T | null>(defaultKey || null)
   const [sortDirection, setSortDirection] = useState<SortDirection>(null)

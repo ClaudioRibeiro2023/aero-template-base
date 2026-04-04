@@ -4,19 +4,32 @@ import './Alert.css'
 
 export type AlertVariant = 'info' | 'success' | 'warning' | 'error'
 
+/** Props for the {@link Alert} component. */
 export interface AlertProps extends HTMLAttributes<HTMLDivElement> {
-  /** Variante visual do alerta */
+  /** Color variant that controls the alert styling. @default 'info' */
   variant?: AlertVariant
-  /** Título do alerta */
+  /** Bold heading text for the alert. */
   title?: string
-  /** Descrição principal */
+  /** Descriptive text rendered below the title. */
   description?: ReactNode
-  /** Ícone opcional à esquerda */
+  /** Optional icon displayed at the left edge. */
   icon?: ReactNode
-  /** Ações à direita (botões, links) */
+  /** Action elements (buttons, links) rendered at the right side. */
   actions?: ReactNode
 }
 
+/**
+ * Contextual alert banner with icon, title, description, and optional actions.
+ * Renders with `role="alert"` for screen reader announcements.
+ *
+ * @example
+ * ```tsx
+ * <Alert variant="warning" title="Atencao" description="Sua sessao expira em 5 minutos." />
+ * <Alert variant="error" title="Erro" actions={<Button size="sm">Tentar novamente</Button>}>
+ *   Falha ao carregar dados.
+ * </Alert>
+ * ```
+ */
 export const Alert = forwardRef<HTMLDivElement, AlertProps>(
   ({ variant = 'info', title, description, icon, actions, className, children, ...props }, ref) => {
     return (

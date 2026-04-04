@@ -3,12 +3,27 @@ import { ChevronRight } from 'lucide-react'
 import clsx from 'clsx'
 import './Breadcrumb.css'
 
+/** Props for the {@link Breadcrumb} component. */
 export interface BreadcrumbProps extends HTMLAttributes<HTMLElement> {
-  /** Separador customizado */
+  /** Custom separator element between items. Defaults to a ChevronRight icon. */
   separator?: ReactNode
+  /** One or more {@link BreadcrumbItem} elements. */
   children: ReactNode
 }
 
+/**
+ * Navigation breadcrumb trail with automatic separators between items.
+ * Renders a `<nav>` with `aria-label="Breadcrumb"` for accessibility.
+ *
+ * @example
+ * ```tsx
+ * <Breadcrumb>
+ *   <BreadcrumbItem href="/">Inicio</BreadcrumbItem>
+ *   <BreadcrumbItem href="/usuarios">Usuarios</BreadcrumbItem>
+ *   <BreadcrumbItem current>Editar</BreadcrumbItem>
+ * </Breadcrumb>
+ * ```
+ */
 export function Breadcrumb({ separator, className, children, ...props }: BreadcrumbProps) {
   const items = Children.toArray(children)
   const sep = separator || <ChevronRight size={14} />
@@ -29,14 +44,20 @@ export function Breadcrumb({ separator, className, children, ...props }: Breadcr
   )
 }
 
+/** Props for the {@link BreadcrumbItem} component. */
 export interface BreadcrumbItemProps extends HTMLAttributes<HTMLElement> {
-  /** URL do link (se fornecido, renderiza <a>) */
+  /** URL for the breadcrumb link. When provided, renders an `<a>` tag. */
   href?: string
-  /** Se é a página atual */
+  /** Marks this item as the current page (renders as `<span>` with `aria-current="page"`). @default false */
   current?: boolean
+  /** Label text or content for this breadcrumb step. */
   children: ReactNode
 }
 
+/**
+ * Individual breadcrumb step. Renders as a link (`<a>`), button, or static text
+ * depending on whether `href` or `current` is provided.
+ */
 export function BreadcrumbItem({
   href,
   current = false,

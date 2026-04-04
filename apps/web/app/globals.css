@@ -55,7 +55,7 @@
   --shadow-glow: 0 0 20px var(--glow-brand);
 
   /* Layout */
-  --sidebar-width: 240px;
+  --sidebar-width: 260px;
   --sidebar-collapsed-width: 56px;
 
   /* Radius */
@@ -92,6 +92,21 @@
 }
 
 /* ============================================
+   Theme transition — smooth switch between dark and light
+   ============================================ */
+
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition:
+    background-color 300ms ease,
+    color 300ms ease,
+    border-color 300ms ease,
+    box-shadow 300ms ease !important;
+}
+
+/* ============================================
    Base styles
    ============================================ */
 
@@ -115,6 +130,33 @@ body {
 
 .glass-panel:hover {
   border-color: var(--glass-border-hover);
+}
+
+/* ============================================
+   Glass Panel Elevated — cards with more prominence
+   ============================================ */
+
+.glass-panel-elevated {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.03);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.glass-panel-elevated:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.25),
+    0 0 20px var(--glow-brand);
+  transform: translateY(-1px);
 }
 
 /* ============================================
@@ -326,6 +368,515 @@ html {
 }
 
 /* ============================================
+   Sidebar Island — Adaptive Glass Design
+   ============================================ */
+
+@property --aurora-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes auroraRotate {
+  to {
+    --aurora-angle: 360deg;
+  }
+}
+
+@keyframes sidebarIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes activePulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes avatarBorder {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Sidebar island container */
+.sidebar-island {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  bottom: 12px;
+  z-index: 50;
+  border-radius: 20px;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 135, 168, 0.03) 0%,
+    rgba(12, 12, 15, 0.92) 50%,
+    rgba(0, 135, 168, 0.02) 100%
+  );
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    0 0 80px rgba(0, 135, 168, 0.03);
+  display: flex;
+  flex-direction: column;
+  animation: sidebarIn 500ms ease-out both;
+  overflow: hidden;
+  transition:
+    width 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 300ms ease-out;
+}
+
+/* Aurora border effect */
+.sidebar-island::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 20px;
+  background: conic-gradient(
+    from var(--aurora-angle, 0deg),
+    transparent 0%,
+    rgba(0, 135, 168, 0.15) 15%,
+    transparent 30%,
+    rgba(0, 180, 216, 0.1) 50%,
+    transparent 65%,
+    rgba(0, 135, 168, 0.12) 80%,
+    transparent 100%
+  );
+  animation: auroraRotate 8s linear infinite;
+  z-index: -2;
+}
+
+.sidebar-island::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 19px;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 135, 168, 0.03) 0%,
+    rgba(12, 12, 15, 0.92) 50%,
+    rgba(0, 135, 168, 0.02) 100%
+  );
+  z-index: -1;
+}
+
+/* Sidebar nav item hover effect */
+.sidebar-nav-item {
+  transition:
+    background 200ms,
+    color 200ms,
+    transform 200ms;
+}
+.sidebar-nav-item:hover {
+  transform: translateX(2px);
+}
+
+/* Active nav item glow */
+.sidebar-nav-item-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  background: radial-gradient(ellipse at left center, rgba(0, 135, 168, 0.06), transparent 70%);
+  animation: activePulse 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Active indicator bar */
+.sidebar-active-bar {
+  position: absolute;
+  left: 0;
+  width: 3px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--brand-primary);
+  box-shadow: 0 0 8px var(--glow-brand);
+  transition:
+    top 350ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 200ms;
+}
+
+/* Avatar rotating gradient border */
+.avatar-gradient-border {
+  position: relative;
+}
+.avatar-gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: conic-gradient(var(--brand-primary), var(--brand-secondary), var(--brand-primary));
+  animation: avatarBorder 10s linear infinite;
+  z-index: -1;
+}
+
+/* Sidebar divider with gradient */
+.sidebar-divider {
+  height: 1px;
+  margin: 4px 8px;
+  background: linear-gradient(90deg, transparent, rgba(0, 135, 168, 0.2), transparent);
+}
+
+/* Sidebar island layout offset for main content */
+.sidebar-island-offset {
+  margin-left: calc(var(--sidebar-width) + 36px);
+}
+.sidebar-island-offset-collapsed {
+  margin-left: calc(var(--sidebar-collapsed-width) + 36px);
+}
+
+/* Mobile: sidebar island as drawer */
+@media (max-width: 767px) {
+  .sidebar-island {
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 0 20px 20px 0;
+  }
+  .sidebar-island::before {
+    border-radius: 0 20px 20px 0;
+  }
+  .sidebar-island::after {
+    border-radius: 0 19px 19px 0;
+  }
+  .sidebar-island-offset,
+  .sidebar-island-offset-collapsed {
+    margin-left: 0;
+  }
+}
+
+/* ============================================
+   Focus Visible — A11y keyboard navigation
+   ============================================ */
+
+:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove default focus for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Enhanced focus for interactive elements */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--glow-brand);
+}
+
+/* ============================================
+   Tablet Refinements (768px - 1023px)
+   ============================================ */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .glass-panel {
+    padding: 16px;
+  }
+
+  /* Ensure touch targets are at least 44x44px on tablet */
+  button,
+  a,
+  [role='button'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Adjust grid layouts for tablet */
+  .tablet-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+/* ============================================
+   Touch Target Minimum — WCAG 2.5.8
+   ============================================ */
+
+@media (pointer: coarse) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ============================================
+   Safe Area Insets — notch/dynamic island devices
+   ============================================ */
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-x {
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* ============================================
+   Landscape mode — adjust sidebar and content
+   ============================================ */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .sidebar-island {
+    top: 6px;
+    bottom: 6px;
+    left: 6px;
+  }
+
+  .sidebar-island-offset {
+    margin-left: calc(var(--sidebar-width) + 24px);
+  }
+}
+
+/* ============================================
+   Container Queries — responsive components
+   ============================================ */
+
+.container-query {
+  container-type: inline-size;
+}
+
+@container (max-width: 400px) {
+  .cq-stack {
+    flex-direction: column;
+  }
+  .cq-hide {
+    display: none;
+  }
+  .cq-full {
+    width: 100%;
+  }
+}
+
+@container (min-width: 600px) {
+  .cq-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@container (min-width: 900px) {
+  .cq-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+}
+
+/* ============================================
+   Print styles — clean output
+   ============================================ */
+
+@media print {
+  .sidebar-island,
+  .sidebar-island::before,
+  .sidebar-island::after,
+  header,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .glass-panel,
+  .glass-panel-elevated {
+    background: white !important;
+    border: 1px solid #ddd !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 16px !important;
+  }
+}
+
+/* ============================================
+   Scroll Progress Indicator
+   ============================================ */
+
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 100;
+  background: transparent;
+  pointer-events: none;
+}
+
+.scroll-progress::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: var(--scroll-pct, 0%);
+  background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent, #94d2bd));
+  box-shadow: 0 0 8px var(--glow-brand);
+  transition: width 100ms linear;
+}
+
+/* ============================================
+   Enhanced Page Transitions
+   ============================================ */
+
+.page-exit {
+  animation: page-exit 0.2s ease-in forwards;
+}
+
+@keyframes page-exit {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Content reveal — stagger from skeleton */
+.content-reveal {
+  animation: contentReveal 0.4s ease-out forwards;
+}
+
+@keyframes contentReveal {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   Interactive Feedback
+   ============================================ */
+
+/* Ripple effect on click */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
+    rgba(255, 255, 255, 0.12) 0%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 300ms;
+  pointer-events: none;
+}
+
+.ripple:active::after {
+  opacity: 1;
+}
+
+/* Magnetic hover — subtle pull toward cursor */
+.magnetic-hover {
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Number counter animation */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.count-up {
+  animation: countUp 0.5s ease-out forwards;
+}
+
+/* Card entrance with 3D perspective */
+@keyframes card3DEnter {
+  from {
+    opacity: 0;
+    transform: perspective(800px) rotateX(4deg) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(800px) rotateX(0deg) translateY(0);
+  }
+}
+
+.card-3d-enter {
+  animation: card3DEnter 0.5s ease-out forwards;
+}
+
+/* Glass shimmer on hover */
+.glass-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-shimmer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.03) 45%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.03) 55%,
+    transparent 60%
+  );
+  transform: translateX(-100%);
+  transition: transform 600ms ease;
+  pointer-events: none;
+}
+
+.glass-shimmer:hover::before {
+  transform: translateX(100%);
+}
+
+/* ============================================
    Reduced Motion
    ============================================ */
 
@@ -367,5 +918,33 @@ html {
 
   .press-scale:active {
     transform: none;
+  }
+
+  .sidebar-island {
+    animation: none;
+  }
+  .sidebar-island::before {
+    animation: none;
+  }
+  .avatar-gradient-border::before {
+    animation: none;
+  }
+  .sidebar-nav-item-active::before {
+    animation: none;
+  }
+
+  .content-reveal,
+  .count-up,
+  .card-3d-enter {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
+  .glass-shimmer::before {
+    display: none;
+  }
+  .scroll-progress {
+    display: none;
   }
 }

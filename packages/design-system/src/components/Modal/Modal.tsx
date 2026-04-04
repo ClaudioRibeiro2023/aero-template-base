@@ -11,28 +11,42 @@ import './Modal.css'
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl' | 'full'
 
+/** Props for the {@link Modal} component. */
 export interface ModalProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
-  /** Controle de visibilidade */
+  /** Whether the modal is currently visible. */
   isOpen: boolean
-  /** Callback ao fechar */
+  /** Called when the modal requests to close (ESC key, overlay click, or close button). */
   onClose: () => void
-  /** Título do modal */
+  /** Title displayed in the modal header. Accepts ReactNode for rich content. */
   title?: ReactNode
-  /** Descrição/subtítulo */
+  /** Optional description shown below the title. */
   description?: string
-  /** Tamanho do modal */
+  /** Modal width preset. @default 'md' */
   size?: ModalSize
-  /** Mostrar botão de fechar */
+  /** Whether to show the X close button in the header. @default true */
   showCloseButton?: boolean
-  /** Fechar ao clicar no overlay */
+  /** Whether clicking the overlay backdrop closes the modal. @default true */
   closeOnOverlayClick?: boolean
-  /** Fechar ao pressionar ESC */
+  /** Whether pressing the Escape key closes the modal. @default true */
   closeOnEsc?: boolean
-  /** Footer do modal */
+  /** Content rendered in the modal footer area (e.g. action buttons). */
   footer?: ReactNode
+  /** Modal body content. */
   children?: ReactNode
 }
 
+/**
+ * Modal dialog with focus trap, ESC close, and overlay click dismiss.
+ * Locks body scroll while open and manages focus cycling with Tab/Shift+Tab.
+ *
+ * @example
+ * ```tsx
+ * <Modal isOpen={open} onClose={() => setOpen(false)} title="Confirmar exclusao">
+ *   <p>Tem certeza que deseja excluir?</p>
+ *   <Modal footer={<Button onClick={handleDelete}>Excluir</Button>} />
+ * </Modal>
+ * ```
+ */
 export function Modal({
   isOpen,
   onClose,

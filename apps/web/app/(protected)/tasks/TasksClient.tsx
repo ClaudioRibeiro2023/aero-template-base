@@ -261,14 +261,14 @@ function TaskRow({
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex-shrink-0">
         <button
           onClick={() => onEdit(task)}
-          className="p-1.5 rounded-lg hover:bg-white/[0.06] text-[var(--text-muted)] hover:text-[var(--brand-primary)] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+          className="p-1.5 rounded-lg hover:bg-white/[0.06] text-[var(--text-muted)] hover:text-[var(--brand-primary)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label={`Editar task: ${task.title}`}
         >
           <Pencil size={14} aria-hidden="true" />
         </button>
         <button
           onClick={() => onDelete(task.id)}
-          className="p-1.5 rounded-lg hover:bg-white/[0.06] text-[var(--text-muted)] hover:text-rose-400 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+          className="p-1.5 rounded-lg hover:bg-white/[0.06] text-[var(--text-muted)] hover:text-rose-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label={`Excluir task: ${task.title}`}
         >
           <Trash2 size={14} aria-hidden="true" />

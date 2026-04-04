@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, Save } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useToast } from '@template/design-system'
 import { useFormDirty } from '@/hooks/useFormDirty'
 import { useAdminPlatformConfig } from '@/hooks/usePlatformConfig'
@@ -10,6 +11,8 @@ import type { PartialPlatformConfig } from '@/services/adminConfig'
 
 export default function ConfigGeralPage() {
   const { config, updateAsync } = useAdminPlatformConfig()
+  const t = useTranslations('config')
+  const tCommon = useTranslations('common')
   const [appName, setAppName] = useState('')
   const [language, setLanguage] = useState('pt-BR')
   const { success, error: toastError } = useToast()
@@ -31,9 +34,9 @@ export default function ConfigGeralPage() {
         defaultLanguage: language,
       } as PartialPlatformConfig)
       markClean()
-      success('Configurações salvas com sucesso')
+      success(t('savedSuccess'))
     } catch {
-      toastError('Erro ao salvar configurações')
+      toastError(t('saveError'))
     }
   }
 
@@ -43,15 +46,13 @@ export default function ConfigGeralPage() {
         <Link
           href="/admin/config"
           className="p-1.5 rounded-xl hover:bg-white/[0.03] transition-colors"
-          aria-label="Voltar"
+          aria-label={tCommon('back')}
         >
           <ChevronLeft size={20} className="text-[var(--text-muted)]" />
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-[var(--text-primary)]">Configurações Gerais</h1>
-          <p className="text-sm text-[var(--text-secondary)]">
-            Nome do sistema e preferências básicas
-          </p>
+          <h1 className="text-xl font-bold text-[var(--text-primary)]">{t('generalTitle')}</h1>
+          <p className="text-sm text-[var(--text-secondary)]">{t('generalSubtitle')}</p>
         </div>
       </div>
 
@@ -61,7 +62,7 @@ export default function ConfigGeralPage() {
             htmlFor="appName"
             className="block text-sm font-medium text-[var(--text-primary)] mb-1.5"
           >
-            Nome do Sistema
+            {t('systemName')}
           </label>
           <input
             id="appName"
@@ -73,9 +74,7 @@ export default function ConfigGeralPage() {
             }}
             className="w-full px-3 py-2.5 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-sm text-sm text-[var(--text-primary)] transition-all duration-200 focus:outline-none focus:border-[var(--brand-primary)]/50 focus:ring-1 focus:ring-[var(--brand-primary)]/20"
           />
-          <p className="text-xs text-[var(--text-muted)] mt-1.5">
-            Exibido no header, login e emails
-          </p>
+          <p className="text-xs text-[var(--text-muted)] mt-1.5">{t('displayedIn')}</p>
         </div>
 
         <div>
@@ -83,7 +82,7 @@ export default function ConfigGeralPage() {
             htmlFor="language"
             className="block text-sm font-medium text-[var(--text-primary)] mb-1.5"
           >
-            Idioma Padrão
+            {t('defaultLanguage')}
           </label>
           <select
             id="language"
@@ -104,7 +103,7 @@ export default function ConfigGeralPage() {
           {isDirty && (
             <span className="text-xs text-amber-400 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              Alterações não salvas
+              {tCommon('unsavedChanges')}
             </span>
           )}
           <button
@@ -113,7 +112,7 @@ export default function ConfigGeralPage() {
             style={{ boxShadow: '0 0 16px var(--glow-brand)' }}
           >
             <Save size={15} />
-            Salvar
+            {tCommon('save')}
           </button>
         </div>
       </form>

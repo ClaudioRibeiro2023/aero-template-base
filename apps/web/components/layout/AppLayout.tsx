@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { ScrollProgress } from '@/components/common/ScrollProgress'
 import { AppSidebar } from './AppSidebar'
 import { Header } from './Header'
 import { Footer } from './Footer'
@@ -155,7 +156,9 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
   // Calcular margem do conteúdo principal
   const getContentMargin = () => {
     if (isMobile) return '0'
-    return effectiveCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)'
+    return effectiveCollapsed
+      ? 'calc(var(--sidebar-collapsed-width) + 36px)'
+      : 'calc(var(--sidebar-width) + 36px)'
   }
 
   return (
@@ -180,7 +183,7 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
             isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
           ],
           // Tablet / Desktop: static
-          !isMobile && 'relative'
+          !isMobile && ''
         )}
       >
         <AppSidebar
@@ -196,11 +199,15 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
         className={clsx('flex-1 flex flex-col transition-all duration-300', isMobile && '!ml-0')}
         style={{ marginLeft: isMobile ? undefined : getContentMargin() }}
       >
-        <Header onMobileMenuToggle={() => setIsMobileMenuOpen(prev => !prev)} isMobile={isMobile} />
-        <main id="main-content" className="flex-1 ambient-gradient">
+        <Header
+          onMobileMenuToggle={() => setIsMobileMenuOpen(prev => !prev)}
+          isMobile={isMobile}
+          className="safe-area-top"
+        />
+        <main id="main-content" className="flex-1 ambient-gradient overflow-y-auto">
           {children}
         </main>
-        <Footer />
+        <Footer className="safe-area-bottom" />
       </div>
 
       {/* Global Search (Ctrl+K) */}
@@ -208,6 +215,8 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
 
       {/* First-Run Wizard (Sprint 24) */}
       {showWizard && <FirstRunWizard onComplete={dismissWizard} onSkip={dismissWizard} />}
+
+      <ScrollProgress />
     </div>
   )
 }

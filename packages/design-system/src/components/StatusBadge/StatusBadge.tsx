@@ -5,15 +5,26 @@ import './StatusBadge.css'
 export type StatusBadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'pending'
 export type StatusBadgeSize = 'sm' | 'md'
 
+/** Props for the {@link StatusBadge} component. */
 export interface StatusBadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  /** Variante visual do badge */
+  /** Color variant indicating the status type. @default 'info' */
   variant?: StatusBadgeVariant
-  /** Tamanho do badge */
+  /** Badge size. @default 'md' */
   size?: StatusBadgeSize
-  /** Ícone opcional à esquerda */
+  /** Optional icon rendered to the left of the label. */
   icon?: ReactNode
 }
 
+/**
+ * Colored badge for displaying entity status (e.g. active, pending, error).
+ * Supports an optional leading icon and two size variants.
+ *
+ * @example
+ * ```tsx
+ * <StatusBadge variant="success">Ativo</StatusBadge>
+ * <StatusBadge variant="error" icon={<AlertCircle size={14} />}>Falhou</StatusBadge>
+ * ```
+ */
 export const StatusBadge = forwardRef<HTMLSpanElement, StatusBadgeProps>(
   ({ variant = 'info', size = 'md', icon, className, children, ...props }, ref) => {
     return (

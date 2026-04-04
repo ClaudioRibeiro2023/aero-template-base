@@ -122,11 +122,11 @@ export function LoginForm({ appName, logoUrl }: LoginFormProps) {
     }
   }
 
-  async function handleGoogleLogin() {
+  async function handleOAuthLogin(provider: 'google' | 'github') {
     setSocialLoading(true)
     setMessage(null)
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider,
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
     if (error) {
@@ -162,21 +162,34 @@ export function LoginForm({ appName, logoUrl }: LoginFormProps) {
       >
         <h2 className="text-lg font-semibold text-white text-center mb-6">Bem-vindo de volta</h2>
 
-        {/* Google OAuth */}
-        <button
-          onClick={handleGoogleLogin}
-          disabled={isLoading}
-          className="w-full h-12 rounded-lg text-sm font-medium flex items-center justify-center gap-3 transition-all duration-200 disabled:opacity-50 border border-white/15 text-white/80 hover:bg-white/10 hover:border-white/25"
-          style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
-        >
-          <GoogleIcon />
-          {socialLoading ? 'Conectando...' : 'Entrar com Google'}
-        </button>
+        {/* OAuth Providers */}
+        <div className="space-y-3">
+          <button
+            onClick={() => handleOAuthLogin('google')}
+            disabled={isLoading}
+            className="w-full h-12 rounded-lg text-sm font-medium flex items-center justify-center gap-3 transition-all duration-200 disabled:opacity-50 border border-white/15 text-white/80 hover:bg-white/10 hover:border-white/25"
+            style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
+          >
+            <GoogleIcon />
+            {socialLoading ? 'Conectando...' : 'Entrar com Google'}
+          </button>
+          <button
+            onClick={() => handleOAuthLogin('github')}
+            disabled={isLoading}
+            className="w-full h-12 rounded-lg text-sm font-medium flex items-center justify-center gap-3 transition-all duration-200 disabled:opacity-50 border border-white/15 text-white/90 hover:bg-white/10 hover:border-white/25"
+            style={{ backgroundColor: 'rgba(30,30,30,0.6)' }}
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+            </svg>
+            {socialLoading ? 'Conectando...' : 'Entrar com GitHub'}
+          </button>
+        </div>
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-5">
           <div className="flex-1 h-px bg-white/10" />
-          <span className="text-xs text-white/30 font-medium">ou</span>
+          <span className="text-xs text-white/30 font-medium">ou continue com</span>
           <div className="flex-1 h-px bg-white/10" />
         </div>
 

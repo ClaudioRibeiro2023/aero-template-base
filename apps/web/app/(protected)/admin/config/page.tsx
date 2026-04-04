@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/hooks/useAuth'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import {
   ChevronRight,
@@ -13,53 +14,55 @@ import {
   ShieldAlert,
 } from 'lucide-react'
 
-const SECTIONS = [
+const SECTION_DEFS = [
   {
     id: 'geral',
-    title: 'Geral',
-    description: 'Nome do sistema, idioma e configurações básicas',
+    titleKey: 'general',
+    descKey: 'generalDesc',
     icon: Sliders,
     path: '/admin/config/geral',
   },
   {
     id: 'aparencia',
-    title: 'Aparência',
-    description: 'Tema, cores e branding da plataforma',
+    titleKey: 'appearance',
+    descKey: 'appearanceDesc',
     icon: Paintbrush,
     path: '/admin/config/aparencia',
   },
   {
     id: 'notificacoes',
-    title: 'Notificações',
-    description: 'Email, push e configuração de alertas',
+    titleKey: 'notifications',
+    descKey: 'notificationsDesc',
     icon: Bell,
     path: '/admin/config/notificacoes',
   },
   {
     id: 'integracoes',
-    title: 'Integrações',
-    description: 'APIs, webhooks e serviços externos',
+    titleKey: 'integrations',
+    descKey: 'integrationsDesc',
     icon: Plug,
     path: '/admin/config/integracoes',
   },
   {
     id: 'navegacao',
-    title: 'Navegação',
-    description: 'Configure menus, ordem e visibilidade do sidebar',
+    titleKey: 'navigation',
+    descKey: 'navigationDesc',
     icon: Menu,
     path: '/admin/config/navegacao',
   },
   {
     id: 'feature-flags',
-    title: 'Feature Flags',
-    description: 'Ative ou desative funcionalidades em tempo real',
+    titleKey: 'featureFlags',
+    descKey: 'featureFlagsDesc',
     icon: ToggleLeft,
     path: '/admin/config/feature-flags',
   },
-]
+] as const
 
 export default function ConfigPage() {
   const { hasRole } = useAuth()
+  const t = useTranslations('config')
+  const tUsers = useTranslations('users')
   const isAdmin = hasRole('ADMIN') || hasRole('GESTOR')
 
   if (!isAdmin) {
@@ -69,9 +72,9 @@ export default function ConfigPage() {
           <div className="p-3 rounded-2xl bg-rose-500/10 mb-4">
             <ShieldAlert size={28} className="text-rose-400" />
           </div>
-          <h1 className="text-xl font-bold text-rose-400">Acesso negado</h1>
+          <h1 className="text-xl font-bold text-rose-400">{tUsers('accessDenied')}</h1>
           <p className="mt-2 text-sm text-[var(--text-secondary)] max-w-md">
-            Você precisa de permissão ADMIN ou GESTOR para acessar esta página.
+            {tUsers('adminRequired')}
           </p>
         </div>
       </main>
@@ -81,14 +84,12 @@ export default function ConfigPage() {
   return (
     <main className="page-enter ambient-gradient max-w-3xl mx-auto p-4 sm:p-8">
       <div className="relative z-10 mb-6">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Configurações</h1>
-        <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Gerencie as configurações do sistema
-        </p>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('title')}</h1>
+        <p className="text-sm text-[var(--text-secondary)] mt-1">{t('manageSettings')}</p>
       </div>
 
       <div className="relative z-10 space-y-3">
-        {SECTIONS.map(section => {
+        {SECTION_DEFS.map(section => {
           const Icon = section.icon
           return (
             <Link
@@ -107,9 +108,9 @@ export default function ConfigPage() {
               </div>
               <div className="relative flex-1 min-w-0">
                 <p className="font-semibold text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] transition-colors">
-                  {section.title}
+                  {t(section.titleKey)}
                 </p>
-                <p className="text-sm text-[var(--text-muted)] truncate">{section.description}</p>
+                <p className="text-sm text-[var(--text-muted)] truncate">{t(section.descKey)}</p>
               </div>
               <ChevronRight
                 size={18}

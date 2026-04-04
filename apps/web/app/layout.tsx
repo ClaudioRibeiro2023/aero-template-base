@@ -1,9 +1,17 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
+import { getLocale, getMessages } from 'next-intl/server'
 import './globals.css'
 import { Providers } from './providers'
+import { IntlProvider } from '@/components/providers/IntlProvider'
 import { fontSans, fontMono } from './fonts'
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Template Platform'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
 
 export const metadata: Metadata = {
   title: {
@@ -14,10 +22,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005'),
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale()
+  const messages = await getMessages()
+
   return (
     <html
-      lang="pt-BR"
+      lang={locale}
       suppressHydrationWarning
       className={`${fontSans.variable} ${fontMono.variable}`}
     >
@@ -28,7 +39,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Pular para conteudo
         </a>
-        <Providers>{children}</Providers>
+        <IntlProvider locale={locale} messages={messages as Record<string, unknown>}>
+          <Providers>{children}</Providers>
+        </IntlProvider>
       </body>
     </html>
   )
