@@ -7,10 +7,15 @@
    ============================================ */
 
 :root {
-  /* Brand */
+  /* Brand — override via NEXT_PUBLIC_BRAND_* env vars no layout.tsx */
   --brand-primary: #00b4d8;
   --brand-secondary: #005f73;
   --brand-accent: #94d2bd;
+
+  /* Ambient gradient colors — configurável por app */
+  --ambient-color-1: rgba(0, 180, 216, 0.06);
+  --ambient-color-2: rgba(167, 139, 250, 0.04);
+  --ambient-color-3: rgba(52, 211, 153, 0.03);
 
   /* Accent palette */
   --accent-purple: #a78bfa;
@@ -174,9 +179,9 @@ body {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 80% 60% at 10% 20%, rgba(0, 180, 216, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 80% at 80% 80%, rgba(167, 139, 250, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(52, 211, 153, 0.03) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 60% at 10% 20%, var(--ambient-color-1) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 80%, var(--ambient-color-2) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% 50%, var(--ambient-color-3) 0%, transparent 60%);
 }
 
 /* ============================================

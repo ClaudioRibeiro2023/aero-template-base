@@ -21,10 +21,20 @@ export default function LoginPage() {
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Template Platform'
   const logoUrl = process.env.NEXT_PUBLIC_LOGO_URL
 
+  // Gradient colors configuráveis via env — cada app terá combinação única
+  const gradientColors =
+    process.env.NEXT_PUBLIC_GRADIENT_COLORS || '#0c2340,#163b5c,#0e8c6b,#0c2340,#1a4a73'
+
   return (
     <main className="min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Layer 0: Animated mesh background */}
-      <div className="absolute inset-0 animated-mesh" />
+      <div
+        className="absolute inset-0 animated-mesh"
+        style={{
+          background: `linear-gradient(-45deg, ${gradientColors})`,
+          backgroundSize: '400% 400%',
+        }}
+      />
 
       {/* Layer 1: Noise texture */}
       <NoiseOverlay />
@@ -71,7 +81,6 @@ export default function LoginPage() {
       {/* ================================================================== */}
       <style jsx>{`
         .animated-mesh {
-          background: linear-gradient(-45deg, #0c2340, #163b5c, #0e8c6b, #0c2340, #1a4a73);
           background-size: 400% 400%;
           animation: meshShift 15s ease infinite;
         }

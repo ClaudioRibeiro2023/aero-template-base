@@ -68,8 +68,6 @@ export function LoginForm({ appName, logoUrl }: LoginFormProps) {
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
   const [mode, setMode] = useState<AuthMode>('password')
 
-  const appInitial = appName.charAt(0).toUpperCase()
-
   // ── Form: senha ──
   const {
     register: registerPassword,
@@ -140,19 +138,18 @@ export function LoginForm({ appName, logoUrl }: LoginFormProps) {
   return (
     <div className="relative z-10 w-full max-w-md px-4">
       {/* Logo & Title */}
-      <div className="text-center mb-6 animate-fade-in-up">
-        <div className="inline-block mb-4 logo-glitch">
-          {logoUrl ? (
-            <img src={logoUrl} alt={appName} className="h-16 w-auto object-contain mx-auto" />
-          ) : (
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0E7C7B] to-[#2980B9] flex items-center justify-center text-white font-bold text-2xl mx-auto shadow-xl shadow-[#0E7C7B]/30">
-              {appInitial}
-            </div>
-          )}
+      <div className="text-center mb-8 animate-fade-in-up">
+        <div className="inline-block mb-5 logo-glitch">
+          <img
+            src={logoUrl || '/aero-logo.png'}
+            alt={appName}
+            className="h-14 w-auto object-contain mx-auto drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+          />
         </div>
-        <p className="text-white/50 text-sm">
+        <h1 className="text-2xl font-bold text-white tracking-wide mb-1">
           <TypingText text={appName} />
-        </p>
+        </h1>
+        <div className="w-12 h-0.5 mx-auto rounded-full bg-gradient-to-r from-transparent via-white/30 to-transparent" />
       </div>
 
       {/* Login Card */}

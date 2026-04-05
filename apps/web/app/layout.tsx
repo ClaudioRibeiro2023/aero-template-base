@@ -32,7 +32,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
       className={`${fontSans.variable} ${fontMono.variable}`}
     >
-      <body className={fontSans.className}>
+      <body
+        className={fontSans.className}
+        style={
+          {
+            '--ambient-color-1': process.env.NEXT_PUBLIC_AMBIENT_COLOR_1 || undefined,
+            '--ambient-color-2': process.env.NEXT_PUBLIC_AMBIENT_COLOR_2 || undefined,
+            '--ambient-color-3': process.env.NEXT_PUBLIC_AMBIENT_COLOR_3 || undefined,
+          } as React.CSSProperties
+        }
+      >
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-brand-primary focus:rounded"
