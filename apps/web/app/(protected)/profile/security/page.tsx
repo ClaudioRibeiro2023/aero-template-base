@@ -1,11 +1,163 @@
 'use client'
 
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
-import { useState, useMemo, useCallback } from 'react'
-import { Shield, Smartphone, ChevronLeft, Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { useState, useMemo, useCallback, type FormEvent } from 'react'
+import { Shield, Smartphone, ChevronLeft, Loader2, CheckCircle2, XCircle, Lock } from 'lucide-react'
 import Link from 'next/link'
 
 type MfaStep = 'idle' | 'enrolling' | 'verifying' | 'enabled'
+
+function PasswordUpdateForm({
+  supabase,
+}: {
+  supabase: ReturnType<typeof createSupabaseBrowserClient>
+}) {
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+
+  const handleSubmit = useCallback(
+    async (e: FormEvent) => {
+      e.preventDefault()
+      setError(null)
+      setSuccess(false)
+
+      if (!currentPassword) {
+        setError('Informe a senha atual.')
+        return
+      }
+      if (newPassword.length < 8) {
+        setError('A nova senha deve ter pelo menos 8 caracteres.')
+        return
+      }
+      if (newPassword !== confirmPassword) {
+        setError('As senhas nao coincidem.')
+        return
+      }
+
+      setLoading(true)
+      try {
+        // Re-authenticate with current password
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user?.email) {
+          setError('Nao foi possivel identificar o usuario.')
+          return
+        }
+
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: currentPassword,
+        })
+        if (signInError) {
+          setError('Senha atual incorreta.')
+          return
+        }
+
+        const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+        if (updateError) {
+          setError(updateError.message)
+          return
+        }
+
+        setSuccess(true)
+        setCurrentPassword('')
+        setNewPassword('')
+        setConfirmPassword('')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [supabase, currentPassword, newPassword, confirmPassword]
+  )
+
+  const inputClass =
+    'w-full h-11 px-4 bg-white/[0.06] border border-white/10 rounded-lg text-white text-sm placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-[#2980B9]/40'
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-8 mb-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
+          <Lock className="w-5 h-5 text-blue-400" />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold text-white">Alterar Senha</h2>
+          <p className="text-sm text-white/50">Atualize a senha da sua conta</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="current-password" className="block text-sm text-white/60 mb-1.5">
+            Senha atual
+          </label>
+          <input
+            id="current-password"
+            type="password"
+            value={currentPassword}
+            onChange={e => setCurrentPassword(e.target.value)}
+            placeholder="Digite sua senha atual"
+            className={inputClass}
+            autoComplete="current-password"
+          />
+        </div>
+        <div>
+          <label htmlFor="new-password" className="block text-sm text-white/60 mb-1.5">
+            Nova senha
+          </label>
+          <input
+            id="new-password"
+            type="password"
+            value={newPassword}
+            onChange={e => setNewPassword(e.target.value)}
+            placeholder="Minimo 8 caracteres"
+            className={inputClass}
+            autoComplete="new-password"
+          />
+        </div>
+        <div>
+          <label htmlFor="confirm-password" className="block text-sm text-white/60 mb-1.5">
+            Confirmar nova senha
+          </label>
+          <input
+            id="confirm-password"
+            type="password"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            placeholder="Repita a nova senha"
+            className={inputClass}
+            autoComplete="new-password"
+          />
+        </div>
+
+        {error && (
+          <p className="text-sm text-red-400 text-center" role="alert">
+            {error}
+          </p>
+        )}
+        {success && (
+          <p className="text-sm text-emerald-400 text-center" role="status">
+            Senha alterada com sucesso!
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full h-11 rounded-lg text-sm font-medium text-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          style={{ background: 'linear-gradient(135deg, #2980B9, #0E8C6B)' }}
+        >
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
+          Alterar senha
+        </button>
+      </form>
+    </div>
+  )
+}
 
 export default function SecurityPage() {
   const supabase = useMemo(() => createSupabaseBrowserClient(), [])
@@ -73,6 +225,8 @@ export default function SecurityPage() {
         <ChevronLeft className="w-4 h-4" />
         Voltar ao perfil
       </Link>
+
+      <PasswordUpdateForm supabase={supabase} />
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl p-8">
         <div className="flex items-center gap-3 mb-6">

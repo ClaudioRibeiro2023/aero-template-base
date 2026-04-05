@@ -20,6 +20,18 @@ export const metadata: Metadata = {
   },
   description: 'Built with Aero Studio Template v2.0',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005'),
+  openGraph: {
+    title: APP_NAME,
+    description: 'Built with Aero Studio Template v2.0',
+    type: 'website',
+    locale: 'pt_BR',
+    siteName: APP_NAME,
+  },
+  twitter: {
+    card: 'summary',
+    title: APP_NAME,
+    description: 'Built with Aero Studio Template v2.0',
+  },
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
