@@ -2,13 +2,15 @@
  * GET /api/platform/metrics — Retorna métricas semanais da plataforma
  * Acessível apenas para ADMIN e GESTOR.
  */
+import type { NextRequest } from 'next/server'
 import { createServerSupabase } from '@/app/lib/supabase-server'
 import { ok, unauthorized, forbidden, serverError } from '@/lib/api-response'
 import { getAuthUser } from '@/lib/auth-guard'
+import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export const GET = withApiLog('platform-metrics', async function GET(_request: NextRequest) {
   const { user, error } = await getAuthUser()
   if (error || !user) return unauthorized()
 
@@ -39,4 +41,4 @@ export async function GET() {
   } catch (err) {
     return serverError(err instanceof Error ? err.message : 'Erro ao buscar métricas')
   }
-}
+})

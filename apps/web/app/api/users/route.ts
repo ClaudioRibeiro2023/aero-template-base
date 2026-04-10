@@ -19,11 +19,12 @@ import {
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthUser } from '@/lib/auth-guard'
 import { createServerSupabase } from '@/app/lib/supabase-server'
+import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
 // ── GET /api/users ──
-export async function GET(request: NextRequest) {
+export const GET = withApiLog('users', async function GET(request: NextRequest) {
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (!success) return tooManyRequests()
@@ -77,10 +78,10 @@ export async function GET(request: NextRequest) {
     total: count ?? 0,
     pages: Math.ceil((count ?? 0) / pageSize),
   })
-}
+})
 
 // ── POST /api/users ──
-export async function POST(request: NextRequest) {
+export const POST = withApiLog('users', async function POST(request: NextRequest) {
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 
@@ -145,4 +146,4 @@ export async function POST(request: NextRequest) {
   }
 
   return created(profile)
-}
+})

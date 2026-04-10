@@ -7,7 +7,7 @@
  * Contém: KPI cards com count-up, mini chart com animação, quick actions.
  * Tudo que precisa de hooks de browser (useState, useEffect, useReducedMotion).
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useReducedMotion } from '@/hooks/useA11y'
 import { useAuth } from '@/hooks/useAuth'
@@ -23,6 +23,7 @@ import {
   BarChart3,
   Zap,
   Gauge,
+  GripVertical,
 } from 'lucide-react'
 
 // ── KPI Mock Data ──
@@ -256,6 +257,38 @@ interface DashboardClientProps {
   dateLabel: string
 }
 
+const STORAGE_KEY = 'dashboard-widget-order'
+
+function useWidgetOrder(defaultKeys: string[]) {
+  const [order, setOrder] = useState<string[]>(defaultKeys)
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        const parsed: string[] = JSON.parse(saved)
+        // Only restore if saved keys match current keys
+        if (parsed.length === defaultKeys.length && parsed.every(k => defaultKeys.includes(k))) {
+          setOrder(parsed)
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const saveOrder = useCallback((newOrder: string[]) => {
+    setOrder(newOrder)
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrder))
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  return { order, saveOrder }
+}
+
 export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
   // Data is static (KPI_CARDS, CHART_DATA, QUICK_ACTIONS are constants) — no loading needed
   const loading = false
@@ -273,6 +306,41 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
   const latestMetric = metrics[0]
   const previousMetric = metrics[1]
 
+  // Drag-and-drop widget ordering
+  const { order, saveOrder } = useWidgetOrder(KPI_CARDS.map(c => c.key))
+  const orderedCards = order.map(key => KPI_CARDS.find(c => c.key === key)!).filter(Boolean)
+  const dragIndexRef = useRef<number | null>(null)
+  const [dragOver, setDragOver] = useState<number | null>(null)
+
+  function handleDragStart(index: number) {
+    dragIndexRef.current = index
+  }
+
+  function handleDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault()
+    setDragOver(index)
+  }
+
+  function handleDrop(index: number) {
+    const from = dragIndexRef.current
+    if (from === null || from === index) {
+      dragIndexRef.current = null
+      setDragOver(null)
+      return
+    }
+    const newOrder = [...order]
+    const [moved] = newOrder.splice(from, 1)
+    newOrder.splice(index, 0, moved)
+    saveOrder(newOrder)
+    dragIndexRef.current = null
+    setDragOver(null)
+  }
+
+  function handleDragEnd() {
+    dragIndexRef.current = null
+    setDragOver(null)
+  }
+
   return (
     <main className="page-enter ambient-gradient max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
@@ -283,13 +351,38 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
         </p>
       </div>
 
-      {/* Bento Grid — KPI Cards */}
+      {/* Bento Grid — KPI Cards (draggable) */}
       <section aria-label="Indicadores principais" className="relative z-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 stagger-children">
-          {KPI_CARDS.map(({ key, ...card }) => (
-            <KpiCard key={key} {...card} loading={loading} />
+          {orderedCards.map(({ key, ...card }, index) => (
+            <div
+              key={key}
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={e => handleDragOver(e, index)}
+              onDrop={() => handleDrop(index)}
+              onDragEnd={handleDragEnd}
+              className="group/drag relative"
+              style={{
+                opacity: dragIndexRef.current === index ? 0.5 : 1,
+                outline: dragOver === index ? '2px dashed var(--brand-primary)' : undefined,
+                borderRadius: 'var(--radius-lg)',
+              }}
+            >
+              {/* Drag handle */}
+              <div
+                className="absolute top-2 right-2 z-10 opacity-0 group-hover/drag:opacity-60 transition-opacity cursor-grab active:cursor-grabbing"
+                aria-hidden="true"
+              >
+                <GripVertical size={14} className="text-[var(--text-muted)]" />
+              </div>
+              <KpiCard {...card} loading={loading} />
+            </div>
           ))}
         </div>
+        <p className="mt-1.5 text-[11px] text-[var(--text-muted)] text-right">
+          Arraste para reordenar
+        </p>
       </section>
 
       {/* Platform Metrics — admin/gestor only */}

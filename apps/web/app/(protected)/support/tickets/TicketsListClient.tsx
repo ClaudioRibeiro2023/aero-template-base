@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import {
   Plus,
   Loader2,
@@ -23,6 +23,8 @@ import {
 } from '@/hooks/useSupportTickets'
 import { TicketCard } from '@/components/support/TicketCard'
 import { BulkActionBar } from '@/components/common/BulkActionBar'
+import { UndoToast } from '@/components/common/UndoToast'
+import { useUndoToast } from '@/hooks/useUndoToast'
 import { exportToCsv } from '@/lib/export-csv'
 
 const STATUS_FILTERS = [
@@ -56,6 +58,8 @@ export function TicketsListClient() {
 
   const bulkClose = useBulkCloseTickets()
   const bulkReassign = useBulkReassignTickets()
+  const { toast: undoToast, show: showUndo, dismiss: dismissUndo, handleUndo } = useUndoToast()
+  const closedIdsRef = useRef<string[]>([])
 
   // Real-time: lista atualiza automaticamente
   useRealtimeTickets()
@@ -105,11 +109,27 @@ export function TicketsListClient() {
   }
 
   async function handleBulkClose() {
-    if (!confirm(`Fechar ${selected.size} tickets selecionados?`)) return
+    const ids = Array.from(selected)
+    const count = ids.length
+    closedIdsRef.current = ids
     try {
-      await bulkClose.mutateAsync(Array.from(selected))
-      setToast({ message: `${selected.size} tickets fechados`, type: 'success' })
+      await bulkClose.mutateAsync(ids)
       setSelected(new Set())
+      showUndo({
+        message: `${count} ticket${count > 1 ? 's' : ''} fechado${count > 1 ? 's' : ''}`,
+        onUndo: async () => {
+          // Reabrir tickets via reassign to original status — use update to 'open'
+          await Promise.all(
+            closedIdsRef.current.map(id =>
+              fetch(`/api/support/tickets/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'open' }),
+              })
+            )
+          )
+        },
+      })
     } catch {
       setToast({ message: 'Erro ao fechar tickets', type: 'error' })
     }
@@ -283,7 +303,20 @@ export function TicketsListClient() {
         ]}
       />
 
-      {/* Toast */}
+      {/* Undo Toast — bulk close */}
+      {undoToast && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[110]">
+          <UndoToast
+            message={undoToast.message}
+            countdown={undoToast.countdown}
+            isPending={undoToast.isPending}
+            onUndo={handleUndo}
+            onDismiss={dismissUndo}
+          />
+        </div>
+      )}
+
+      {/* Toast — export / error feedback */}
       {toast && (
         <div className="fixed bottom-4 right-4 z-[100]">
           <ToastItem

@@ -15,6 +15,7 @@ import {
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +23,7 @@ const TICKET_COLUMNS =
   'id, title, description, status, priority, category, created_by, assignee_id, satisfaction_rating, satisfaction_comment, created_at, updated_at'
 
 // ── GET /api/support/tickets ──
-export async function GET(request: NextRequest) {
+export const GET = withApiLog('support-tickets', async function GET(request: NextRequest) {
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
@@ -65,10 +66,10 @@ export async function GET(request: NextRequest) {
     total: count ?? 0,
     pages: Math.ceil((count ?? 0) / pageSize),
   })
-}
+})
 
 // ── POST /api/support/tickets ──
-export async function POST(request: NextRequest) {
+export const POST = withApiLog('support-tickets', async function POST(request: NextRequest) {
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 
@@ -108,4 +109,4 @@ export async function POST(request: NextRequest) {
     return serverError()
   }
   return created(data)
-}
+})

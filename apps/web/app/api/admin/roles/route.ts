@@ -17,10 +17,11 @@ import {
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthUser } from '@/lib/auth-guard'
 import { auditLog } from '@/lib/audit-log'
+import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
+export const GET = withApiLog('admin-roles', async function GET(request: NextRequest) {
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
@@ -54,9 +55,9 @@ export async function GET(request: NextRequest) {
   }
 
   return ok({ items: data ?? [], total: data?.length ?? 0 })
-}
+})
 
-export async function POST(request: NextRequest) {
+export const POST = withApiLog('admin-roles', async function POST(request: NextRequest) {
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 
@@ -120,4 +121,4 @@ export async function POST(request: NextRequest) {
   })
 
   return created(data)
-}
+})

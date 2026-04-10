@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,6 +14,8 @@ import {
 } from 'lucide-react'
 import { EmptyState, ToastItem } from '@template/design-system'
 import { BulkActionBar } from '@/components/common/BulkActionBar'
+import { UndoToast } from '@/components/common/UndoToast'
+import { useUndoToast } from '@/hooks/useUndoToast'
 import { exportToCsv } from '@/lib/export-csv'
 import { useBulkDeactivateUsers, useBulkChangeUserRole, type Profile } from '@/hooks/useUsers'
 
@@ -52,6 +54,8 @@ export function UsersTable({
 
   const bulkDeactivate = useBulkDeactivateUsers()
   const bulkChangeRole = useBulkChangeUserRole()
+  const { toast: undoToast, show: showUndo, dismiss: dismissUndo, handleUndo } = useUndoToast()
+  const deactivatedIdsRef = useRef<string[]>([])
 
   function toggleSelect(id: string) {
     setSelected(prev => {
@@ -86,11 +90,26 @@ export function UsersTable({
   }
 
   async function handleBulkDeactivate() {
-    if (!confirm(`Desativar ${selected.size} usuários selecionados?`)) return
+    const ids = Array.from(selected)
+    const count = ids.length
+    deactivatedIdsRef.current = ids
     try {
-      await bulkDeactivate.mutateAsync(Array.from(selected))
-      setToast({ message: `${selected.size} usuários desativados`, type: 'success' })
+      await bulkDeactivate.mutateAsync(ids)
       setSelected(new Set())
+      showUndo({
+        message: `${count} usuário${count > 1 ? 's' : ''} desativado${count > 1 ? 's' : ''}`,
+        onUndo: async () => {
+          await Promise.all(
+            deactivatedIdsRef.current.map(id =>
+              fetch(`/api/users/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_active: true }),
+              })
+            )
+          )
+        },
+      })
     } catch {
       setToast({ message: 'Erro ao desativar usuários', type: 'error' })
     }
@@ -367,7 +386,20 @@ export function UsersTable({
         ]}
       />
 
-      {/* Toast */}
+      {/* Undo Toast — bulk deactivate */}
+      {undoToast && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[110]">
+          <UndoToast
+            message={undoToast.message}
+            countdown={undoToast.countdown}
+            isPending={undoToast.isPending}
+            onUndo={handleUndo}
+            onDismiss={dismissUndo}
+          />
+        </div>
+      )}
+
+      {/* Toast — export / role / error feedback */}
       {toast && (
         <div className="fixed bottom-4 right-4 z-[100]">
           <ToastItem

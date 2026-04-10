@@ -6,10 +6,11 @@ import { createServerSupabase } from '@/app/lib/supabase-server'
 import { ok, unauthorized, serverError } from '@/lib/api-response'
 import { getAuthUser } from '@/lib/auth-guard'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
+import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
+export const GET = withApiLog('organizations', async function GET(request: NextRequest) {
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (success === false) {
@@ -36,4 +37,4 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     return serverError(err instanceof Error ? err.message : 'Erro ao listar organizações')
   }
-}
+})

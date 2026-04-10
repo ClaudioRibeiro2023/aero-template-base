@@ -7,10 +7,11 @@ import { requireJson } from '@/lib/api-guard'
 import { ok, badRequest, unauthorized, forbidden, serverError } from '@/lib/api-response'
 import { getAuthUser } from '@/lib/auth-guard'
 import { auditLog } from '@/lib/audit-log'
+import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(request: NextRequest) {
+export const POST = withApiLog('auth-switch-org', async function POST(request: NextRequest) {
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 
@@ -57,4 +58,4 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return serverError(err instanceof Error ? err.message : 'Erro ao trocar organização')
   }
-}
+})

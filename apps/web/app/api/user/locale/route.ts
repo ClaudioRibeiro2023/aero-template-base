@@ -7,12 +7,13 @@ import { createServerSupabase } from '@/app/lib/supabase-server'
 import { requireJson } from '@/lib/api-guard'
 import { ok, badRequest, unauthorized, serverError } from '@/lib/api-response'
 import { getAuthUser } from '@/lib/auth-guard'
+import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
 const SUPPORTED_LOCALES = ['pt-BR', 'en-US', 'es']
 
-export async function GET() {
+export const GET = withApiLog('user-locale', async function GET(_request: NextRequest) {
   const { user, error } = await getAuthUser()
   if (error || !user) return unauthorized()
 
@@ -24,9 +25,9 @@ export async function GET() {
   } catch (err) {
     return serverError(err instanceof Error ? err.message : 'Erro ao buscar locale')
   }
-}
+})
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withApiLog('user-locale', async function PATCH(request: NextRequest) {
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 
@@ -51,4 +52,4 @@ export async function PATCH(request: NextRequest) {
   } catch (err) {
     return serverError(err instanceof Error ? err.message : 'Erro ao atualizar locale')
   }
-}
+})

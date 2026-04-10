@@ -18,6 +18,7 @@ import {
   notFound,
 } from '@/lib/api-response'
 import { getAuthUser } from '@/lib/auth-guard'
+import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,7 +62,7 @@ const AdminConfigSchema = z.object({
   default_timezone: z.string().max(50).optional(),
 })
 
-export async function GET(request: NextRequest) {
+export const GET = withApiLog('admin-config', async function GET(request: NextRequest) {
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()
@@ -98,9 +99,9 @@ export async function GET(request: NextRequest) {
     return notFound('Nenhuma configuracao encontrada')
   }
   return ok(data)
-}
+})
 
-export async function PATCH(request: NextRequest) {
+export const PATCH = withApiLog('admin-config', async function PATCH(request: NextRequest) {
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()
@@ -154,4 +155,4 @@ export async function PATCH(request: NextRequest) {
     return serverError()
   }
   return ok(data)
-}
+})
