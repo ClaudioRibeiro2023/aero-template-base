@@ -13,7 +13,16 @@
     "next": "Next",
     "close": "Close",
     "confirm": "Confirm",
-    "unsavedChanges": "Unsaved changes"
+    "unsavedChanges": "Unsaved changes",
+    "saving": "Saving...",
+    "previous": "Previous",
+    "page": "Page",
+    "of": "of",
+    "noResults": "No results found",
+    "clearFilters": "Clear filters",
+    "all": "All",
+    "required": "Required",
+    "actions": "Actions"
   },
   "auth": {
     "login": "Sign in",
@@ -47,7 +56,8 @@
     "searchShortcut": "Search (Ctrl+K)",
     "openMenu": "Open menu",
     "toggleTheme": "Toggle theme",
-    "home": "Home"
+    "home": "Home",
+    "quality": "Quality"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -113,5 +123,145 @@
   "theme": {
     "light": "Light mode",
     "dark": "Dark mode"
+  },
+  "support": {
+    "title": "Support",
+    "tickets": "Tickets",
+    "newTicket": "New Ticket",
+    "ticketDetail": "Ticket Details",
+    "status": {
+      "open": "Open",
+      "in_progress": "In Progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "priority": { "low": "Low", "medium": "Medium", "high": "High", "critical": "Critical" },
+    "category": {
+      "bug": "Bug",
+      "feature": "Feature",
+      "question": "Question",
+      "access": "Access",
+      "performance": "Performance",
+      "other": "Other"
+    },
+    "form": {
+      "title": "Title",
+      "description": "Description",
+      "category": "Category",
+      "priority": "Priority",
+      "attachments": "Attachments",
+      "submit": "Submit Ticket"
+    },
+    "thread": {
+      "reply": "Reply",
+      "internalNote": "Internal Note",
+      "placeholder": "Type your message..."
+    },
+    "actions": {
+      "assign": "Assign",
+      "changeStatus": "Change Status",
+      "resolve": "Resolve",
+      "close": "Close",
+      "reopen": "Reopen"
+    },
+    "rating": {
+      "title": "Rate the support",
+      "comment": "Comment (optional)",
+      "submit": "Submit Rating"
+    },
+    "filters": {
+      "all": "All",
+      "myTickets": "My Tickets",
+      "assigned": "Assigned to Me",
+      "unassigned": "Unassigned"
+    },
+    "empty": "No tickets found",
+    "created": "Ticket created successfully",
+    "updated": "Ticket updated"
+  },
+  "quality": {
+    "title": "Quality Diagnostic",
+    "runDiagnostic": "Run Diagnostic",
+    "running": "Running diagnostic...",
+    "overallScore": "Overall Score",
+    "categories": {
+      "security": "Security",
+      "performance": "Performance",
+      "accessibility": "Accessibility",
+      "seo": "SEO",
+      "apiHealth": "API Health",
+      "database": "Database",
+      "i18n": "Internationalization",
+      "dependencies": "Dependencies",
+      "codeQuality": "Code Quality"
+    },
+    "status": { "pass": "Pass", "warn": "Warning", "fail": "Fail" },
+    "history": "Diagnostic History",
+    "noReports": "No diagnostics performed",
+    "recommendation": "Recommendation",
+    "details": "Details",
+    "save": "Save",
+    "noDiagnostic": "No diagnostic performed",
+    "noDiagnosticHint": "Click \"Run Diagnostic\" to start the evaluation",
+    "analyzing": "Analyzing all modules",
+    "categoryDetails": "Category Details",
+    "reportTitle": "Quality Report",
+    "reportNotFound": "Report not found.",
+    "generatedAt": "Generated at",
+    "score": "Score"
+  },
+  "audit": {
+    "title": "Audit",
+    "subtitle": "Administrative action history",
+    "date": "Date",
+    "action": "Action",
+    "resource": "Resource",
+    "user": "User",
+    "details": "Details",
+    "allActions": "All actions",
+    "filterByResource": "Filter by resource...",
+    "records": "{count, plural, =0 {0 records} =1 {1 record} other {# records}}",
+    "noRecords": "No records found",
+    "adjustFilters": "Try adjusting the search filters",
+    "historyWillAppear": "Audit history will appear here",
+    "caption": "System audit log"
+  },
+  "roles": {
+    "title": "Roles & Permissions",
+    "subtitle": "Manage platform access roles",
+    "createRole": "Create Role",
+    "noRoles": "No roles found",
+    "systemRole": "System role",
+    "customRole": "Custom role",
+    "users": "users",
+    "permissions": "permissions"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "totalTasks": "{count} total tasks",
+    "manageTasks": "Manage project tasks",
+    "newTask": "New Task",
+    "editTask": "Edit Task",
+    "noTasks": "No tasks found",
+    "noTasksHint": "Click \"New Task\" to get started",
+    "confirmDelete": "Confirm deletion of this task?",
+    "deleted": "Task deleted successfully",
+    "deleteError": "Error deleting task",
+    "titleLabel": "Title",
+    "descriptionLabel": "Description",
+    "statusLabel": "Status",
+    "priorityLabel": "Priority",
+    "status": {
+      "todo": "To Do",
+      "in_progress": "In Progress",
+      "done": "Done",
+      "cancelled": "Cancelled"
+    },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    }
   }
 }

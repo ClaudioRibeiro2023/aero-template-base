@@ -57,3 +57,32 @@ export {
   type FeatureFlagCreateFormValues,
   type FeatureFlagUpdateFormValues,
 } from './feature-flag'
+
+// Support ticket schemas
+export {
+  TicketStatusEnum,
+  TicketPriorityEnum,
+  TicketCategoryEnum,
+  MessageTypeEnum,
+  ticketCreateSchema,
+  ticketUpdateSchema,
+  ticketAssignSchema,
+  ticketRateSchema,
+  messageCreateSchema,
+  type TicketCreateFormValues,
+  type TicketUpdateFormValues,
+  type TicketAssignFormValues,
+  type TicketRateFormValues,
+  type MessageCreateFormValues,
+} from './support-ticket'
+
+// Quality report schemas
+export {
+  QualityCheckStatusEnum,
+  qualityCheckResultSchema,
+  qualityCategoryResultSchema,
+  qualityReportCreateSchema,
+  type QualityCheckResult,
+  type QualityCategoryResult,
+  type QualityReportCreateValues,
+} from './quality-report'

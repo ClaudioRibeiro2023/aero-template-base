@@ -44,7 +44,10 @@ vi.mock('@/lib/supabase-cookies', () => ({
 function makeRequest(body?: unknown) {
   return {
     url: 'http://localhost:3000/api/auth/signup',
-    headers: new Map([['x-forwarded-for', '127.0.0.1']]),
+    headers: new Map([
+      ['x-forwarded-for', '127.0.0.1'],
+      ['content-type', 'application/json'],
+    ]),
     json: vi.fn(async () => body),
   } as unknown as import('next/server').NextRequest
 }

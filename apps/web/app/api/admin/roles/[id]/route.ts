@@ -5,6 +5,7 @@
  */
 import type { NextRequest } from 'next/server'
 import { createServerSupabase } from '@/app/lib/supabase-server'
+import { requireJson } from '@/lib/api-guard'
 import {
   ok,
   badRequest,
@@ -49,6 +50,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const jsonError = requireJson(request)
+  if (jsonError) return jsonError
+
   const { id } = await params
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })

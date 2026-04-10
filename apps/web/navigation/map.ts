@@ -354,6 +354,34 @@ export const NAVIGATION: NavigationMap = {
       ],
     },
 
+    {
+      id: 'qualidade',
+      name: 'Qualidade',
+      description: 'Diagnóstico de qualidade da plataforma',
+      path: '/admin/quality',
+      icon: 'ShieldCheck',
+      group: 'Serviços Técnicos',
+      roles: ['ADMIN'] as UserRole[],
+      functions: [
+        {
+          id: 'quality-dashboard',
+          name: 'Dashboard',
+          subtitle: 'Visão geral de qualidade',
+          path: '/admin/quality',
+          category: 'CONTROLE',
+          icon: 'Gauge',
+        },
+        {
+          id: 'quality-history',
+          name: 'Histórico',
+          subtitle: 'Relatórios anteriores',
+          path: '/admin/quality/history',
+          category: 'ANALISE',
+          icon: 'History',
+        },
+      ],
+    },
+
     // =========================================================================
     // DOCUMENTAÇÃO
     // =========================================================================
@@ -476,6 +504,34 @@ export const NAVIGATION: NavigationMap = {
           category: 'CONTROLE',
           icon: 'FileSearch',
           roles: ['ADMIN'],
+        },
+      ],
+    },
+
+    {
+      id: 'suporte',
+      name: 'Suporte',
+      description: 'Central de suporte e tickets',
+      path: '/support',
+      topNav: true,
+      icon: 'LifeBuoy',
+      group: 'Sistema',
+      functions: [
+        {
+          id: 'support-tickets',
+          name: 'Tickets',
+          subtitle: 'Abrir e acompanhar tickets',
+          path: '/support/tickets',
+          category: 'OPERACIONAL',
+          icon: 'Ticket',
+        },
+        {
+          id: 'support-new',
+          name: 'Novo Ticket',
+          subtitle: 'Abrir chamado de suporte',
+          path: '/support/tickets/new',
+          category: 'OPERACIONAL',
+          icon: 'Plus',
         },
       ],
     },

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { SkipLink } from '@/components/common/SkipLink'
 import { ToastProvider } from '@template/design-system'
 
 // Rotas críticas para pré-busca antecipada
@@ -21,6 +22,7 @@ export function ProtectedLayoutClient({ children }: { children: React.ReactNode 
 
   return (
     <ToastProvider>
+      <SkipLink />
       <AppLayout>{children}</AppLayout>
     </ToastProvider>
   )

@@ -7,6 +7,7 @@
  */
 import type { NextRequest } from 'next/server'
 import { userUpdateSchema } from '@template/shared/schemas'
+import { requireJson } from '@/lib/api-guard'
 import {
   ok,
   badRequest,
@@ -51,6 +52,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 // ── PUT /api/users/[id] ──
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const jsonError = requireJson(request)
+  if (jsonError) return jsonError
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()

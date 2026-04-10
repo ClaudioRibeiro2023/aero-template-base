@@ -13,7 +13,16 @@
     "next": "Próximo",
     "close": "Fechar",
     "confirm": "Confirmar",
-    "unsavedChanges": "Alterações não salvas"
+    "unsavedChanges": "Alterações não salvas",
+    "saving": "Salvando...",
+    "previous": "Anterior",
+    "page": "Página",
+    "of": "de",
+    "noResults": "Nenhum resultado encontrado",
+    "clearFilters": "Limpar filtros",
+    "all": "Todos",
+    "required": "Obrigatório",
+    "actions": "Ações"
   },
   "auth": {
     "login": "Entrar",
@@ -47,7 +56,8 @@
     "searchShortcut": "Buscar (Ctrl+K)",
     "openMenu": "Abrir menu",
     "toggleTheme": "Alternar tema",
-    "home": "Início"
+    "home": "Início",
+    "quality": "Qualidade"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -113,5 +123,154 @@
   "theme": {
     "light": "Modo claro",
     "dark": "Modo escuro"
+  },
+  "support": {
+    "title": "Suporte",
+    "tickets": "Tickets",
+    "newTicket": "Novo Ticket",
+    "ticketDetail": "Detalhes do Ticket",
+    "status": {
+      "open": "Aberto",
+      "in_progress": "Em Andamento",
+      "resolved": "Resolvido",
+      "closed": "Fechado"
+    },
+    "priority": {
+      "low": "Baixa",
+      "medium": "Média",
+      "high": "Alta",
+      "critical": "Crítica"
+    },
+    "category": {
+      "bug": "Bug",
+      "feature": "Funcionalidade",
+      "question": "Dúvida",
+      "access": "Acesso",
+      "performance": "Performance",
+      "other": "Outro"
+    },
+    "form": {
+      "title": "Título",
+      "description": "Descrição",
+      "category": "Categoria",
+      "priority": "Prioridade",
+      "attachments": "Anexos",
+      "submit": "Enviar Ticket"
+    },
+    "thread": {
+      "reply": "Responder",
+      "internalNote": "Nota Interna",
+      "placeholder": "Digite sua mensagem..."
+    },
+    "actions": {
+      "assign": "Atribuir",
+      "changeStatus": "Alterar Status",
+      "resolve": "Resolver",
+      "close": "Fechar",
+      "reopen": "Reabrir"
+    },
+    "rating": {
+      "title": "Avalie o atendimento",
+      "comment": "Comentário (opcional)",
+      "submit": "Enviar Avaliação"
+    },
+    "filters": {
+      "all": "Todos",
+      "myTickets": "Meus Tickets",
+      "assigned": "Atribuídos a Mim",
+      "unassigned": "Sem Atribuição"
+    },
+    "empty": "Nenhum ticket encontrado",
+    "created": "Ticket criado com sucesso",
+    "updated": "Ticket atualizado"
+  },
+  "quality": {
+    "title": "Diagnóstico de Qualidade",
+    "runDiagnostic": "Executar Diagnóstico",
+    "running": "Executando diagnóstico...",
+    "overallScore": "Score Geral",
+    "categories": {
+      "security": "Segurança",
+      "performance": "Performance",
+      "accessibility": "Acessibilidade",
+      "seo": "SEO",
+      "apiHealth": "Saúde da API",
+      "database": "Banco de Dados",
+      "i18n": "Internacionalização",
+      "dependencies": "Dependências",
+      "codeQuality": "Qualidade de Código"
+    },
+    "status": {
+      "pass": "Aprovado",
+      "warn": "Atenção",
+      "fail": "Reprovado"
+    },
+    "history": "Histórico de Diagnósticos",
+    "noReports": "Nenhum diagnóstico realizado",
+    "recommendation": "Recomendação",
+    "details": "Detalhes",
+    "save": "Salvar",
+    "noDiagnostic": "Nenhum diagnóstico executado",
+    "noDiagnosticHint": "Clique em \"Executar Diagnóstico\" para iniciar a avaliação",
+    "analyzing": "Analisando todos os módulos",
+    "categoryDetails": "Detalhes por Categoria",
+    "reportTitle": "Relatório de Qualidade",
+    "reportNotFound": "Relatório não encontrado.",
+    "generatedAt": "Gerado em",
+    "score": "Score"
+  },
+  "audit": {
+    "title": "Auditoria",
+    "subtitle": "Histórico de ações administrativas",
+    "date": "Data",
+    "action": "Ação",
+    "resource": "Recurso",
+    "user": "Usuário",
+    "details": "Detalhes",
+    "allActions": "Todas as ações",
+    "filterByResource": "Filtrar por recurso...",
+    "records": "{count, plural, =0 {0 registros} =1 {1 registro} other {# registros}}",
+    "noRecords": "Nenhum registro encontrado",
+    "adjustFilters": "Tente ajustar os filtros de busca",
+    "historyWillAppear": "O histórico de auditoria aparecerá aqui",
+    "caption": "Registro de auditoria do sistema"
+  },
+  "roles": {
+    "title": "Perfis e Permissões",
+    "subtitle": "Gerencie os papéis de acesso da plataforma",
+    "createRole": "Criar Perfil",
+    "noRoles": "Nenhum perfil encontrado",
+    "systemRole": "Perfil do sistema",
+    "customRole": "Perfil personalizado",
+    "users": "usuários",
+    "permissions": "permissões"
+  },
+  "tasks": {
+    "title": "Tarefas",
+    "totalTasks": "{count} tarefas no total",
+    "manageTasks": "Gerenciar tarefas do projeto",
+    "newTask": "Nova Task",
+    "editTask": "Editar Task",
+    "noTasks": "Nenhuma task encontrada",
+    "noTasksHint": "Clique em \"Nova Task\" para começar",
+    "confirmDelete": "Confirmar exclusão desta task?",
+    "deleted": "Task excluída com sucesso",
+    "deleteError": "Erro ao excluir task",
+    "titleLabel": "Título",
+    "descriptionLabel": "Descrição",
+    "statusLabel": "Status",
+    "priorityLabel": "Prioridade",
+    "status": {
+      "todo": "A Fazer",
+      "in_progress": "Em Andamento",
+      "done": "Concluída",
+      "cancelled": "Cancelada"
+    },
+    "priority": {
+      "low": "Baixa",
+      "medium": "Média",
+      "high": "Alta",
+      "critical": "Crítica"
+    }
   }
 }

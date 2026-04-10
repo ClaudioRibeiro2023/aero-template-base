@@ -4,6 +4,7 @@
  */
 import type { NextRequest } from 'next/server'
 import { createServerSupabase } from '@/app/lib/supabase-server'
+import { requireJson } from '@/lib/api-guard'
 import { ok, badRequest, unauthorized, forbidden, tooManyRequests } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthUser } from '@/lib/auth-guard'
@@ -45,6 +46,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const jsonError = requireJson(request)
+  if (jsonError) return jsonError
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()

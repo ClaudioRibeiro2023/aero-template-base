@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { captureException } from '@/lib/sentry'
 
 interface ApiMeta {
   page?: number
@@ -20,8 +21,9 @@ export function noContent() {
 }
 
 export function badRequest(message: string, details?: unknown) {
+  const safeDetails = process.env.NODE_ENV === 'production' ? null : (details ?? null)
   return NextResponse.json(
-    { data: null, error: { message, details: details ?? null } },
+    { data: null, error: { message, details: safeDetails } },
     { status: 400 }
   )
 }
@@ -42,6 +44,7 @@ export function tooManyRequests() {
   return NextResponse.json({ data: null, error: { message: 'Too Many Requests' } }, { status: 429 })
 }
 
-export function serverError(message = 'Internal server error') {
+export function serverError(message = 'Internal server error', cause?: unknown) {
+  if (cause) captureException(cause, { message })
   return NextResponse.json({ data: null, error: { message } }, { status: 500 })
 }

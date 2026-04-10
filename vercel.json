@@ -4,9 +4,10 @@
   "buildCommand": "pnpm run build:packages && pnpm run build:app",
   "outputDirectory": "apps/web/.next",
   "regions": ["gru1"],
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- .",
   "git": {
     "deploymentEnabled": {
-      "master": true
+      "master": false
     }
   }
 }

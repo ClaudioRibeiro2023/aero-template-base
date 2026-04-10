@@ -46,10 +46,12 @@ function makeRequest(options: {
   headers?: Record<string, string>
 }) {
   const { method = 'GET', url = 'http://localhost:3000/api/tasks', body, headers = {} } = options
+  const defaultHeaders: Record<string, string> = { 'x-forwarded-for': '127.0.0.1' }
+  if (method !== 'GET' && method !== 'DELETE') defaultHeaders['content-type'] = 'application/json'
   return {
     method,
     url,
-    headers: new Map(Object.entries({ 'x-forwarded-for': '127.0.0.1', ...headers })),
+    headers: new Map(Object.entries({ ...defaultHeaders, ...headers })),
     json: vi.fn(async () => body),
   } as unknown as import('next/server').NextRequest
 }

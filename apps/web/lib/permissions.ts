@@ -13,6 +13,9 @@ export type Resource =
   | 'audit'
   | 'reports'
   | 'feature-flags'
+  | 'support-tickets'
+  | 'support-messages'
+  | 'quality-reports'
 
 /**
  * Actions that can be performed on resources
@@ -49,6 +52,14 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     'reports:create',
     'feature-flags:read',
     'feature-flags:update',
+    'support-tickets:read',
+    'support-tickets:create',
+    'support-tickets:update',
+    'support-tickets:delete',
+    'support-messages:read',
+    'support-messages:create',
+    'quality-reports:read',
+    'quality-reports:create',
   ],
   GESTOR: [
     'users:read',
@@ -64,9 +75,25 @@ const ROLE_PERMISSIONS: Record<string, Permission[]> = {
     'reports:read',
     'reports:create',
     'feature-flags:read',
+    'support-tickets:read',
+    'support-tickets:create',
+    'support-tickets:update',
+    'support-messages:read',
+    'support-messages:create',
+    'quality-reports:read',
   ],
-  OPERADOR: ['tasks:read', 'tasks:create', 'tasks:update', 'reports:read', 'reports:create'],
-  VIEWER: ['tasks:read', 'reports:read'],
+  OPERADOR: [
+    'tasks:read',
+    'tasks:create',
+    'tasks:update',
+    'reports:read',
+    'reports:create',
+    'support-tickets:read',
+    'support-tickets:create',
+    'support-messages:read',
+    'support-messages:create',
+  ],
+  VIEWER: ['tasks:read', 'reports:read', 'support-tickets:read'],
 }
 
 /**

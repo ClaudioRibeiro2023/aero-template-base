@@ -11,8 +11,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Demo mode: skip auth entirely when enabled
-  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+  // Demo mode: skip auth in development only (server-side env, not exposed to client)
+  if (process.env.DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production') {
     return NextResponse.next()
   }
 

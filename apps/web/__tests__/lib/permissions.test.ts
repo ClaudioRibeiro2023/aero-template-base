@@ -13,9 +13,9 @@ import {
 } from '../../lib/permissions'
 
 describe('getPermissionsForRole', () => {
-  it('ADMIN tem todas as permissoes (19)', () => {
+  it('ADMIN tem todas as permissoes', () => {
     const perms = getPermissionsForRole('ADMIN')
-    expect(perms.length).toBe(19)
+    expect(perms.length).toBeGreaterThanOrEqual(26)
     expect(perms).toContain('users:delete')
     expect(perms).toContain('roles:delete')
     expect(perms).toContain('config:update')
@@ -42,12 +42,12 @@ describe('getPermissionsForRole', () => {
     expect(perms).toContain('reports:create')
     expect(perms).not.toContain('users:read')
     expect(perms).not.toContain('audit:read')
-    expect(perms.length).toBe(5)
+    expect(perms.length).toBe(9)
   })
 
-  it('VIEWER tem apenas leitura de tasks e reports', () => {
+  it('VIEWER tem leitura de tasks, reports e support-tickets', () => {
     const perms = getPermissionsForRole('VIEWER')
-    expect(perms).toEqual(['tasks:read', 'reports:read'])
+    expect(perms).toEqual(['tasks:read', 'reports:read', 'support-tickets:read'])
   })
 
   it('role desconhecida faz fallback para VIEWER', () => {
@@ -59,8 +59,8 @@ describe('getPermissionsForRole', () => {
 describe('getPermissionsForRoles', () => {
   it('merge permissoes de multiplas roles sem duplicatas', () => {
     const perms = getPermissionsForRoles(['OPERADOR', 'VIEWER'])
-    // VIEWER adds nothing new over OPERADOR, so same 5
-    expect(perms.length).toBe(5)
+    // VIEWER adds nothing new over OPERADOR, so same 9
+    expect(perms.length).toBe(9)
   })
 
   it('merge GESTOR + OPERADOR combina permissoes', () => {

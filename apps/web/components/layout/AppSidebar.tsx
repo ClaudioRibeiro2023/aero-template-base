@@ -456,6 +456,7 @@ export function AppSidebar({
                       {hasChildren ? (
                         <div>
                           <button
+                            aria-expanded={expandedModules.has(item.path)}
                             onClick={() => {
                               setExpandedModules(prev => {
                                 const next = new Set(prev)

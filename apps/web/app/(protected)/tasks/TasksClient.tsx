@@ -136,11 +136,17 @@ function TaskFormModal({ task, onClose }: { task?: Task; onClose: () => void }) 
             className={inputClass}
             placeholder="Ex: Implementar autenticação"
             aria-required="true"
+            aria-invalid={!!errors.title}
             aria-describedby={errors.title ? 'task-title-error' : undefined}
             {...register('title')}
           />
           {errors.title && (
-            <p id="task-title-error" role="alert" className="mt-1 text-xs text-rose-400">
+            <p
+              id="task-title-error"
+              role="alert"
+              aria-live="polite"
+              className="mt-1 text-xs text-rose-400"
+            >
               {errors.title.message}
             </p>
           )}
@@ -159,11 +165,17 @@ function TaskFormModal({ task, onClose }: { task?: Task; onClose: () => void }) 
             rows={3}
             className={`${inputClass} resize-none`}
             placeholder="Detalhes da task (opcional)"
+            aria-invalid={!!errors.description}
             aria-describedby={errors.description ? 'task-description-error' : undefined}
             {...register('description')}
           />
           {errors.description && (
-            <p id="task-description-error" role="alert" className="mt-1 text-xs text-rose-400">
+            <p
+              id="task-description-error"
+              role="alert"
+              aria-live="polite"
+              className="mt-1 text-xs text-rose-400"
+            >
               {errors.description.message}
             </p>
           )}

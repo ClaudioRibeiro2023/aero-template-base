@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { ScrollProgress } from '@/components/common/ScrollProgress'
@@ -153,6 +154,19 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
 
   useSwipe(handleSwipeRight, handleSwipeLeft, { edgeOnly: true, threshold: 50 })
 
+  // Focus trap for mobile drawer
+  const drawerRef = useFocusTrap<HTMLDivElement>(isMobile && isMobileMenuOpen)
+
+  // Close mobile drawer on Escape
+  useEffect(() => {
+    if (!isMobile || !isMobileMenuOpen) return
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMobileMenuOpen(false)
+    }
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isMobile, isMobileMenuOpen])
+
   // Calcular margem do conteúdo principal
   const getContentMargin = () => {
     if (isMobile) return '0'
@@ -175,6 +189,7 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
 
       {/* ── Sidebar ── */}
       <div
+        ref={isMobile ? drawerRef : undefined}
         className={clsx(
           // Mobile: off-screen drawer
           isMobile && [

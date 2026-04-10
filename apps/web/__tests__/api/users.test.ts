@@ -49,10 +49,12 @@ vi.mock('@template/shared/schemas', () => ({
 // ── Helper: cria NextRequest simulado ──
 function makeRequest(options: { method?: string; url?: string; body?: unknown }) {
   const { method = 'GET', url = 'http://localhost:3000/api/users', body } = options
+  const headers = new Map([['x-forwarded-for', '127.0.0.1']])
+  if (method !== 'GET' && method !== 'DELETE') headers.set('content-type', 'application/json')
   return {
     method,
     url,
-    headers: new Map([['x-forwarded-for', '127.0.0.1']]),
+    headers,
     json: vi.fn(async () => body),
   } as unknown as import('next/server').NextRequest
 }

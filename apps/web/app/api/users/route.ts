@@ -6,6 +6,7 @@
  */
 import type { NextRequest } from 'next/server'
 import { userCreateSchema } from '@template/shared/schemas'
+import { requireJson } from '@/lib/api-guard'
 import {
   ok,
   created,
@@ -54,8 +55,11 @@ export async function GET(request: NextRequest) {
     .range((page - 1) * pageSize, page * pageSize - 1)
 
   if (search) {
-    // Sanitize: remove PostgREST special chars to prevent filter injection
-    const safe = search.replace(/[,.()"'\\]/g, '')
+    // Sanitize: escape SQL wildcards + remove PostgREST special chars, limit length
+    const safe = search
+      .slice(0, 50)
+      .replace(/[%_]/g, '')
+      .replace(/[,.()"'\\]/g, '')
     if (safe) query = query.or(`display_name.ilike.%${safe}%,email.ilike.%${safe}%`)
   }
   if (role) query = query.eq('role', role)
@@ -77,6 +81,9 @@ export async function GET(request: NextRequest) {
 
 // ── POST /api/users ──
 export async function POST(request: NextRequest) {
+  const jsonError = requireJson(request)
+  if (jsonError) return jsonError
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 15 })
   if (!success) return tooManyRequests()

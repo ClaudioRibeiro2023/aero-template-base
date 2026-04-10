@@ -17,7 +17,18 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createSupabaseCookieClient()
 
-  const redirectTo = `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/auth/callback?next=/login/update-password`
+  // Validate APP_URL to prevent redirect to arbitrary domains
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  let validatedBase = ''
+  try {
+    const parsed = new URL(appUrl)
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      validatedBase = parsed.origin
+    }
+  } catch {
+    // Invalid URL — fall back to empty string (relative redirect)
+  }
+  const redirectTo = `${validatedBase}/auth/callback?next=/login/update-password`
   const { error } = await supabase.auth.resetPasswordForEmail(data.email, { redirectTo })
   if (error) console.error('[auth/reset-password]', error)
 
