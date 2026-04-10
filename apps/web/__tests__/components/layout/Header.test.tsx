@@ -12,6 +12,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('next/navigation', () => ({
   usePathname: () => '/dashboard/usuarios',
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+  }),
 }))
 
 vi.mock('@template/design-system', () => ({

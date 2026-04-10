@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { Plus, Loader2, Headphones, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { EmptyState } from '@template/design-system'
+import { useRealtimeTickets } from '@/hooks/useRealtimeSubscription'
 import { useTickets, type TicketFilters } from '@/hooks/useSupportTickets'
 import { TicketCard } from '@/components/support/TicketCard'
 
@@ -15,8 +18,12 @@ const STATUS_FILTERS = [
 ]
 
 export function TicketsListClient() {
+  const router = useRouter()
   const [filters, setFilters] = useState<TicketFilters>({ page: 1, page_size: 20 })
   const { data, isLoading, isError } = useTickets(filters)
+
+  // Real-time: lista atualiza automaticamente
+  useRealtimeTickets()
 
   const tickets = data?.data ?? []
   const meta = data?.meta
@@ -83,15 +90,19 @@ export function TicketsListClient() {
         )}
 
         {!isLoading && !isError && tickets.length === 0 && (
-          <div className="glass-panel flex flex-col items-center py-16 px-6 text-center">
-            <Headphones size={40} className="text-[var(--text-muted)] mb-4" aria-hidden="true" />
-            <p className="text-sm font-medium text-[var(--text-secondary)]">
-              Nenhum ticket encontrado
-            </p>
-            <p className="text-xs text-[var(--text-muted)] mt-1">
-              Clique em &quot;Novo Ticket&quot; para abrir um chamado
-            </p>
-          </div>
+          <EmptyState
+            icon={<Headphones size={40} />}
+            title="Nenhum ticket encontrado"
+            description="Abra um chamado para receber suporte técnico"
+            actions={
+              <button
+                onClick={() => router.push('/support/tickets/new')}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary)]/90 transition-colors"
+              >
+                Novo Ticket
+              </button>
+            }
+          />
         )}
 
         {tickets.map(ticket => (

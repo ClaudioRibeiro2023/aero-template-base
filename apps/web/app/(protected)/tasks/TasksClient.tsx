@@ -39,7 +39,10 @@ import {
   type TaskStatus,
   type TaskFilters,
 } from '@/hooks/useTasks'
-import { ToastItem, Modal, useToast } from '@template/design-system'
+import { ToastItem, Modal, useToast, EmptyState } from '@template/design-system'
+import { BulkActionBar } from '@/components/common/BulkActionBar'
+import { exportToCsv } from '@/lib/export-csv'
+import { useRealtimeTasks } from '@/hooks/useRealtimeSubscription'
 
 // ── Helpers ──
 const STATUS_LABELS: Record<TaskStatus, string> = {
@@ -242,15 +245,28 @@ function TaskRow({
   task,
   onEdit,
   onDelete,
+  isSelected,
+  onToggleSelect,
 }: {
   task: Task
   onEdit: (t: Task) => void
   onDelete: (id: string) => void
+  isSelected?: boolean
+  onToggleSelect?: (id: string) => void
 }) {
   const StatusIcon = STATUS_ICONS[task.status]
 
   return (
     <div className="glass-panel px-4 py-3 flex items-center gap-4 hover:border-[var(--glass-border-hover)] transition-colors group">
+      {onToggleSelect && (
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggleSelect(task.id)}
+          className="accent-[var(--brand-primary)] w-3.5 h-3.5 flex-shrink-0"
+          aria-label={`Selecionar task: ${task.title}`}
+        />
+      )}
       <StatusIcon
         size={18}
         className={`flex-shrink-0 ${STATUS_COLORS[task.status]}`}
@@ -296,9 +312,13 @@ export function TasksClient() {
   const [modalTask, setModalTask] = useState<Task | undefined>()
   const [showModal, setShowModal] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
 
   const { data, isLoading, isError } = useTasks(filters)
   const deleteTask = useDeleteTask()
+
+  // Real-time: lista atualiza automaticamente quando colegas criam/editam tasks
+  useRealtimeTasks()
 
   const tasks = data?.data ?? []
   const meta = data?.meta
@@ -323,6 +343,59 @@ export function TasksClient() {
     }
   }
 
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    if (selected.size === tasks.length) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(tasks.map(t => t.id)))
+    }
+  }
+
+  function handleBulkExport() {
+    const selectedTasks = tasks.filter(t => selected.has(t.id)) as unknown as Record<
+      string,
+      unknown
+    >[]
+    exportToCsv(selectedTasks, 'tasks', [
+      { key: 'title', label: 'Título' },
+      { key: 'status', label: 'Status', format: v => STATUS_LABELS[v as TaskStatus] || String(v) },
+      {
+        key: 'priority',
+        label: 'Prioridade',
+        format: v => PRIORITY_LABELS[v as string] || String(v),
+      },
+      {
+        key: 'updated_at',
+        label: 'Atualizado',
+        format: v => new Date(v as string).toLocaleDateString('pt-BR'),
+      },
+    ])
+    setToast({ message: `${selectedTasks.length} tasks exportadas`, type: 'success' })
+    setSelected(new Set())
+  }
+
+  async function handleBulkDelete() {
+    if (!confirm(`Excluir ${selected.size} tasks selecionadas?`)) return
+    for (const id of selected) {
+      try {
+        await deleteTask.mutateAsync(id)
+      } catch {
+        /* continue */
+      }
+    }
+    setToast({ message: `${selected.size} tasks excluídas`, type: 'success' })
+    setSelected(new Set())
+  }
+
   return (
     <main className="page-enter ambient-gradient max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
@@ -345,7 +418,18 @@ export function TasksClient() {
       </div>
 
       {/* Filters */}
-      <div className="relative z-10 flex flex-wrap gap-2">
+      <div className="relative z-10 flex flex-wrap items-center gap-2">
+        {tasks.length > 0 && (
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs text-[var(--text-muted)] mr-2">
+            <input
+              type="checkbox"
+              checked={tasks.length > 0 && selected.size === tasks.length}
+              onChange={toggleSelectAll}
+              className="accent-[var(--brand-primary)] w-3.5 h-3.5"
+            />
+            Todos
+          </label>
+        )}
         {(['', 'todo', 'in_progress', 'done', 'cancelled'] as const).map(s => (
           <button
             key={s || 'all'}
@@ -385,19 +469,30 @@ export function TasksClient() {
         )}
 
         {!isLoading && !isError && tasks.length === 0 && (
-          <div className="glass-panel flex flex-col items-center py-16 px-6 text-center">
-            <CheckCircle2 size={40} className="text-[var(--text-muted)] mb-4" aria-hidden="true" />
-            <p className="text-sm font-medium text-[var(--text-secondary)]">
-              Nenhuma task encontrada
-            </p>
-            <p className="text-xs text-[var(--text-muted)] mt-1">
-              Clique em &quot;Nova Task&quot; para começar
-            </p>
-          </div>
+          <EmptyState
+            icon={<CheckCircle2 size={40} />}
+            title="Nenhuma task encontrada"
+            description="Crie sua primeira tarefa para começar a organizar o trabalho"
+            actions={
+              <button
+                onClick={openCreate}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary)]/90 transition-colors"
+              >
+                Nova Task
+              </button>
+            }
+          />
         )}
 
         {tasks.map(task => (
-          <TaskRow key={task.id} task={task} onEdit={openEdit} onDelete={handleDelete} />
+          <TaskRow
+            key={task.id}
+            task={task}
+            onEdit={openEdit}
+            onDelete={handleDelete}
+            isSelected={selected.has(task.id)}
+            onToggleSelect={toggleSelect}
+          />
         ))}
       </section>
 
@@ -436,6 +531,16 @@ export function TasksClient() {
           }}
         />
       )}
+
+      {/* Bulk Actions */}
+      <BulkActionBar
+        selectedCount={selected.size}
+        onClear={() => setSelected(new Set())}
+        actions={[
+          { label: 'Exportar CSV', onClick: handleBulkExport, variant: 'secondary' },
+          { label: 'Excluir', onClick: handleBulkDelete, variant: 'danger' },
+        ]}
+      />
 
       {/* Toast */}
       {toast && (

@@ -2,6 +2,28 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 const publicPaths = ['/login', '/register', '/auth/callback', '/api/health']
+const SUPPORTED_LOCALES = ['pt-BR', 'en-US', 'es']
+
+function detectLocale(request: NextRequest): string | null {
+  // 1. Cookie (set by user preference)
+  const cookieLocale = request.cookies.get('locale')?.value
+  if (cookieLocale && SUPPORTED_LOCALES.includes(cookieLocale)) return null // already set
+
+  // 2. Accept-Language header
+  const acceptLang = request.headers.get('accept-language')
+  if (!acceptLang) return null
+
+  for (const part of acceptLang.split(',')) {
+    const lang = part.split(';')[0].trim()
+    if (SUPPORTED_LOCALES.includes(lang)) return lang
+    // Match prefix: 'pt' → 'pt-BR', 'en' → 'en-US', 'es' → 'es'
+    const prefix = lang.split('-')[0]
+    const match = SUPPORTED_LOCALES.find(l => l.startsWith(prefix))
+    if (match) return match
+  }
+
+  return null
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -54,6 +76,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // Auto-detect locale from Accept-Language if no cookie set
+  const detectedLocale = detectLocale(request)
+  if (detectedLocale) {
+    supabaseResponse.cookies.set('locale', detectedLocale, {
+      path: '/',
+      maxAge: 31536000, // 1 year
+      sameSite: 'lax',
+    })
   }
 
   return supabaseResponse

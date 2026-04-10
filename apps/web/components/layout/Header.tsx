@@ -1,8 +1,9 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { Search, Moon, Sun, Menu } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { Search, Moon, Sun, Menu, Globe } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Tooltip, Breadcrumb, BreadcrumbItem } from '@template/design-system'
 import { NotificationCenter } from '@/components/common/NotificationCenter'
@@ -14,11 +15,21 @@ interface HeaderProps {
   className?: string
 }
 
+const LOCALE_LABELS: Record<string, string> = {
+  'pt-BR': 'PT',
+  'en-US': 'EN',
+  es: 'ES',
+}
+
+const LOCALE_OPTIONS = Object.entries(LOCALE_LABELS)
+
 export function Header({ onMobileMenuToggle, isMobile = false, className }: HeaderProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const notifs = useNotifications()
   const tNav = useTranslations('nav')
   const tTheme = useTranslations('theme')
+  const [showLocalePicker, setShowLocalePicker] = useState(false)
   const [isDark, setIsDark] = useState(() => {
     if (typeof window === 'undefined') return true
     const saved = localStorage.getItem('theme')
@@ -42,6 +53,26 @@ export function Header({ onMobileMenuToggle, isMobile = false, className }: Head
   const toggleTheme = () => {
     setIsDark(prev => !prev)
   }
+
+  const switchLocale = useCallback(
+    async (locale: string) => {
+      try {
+        await fetch('/api/user/locale', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ locale }),
+        })
+        document.cookie = `locale=${locale};path=/;max-age=31536000`
+        router.refresh()
+      } catch {
+        // Fallback: apenas cookie
+        document.cookie = `locale=${locale};path=/;max-age=31536000`
+        router.refresh()
+      }
+      setShowLocalePicker(false)
+    },
+    [router]
+  )
 
   // Friendly label mapping for breadcrumb segments (P3-02)
   const SEGMENT_LABELS: Record<string, string> = {
@@ -131,6 +162,33 @@ export function Header({ onMobileMenuToggle, isMobile = false, className }: Head
           onClear={notifs.clearAll}
           compact={isMobile}
         />
+
+        {/* Locale picker */}
+        <div className="relative">
+          <Tooltip content="Idioma">
+            <button
+              onClick={() => setShowLocalePicker(prev => !prev)}
+              className="p-1.5 rounded-lg hover:bg-white/[0.04] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Trocar idioma"
+              aria-expanded={showLocalePicker}
+            >
+              <Globe size={isMobile ? 16 : 18} className="text-[var(--text-secondary)]" />
+            </button>
+          </Tooltip>
+          {showLocalePicker && (
+            <div className="absolute right-0 top-full mt-1 z-50 bg-[rgba(24,24,27,0.95)] border border-[rgba(255,255,255,0.08)] rounded-lg shadow-xl py-1 min-w-[80px] backdrop-blur-lg">
+              {LOCALE_OPTIONS.map(([code, label]) => (
+                <button
+                  key={code}
+                  onClick={() => switchLocale(code)}
+                  className="w-full px-3 py-1.5 text-xs text-left text-[var(--text-secondary)] hover:bg-white/[0.04] hover:text-[var(--text-primary)] transition-colors"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Theme toggle */}
         <Tooltip content={isDark ? tTheme('light') : tTheme('dark')}>

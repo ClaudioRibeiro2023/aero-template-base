@@ -1,6 +1,7 @@
 'use client'
 
 import { ChevronLeft, ChevronRight, Pencil, Users, ShieldAlert, Loader2 } from 'lucide-react'
+import { EmptyState } from '@template/design-system'
 import type { Profile } from '@/hooks/useUsers'
 
 const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
@@ -89,19 +90,20 @@ export function UsersTable({
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={5} className="py-16">
-                  <div className="flex flex-col items-center gap-3 text-center">
-                    <Users size={48} className="text-zinc-700" aria-hidden="true" />
-                    <p className="text-sm font-medium text-zinc-400">Nenhum usuário encontrado</p>
-                    <p className="text-[13px] text-zinc-600">Tente ajustar os filtros de busca</p>
-                    <button
-                      onClick={onClearFilters}
-                      className="mt-1 px-4 py-1.5 rounded-lg text-[13px] text-zinc-400 transition-colors duration-150 hover:bg-white/[0.04]"
-                      style={{ border: '1px solid rgba(255,255,255,0.08)' }}
-                    >
-                      Limpar filtros
-                    </button>
-                  </div>
+                <td colSpan={5} className="p-0">
+                  <EmptyState
+                    icon={<Users size={48} />}
+                    title="Nenhum usuário encontrado"
+                    description="Tente ajustar os filtros de busca"
+                    actions={
+                      <button
+                        onClick={onClearFilters}
+                        className="px-4 py-1.5 rounded-lg text-sm text-[var(--text-secondary)] border border-[rgba(255,255,255,0.08)] hover:bg-white/[0.04] transition-colors"
+                      >
+                        Limpar filtros
+                      </button>
+                    }
+                  />
                 </td>
               </tr>
             ) : (
