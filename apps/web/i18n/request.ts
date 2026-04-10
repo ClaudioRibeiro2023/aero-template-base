@@ -11,6 +11,7 @@ export default getRequestConfig(async () => {
 
   return {
     locale,
+    timeZone: 'America/Sao_Paulo',
     messages: fallbackMessages ? { ...fallbackMessages, ...messages } : messages,
     // Suppress missing translation warnings in production
     onError: process.env.NODE_ENV === 'production' ? () => {} : undefined,

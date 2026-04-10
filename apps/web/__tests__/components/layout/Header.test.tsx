@@ -48,6 +48,25 @@ vi.mock('@/hooks/useNotifications', () => ({
   }),
 }))
 
+const translations: Record<string, Record<string, string>> = {
+  nav: {
+    mainMenu: 'Menu principal',
+    openMenu: 'Abrir menu',
+    home: 'Início',
+    searchShortcut: 'Buscar',
+    openSearch: 'Abrir busca',
+    toggleTheme: 'Alternar tema',
+  },
+  theme: {
+    light: 'Tema claro',
+    dark: 'Tema escuro',
+  },
+}
+
+vi.mock('next-intl', () => ({
+  useTranslations: (ns: string) => (key: string) => translations[ns]?.[key] ?? key,
+}))
+
 // Mock localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {}
