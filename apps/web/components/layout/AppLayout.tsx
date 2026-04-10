@@ -13,6 +13,7 @@ import { usePlatformConfig, useIsSetupComplete } from '@/hooks/usePlatformConfig
 
 import { usePlatformBranding } from '@/hooks/usePlatformBranding'
 import { useNavigationConfig } from '@/hooks/useNavigationConfig'
+import { useAuth } from '@/hooks/useAuth'
 import clsx from 'clsx'
 
 // Lazy: modal de busca global — não é necessário no render inicial do layout
@@ -28,6 +29,15 @@ const FirstRunWizard = dynamic(
     loading: () => null,
     ssr: false,
   }
+)
+
+// Lazy: onboarding guiado para novos usuários — carregado apenas quando necessário
+const UserOnboardingWizard = dynamic(
+  () =>
+    import('@/components/common/UserOnboardingWizard').then(m => ({
+      default: m.UserOnboardingWizard,
+    })),
+  { loading: () => null, ssr: false }
 )
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed'
@@ -108,6 +118,9 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
   const [showWizard, setShowWizard] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const { user } = useAuth()
+  const [onboardingStep, setOnboardingStep] = useState<number | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   // Restore sidebar collapsed state from localStorage after mount (avoids hydration mismatch)
   useEffect(() => {
@@ -141,6 +154,25 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
   const dismissWizard = useCallback(() => {
     setShowWizard(false)
     localStorage.setItem(WIZARD_DISMISSED_KEY, 'true')
+  }, [])
+
+  // Fetch onboarding step from profile (user-level onboarding)
+  useEffect(() => {
+    if (!user?.id) return
+    fetch('/api/user/onboarding')
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        const step = data?.step ?? 0
+        if (step < 5) {
+          setOnboardingStep(step)
+          setShowOnboarding(true)
+        }
+      })
+      .catch(() => {})
+  }, [user?.id])
+
+  const dismissOnboarding = useCallback(() => {
+    setShowOnboarding(false)
   }, [])
 
   // Touch swipe: open/close sidebar on mobile
@@ -230,6 +262,15 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
 
       {/* First-Run Wizard (Sprint 24) */}
       {showWizard && <FirstRunWizard onComplete={dismissWizard} onSkip={dismissWizard} />}
+
+      {/* User Onboarding Wizard — guia novos usuários em 5 passos */}
+      {showOnboarding && !showWizard && onboardingStep !== null && (
+        <UserOnboardingWizard
+          currentStep={onboardingStep}
+          onStepComplete={step => setOnboardingStep(step)}
+          onDismiss={dismissOnboarding}
+        />
+      )}
 
       <ScrollProgress />
     </div>

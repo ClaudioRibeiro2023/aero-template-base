@@ -11,6 +11,7 @@ export interface FeatureFlag {
   flag_name: string
   description: string
   enabled: boolean
+  rollout_pct: number
   created_at: string
   updated_at: string
 }
@@ -22,6 +23,7 @@ export interface FeatureFlagCreate {
   flag_name: string
   description?: string
   enabled?: boolean
+  rollout_pct?: number
 }
 
 /**
@@ -30,4 +32,5 @@ export interface FeatureFlagCreate {
 export interface FeatureFlagUpdate {
   enabled?: boolean
   description?: string
+  rollout_pct?: number
 }

@@ -1,4 +1,5 @@
 /**
+ * GET  /api/user/onboarding — Retorna progresso atual do onboarding
  * PATCH /api/user/onboarding — Atualiza progresso do onboarding
  */
 import type { NextRequest } from 'next/server'
@@ -8,6 +9,24 @@ import { ok, badRequest, unauthorized, serverError } from '@/lib/api-response'
 import { getAuthUser } from '@/lib/auth-guard'
 
 export const dynamic = 'force-dynamic'
+
+export async function GET() {
+  const { user, error } = await getAuthUser()
+  if (error || !user) return unauthorized()
+
+  try {
+    const supabase = await createServerSupabase()
+    const { data } = await supabase
+      .from('profiles')
+      .select('onboarding_step')
+      .eq('id', user.id)
+      .single()
+
+    return ok({ step: data?.onboarding_step ?? 0 })
+  } catch (err) {
+    return serverError(err instanceof Error ? err.message : 'Erro ao buscar onboarding')
+  }
+}
 
 export async function PATCH(request: NextRequest) {
   const jsonError = requireJson(request)

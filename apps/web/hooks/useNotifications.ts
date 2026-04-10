@@ -5,6 +5,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from '@template/shared'
 import { useWebSocket, type WSMessage } from './useWebSocket'
+import { useRealtimeNotifications as useRealtimeSub } from './useRealtimeSubscription'
 import type { Notification } from '@/components/common/NotificationCenter'
 
 const STORAGE_KEY = 'notifications'
@@ -103,6 +104,9 @@ export function useNotifications() {
     autoReconnect: true,
     onMessage: handleWSMessage,
   })
+
+  // Supabase Realtime: escuta INSERT em notifications table → badge atualiza sem polling
+  useRealtimeSub(user?.id || '', !!user?.id)
 
   // Persist when notifications change
   useEffect(() => {

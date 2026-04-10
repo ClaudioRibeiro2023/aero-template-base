@@ -1,13 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Loader2, Headphones, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Loader2, Headphones, ChevronLeft, ChevronRight, FileDown } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { EmptyState } from '@template/design-system'
+import { EmptyState, ToastItem } from '@template/design-system'
 import { useRealtimeTickets } from '@/hooks/useRealtimeSubscription'
 import { useTickets, type TicketFilters } from '@/hooks/useSupportTickets'
 import { TicketCard } from '@/components/support/TicketCard'
+import { BulkActionBar } from '@/components/common/BulkActionBar'
+import { exportToCsv } from '@/lib/export-csv'
 
 const STATUS_FILTERS = [
   { value: '', label: 'Todos' },
@@ -17,16 +19,73 @@ const STATUS_FILTERS = [
   { value: 'closed', label: 'Fechados' },
 ]
 
+const STATUS_LABELS: Record<string, string> = {
+  open: 'Aberto',
+  in_progress: 'Em Andamento',
+  resolved: 'Resolvido',
+  closed: 'Fechado',
+}
+
+const PRIORITY_LABELS: Record<string, string> = {
+  low: 'Baixa',
+  medium: 'Média',
+  high: 'Alta',
+  critical: 'Crítica',
+}
+
 export function TicketsListClient() {
   const router = useRouter()
   const [filters, setFilters] = useState<TicketFilters>({ page: 1, page_size: 20 })
   const { data, isLoading, isError } = useTickets(filters)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
   // Real-time: lista atualiza automaticamente
   useRealtimeTickets()
 
   const tickets = data?.data ?? []
   const meta = data?.meta
+
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    if (selected.size === tickets.length) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(tickets.map(t => t.id)))
+    }
+  }
+
+  function handleBulkExport() {
+    const selectedTickets = tickets.filter(t => selected.has(t.id)) as unknown as Record<
+      string,
+      unknown
+    >[]
+    exportToCsv(selectedTickets, 'tickets', [
+      { key: 'title', label: 'Título' },
+      { key: 'status', label: 'Status', format: v => STATUS_LABELS[v as string] || String(v) },
+      {
+        key: 'priority',
+        label: 'Prioridade',
+        format: v => PRIORITY_LABELS[v as string] || String(v),
+      },
+      { key: 'category', label: 'Categoria' },
+      {
+        key: 'created_at',
+        label: 'Criado em',
+        format: v => new Date(v as string).toLocaleDateString('pt-BR'),
+      },
+    ])
+    setToast({ message: `${selectedTickets.length} tickets exportados`, type: 'success' })
+    setSelected(new Set())
+  }
 
   return (
     <main className="page-enter ambient-gradient max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
@@ -50,7 +109,18 @@ export function TicketsListClient() {
       </div>
 
       {/* Filters */}
-      <div className="relative z-10 flex flex-wrap gap-2">
+      <div className="relative z-10 flex flex-wrap items-center gap-2">
+        {tickets.length > 0 && (
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs text-[var(--text-muted)] mr-2">
+            <input
+              type="checkbox"
+              checked={tickets.length > 0 && selected.size === tickets.length}
+              onChange={toggleSelectAll}
+              className="accent-[var(--brand-primary)] w-3.5 h-3.5"
+            />
+            Todos
+          </label>
+        )}
         {STATUS_FILTERS.map(f => (
           <button
             key={f.value || 'all'}
@@ -106,7 +176,18 @@ export function TicketsListClient() {
         )}
 
         {tickets.map(ticket => (
-          <TicketCard key={ticket.id} ticket={ticket} />
+          <div key={ticket.id} className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={selected.has(ticket.id)}
+              onChange={() => toggleSelect(ticket.id)}
+              className="accent-[var(--brand-primary)] w-3.5 h-3.5 mt-4 flex-shrink-0"
+              aria-label={`Selecionar ticket: ${ticket.title}`}
+            />
+            <div className="flex-1 min-w-0">
+              <TicketCard ticket={ticket} />
+            </div>
+          </div>
         ))}
       </section>
 
@@ -133,6 +214,31 @@ export function TicketsListClient() {
             <ChevronRight size={16} aria-hidden="true" />
           </button>
         </nav>
+      )}
+      {/* Bulk Actions */}
+      <BulkActionBar
+        selectedCount={selected.size}
+        onClear={() => setSelected(new Set())}
+        actions={[
+          {
+            label: 'Exportar CSV',
+            icon: <FileDown size={14} />,
+            onClick: handleBulkExport,
+            variant: 'secondary',
+          },
+        ]}
+      />
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-4 right-4 z-[100]">
+          <ToastItem
+            id="tickets-toast"
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast(null)}
+          />
+        </div>
       )}
     </main>
   )

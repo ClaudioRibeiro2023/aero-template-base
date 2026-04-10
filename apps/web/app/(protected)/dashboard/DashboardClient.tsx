@@ -10,6 +10,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useReducedMotion } from '@/hooks/useA11y'
+import { useAuth } from '@/hooks/useAuth'
+import { useQuery } from '@tanstack/react-query'
 import {
   Users,
   FileText,
@@ -20,6 +22,7 @@ import {
   ArrowDownRight,
   BarChart3,
   Zap,
+  Gauge,
 } from 'lucide-react'
 
 // ── KPI Mock Data ──
@@ -86,6 +89,22 @@ const CHART_DATA = [
   { label: 'Mai', pct: 70 },
   { label: 'Jun', pct: 90 },
 ]
+
+// ── Platform Metrics (admin/gestor only) ──
+interface PlatformMetric {
+  id: string
+  week_start: string
+  active_users: number
+  tickets_created: number
+  tasks_completed: number
+}
+
+async function fetchMetrics(): Promise<PlatformMetric[]> {
+  const res = await fetch('/api/platform/metrics')
+  if (!res.ok) return []
+  const json = await res.json()
+  return json.data?.metrics ?? []
+}
 
 // ── Animated count-up hook (rAF, expo ease-out — respects reduced-motion) ──
 function useCountUp(target: number, duration = 800, skipAnimation = false) {
@@ -240,6 +259,19 @@ interface DashboardClientProps {
 export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
   // Data is static (KPI_CARDS, CHART_DATA, QUICK_ACTIONS are constants) — no loading needed
   const loading = false
+  const { hasRole } = useAuth()
+  const isAdmin = hasRole('ADMIN') || hasRole('GESTOR')
+
+  // Platform metrics — only for admin/gestor
+  const { data: metrics = [] } = useQuery({
+    queryKey: ['platform-metrics'],
+    queryFn: fetchMetrics,
+    enabled: isAdmin,
+    staleTime: 5 * 60 * 1000, // 5 min
+  })
+
+  const latestMetric = metrics[0]
+  const previousMetric = metrics[1]
 
   return (
     <main className="page-enter ambient-gradient max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
@@ -259,6 +291,82 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
           ))}
         </div>
       </section>
+
+      {/* Platform Metrics — admin/gestor only */}
+      {isAdmin && latestMetric && (
+        <section aria-label="Métricas da semana" className="relative z-10">
+          <div className="glass-panel p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+                  Métricas da Semana
+                </h2>
+                <p className="text-xs text-[var(--text-muted)]">
+                  Semana de {new Date(latestMetric.week_start).toLocaleDateString('pt-BR')}
+                </p>
+              </div>
+              <div className="p-2 rounded-lg bg-[var(--accent-purple)]/10" aria-hidden="true">
+                <Gauge size={16} className="text-[var(--accent-purple)]" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                {
+                  label: 'Usuários Ativos',
+                  value: latestMetric.active_users,
+                  prev: previousMetric?.active_users,
+                  icon: Users,
+                },
+                {
+                  label: 'Tickets Criados',
+                  value: latestMetric.tickets_created,
+                  prev: previousMetric?.tickets_created,
+                  icon: FileText,
+                },
+                {
+                  label: 'Tasks Concluídas',
+                  value: latestMetric.tasks_completed,
+                  prev: previousMetric?.tasks_completed,
+                  icon: Activity,
+                },
+              ].map(metric => {
+                const MetricIcon = metric.icon
+                const delta = metric.prev ? metric.value - metric.prev : 0
+                const deltaPct =
+                  metric.prev && metric.prev > 0 ? Math.round((delta / metric.prev) * 100) : 0
+                return (
+                  <div
+                    key={metric.label}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02]"
+                  >
+                    <div className="p-2 rounded-lg bg-[var(--brand-primary)]/10 flex-shrink-0">
+                      <MetricIcon
+                        size={16}
+                        className="text-[var(--brand-primary)]"
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-lg font-bold font-mono text-[var(--text-primary)]">
+                        <AnimatedValue value={metric.value} />
+                      </p>
+                      <p className="text-xs text-[var(--text-muted)]">{metric.label}</p>
+                    </div>
+                    {deltaPct !== 0 && (
+                      <span
+                        className={`text-xs font-medium ${deltaPct > 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                      >
+                        {deltaPct > 0 ? '+' : ''}
+                        {deltaPct}%
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Bento Grid — Charts + Quick Actions */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-5 gap-4">

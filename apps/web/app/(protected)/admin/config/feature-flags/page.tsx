@@ -12,17 +12,33 @@ import {
   type FeatureFlag,
 } from '@/hooks/useFeatureFlagsAdmin'
 
-// ── Toggle row ──
+// ── Toggle row with rollout slider ──
 function FlagRow({ flag }: { flag: FeatureFlag }) {
   const update = useUpdateFeatureFlag(flag.id)
   const remove = useDeleteFeatureFlag()
   const { success, error: toastError } = useToast()
+  const [localRollout, setLocalRollout] = useState<number | null>(null)
+  const rolloutPct = localRollout ?? flag.rollout_pct ?? 100
 
   async function handleToggle() {
     try {
       await update.mutateAsync({ enabled: !flag.enabled })
     } catch {
       toastError('Erro ao atualizar flag')
+    }
+  }
+
+  async function handleRolloutChange(pct: number) {
+    setLocalRollout(pct)
+  }
+
+  async function handleRolloutCommit() {
+    if (localRollout === null) return
+    try {
+      await update.mutateAsync({ rollout_pct: localRollout })
+      setLocalRollout(null)
+    } catch {
+      toastError('Erro ao atualizar rollout')
     }
   }
 
@@ -36,38 +52,63 @@ function FlagRow({ flag }: { flag: FeatureFlag }) {
   }
 
   return (
-    <div className="flex items-center gap-4 px-6 py-4">
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium font-mono text-[var(--text-primary)]">{flag.flag_name}</p>
-        {flag.description && (
-          <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{flag.description}</p>
-        )}
-      </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={flag.enabled}
-        onClick={handleToggle}
-        disabled={update.isPending}
-        className={`relative inline-flex h-6 w-11 rounded-full transition-all duration-200 disabled:opacity-60 ${
-          flag.enabled ? 'bg-[var(--brand-primary)]' : 'bg-[var(--bg-muted)]'
-        }`}
-        style={flag.enabled ? { boxShadow: '0 0 12px var(--glow-brand)' } : undefined}
-      >
-        <span
-          className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
-            flag.enabled ? 'translate-x-5' : 'translate-x-0'
+    <div className="px-6 py-4 space-y-2">
+      <div className="flex items-center gap-4">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium font-mono text-[var(--text-primary)]">
+            {flag.flag_name}
+          </p>
+          {flag.description && (
+            <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">{flag.description}</p>
+          )}
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={flag.enabled}
+          onClick={handleToggle}
+          disabled={update.isPending}
+          className={`relative inline-flex h-6 w-11 rounded-full transition-all duration-200 disabled:opacity-60 flex-shrink-0 ${
+            flag.enabled ? 'bg-[var(--brand-primary)]' : 'bg-[var(--bg-muted)]'
           }`}
-        />
-      </button>
-      <button
-        type="button"
-        onClick={handleDelete}
-        aria-label={`Remover ${flag.flag_name}`}
-        className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-      >
-        <Trash2 size={14} />
-      </button>
+          style={flag.enabled ? { boxShadow: '0 0 12px var(--glow-brand)' } : undefined}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
+              flag.enabled ? 'translate-x-5' : 'translate-x-0'
+            }`}
+          />
+        </button>
+        <button
+          type="button"
+          onClick={handleDelete}
+          aria-label={`Remover ${flag.flag_name}`}
+          className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all flex-shrink-0"
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+      {/* Rollout slider */}
+      {flag.enabled && (
+        <div className="flex items-center gap-3 pl-0">
+          <span className="text-[11px] text-[var(--text-muted)] w-14 flex-shrink-0">Rollout</span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={5}
+            value={rolloutPct}
+            onChange={e => handleRolloutChange(Number(e.target.value))}
+            onMouseUp={handleRolloutCommit}
+            onTouchEnd={handleRolloutCommit}
+            className="flex-1 h-1.5 rounded-full appearance-none bg-white/10 accent-[var(--brand-primary)]"
+            aria-label={`Rollout percentual para ${flag.flag_name}`}
+          />
+          <span className="text-xs font-mono text-[var(--text-secondary)] w-10 text-right flex-shrink-0">
+            {rolloutPct}%
+          </span>
+        </div>
+      )}
     </div>
   )
 }
@@ -76,6 +117,7 @@ function FlagRow({ flag }: { flag: FeatureFlag }) {
 function AddFlagForm({ onClose }: { onClose: () => void }) {
   const [flagName, setFlagName] = useState('')
   const [description, setDescription] = useState('')
+  const [rolloutPct, setRolloutPct] = useState(100)
   const create = useCreateFeatureFlag()
   const { success, error: toastError } = useToast()
 
@@ -87,6 +129,7 @@ function AddFlagForm({ onClose }: { onClose: () => void }) {
         flag_name: flagName.trim(),
         description: description.trim(),
         enabled: false,
+        rollout_pct: rolloutPct,
       })
       success('Flag criada')
       onClose()
@@ -137,6 +180,23 @@ function AddFlagForm({ onClose }: { onClose: () => void }) {
           />
         </div>
       </div>
+      {/* Rollout slider */}
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-[var(--text-muted)] w-20 flex-shrink-0">Rollout inicial</span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={5}
+          value={rolloutPct}
+          onChange={e => setRolloutPct(Number(e.target.value))}
+          className="flex-1 h-1.5 rounded-full appearance-none bg-white/10 accent-[var(--brand-primary)]"
+        />
+        <span className="text-xs font-mono text-[var(--text-secondary)] w-10 text-right">
+          {rolloutPct}%
+        </span>
+      </div>
+
       <div className="flex items-center gap-2 justify-end">
         <button
           type="button"

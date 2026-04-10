@@ -38,6 +38,8 @@ import {
 import clsx from 'clsx'
 import { useNavigationConfig } from '@/hooks/useNavigationConfig'
 import { useGlobalSearch } from '@/components/search'
+import { useOrganization } from '@/hooks/useOrganization'
+import { TenantSwitcher } from '@/components/common/TenantSwitcher'
 
 // Mapa de ícones dinâmicos — cobre todos os ícones usados em navigation configs
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -203,6 +205,7 @@ export function AppSidebar({
   const { user, logout } = useAuth()
   const pathname = usePathname()
   const globalSearch = useGlobalSearch()
+  const { org, orgs, switchOrg, isLoading: isOrgLoading } = useOrganization()
   const [tooltipItem, setTooltipItem] = useState<string | null>(null)
 
   // Usar hook de configuração dinâmica
@@ -415,6 +418,23 @@ export function AppSidebar({
             )}
           </button>
         </div>
+
+        {/* ── Tenant Switcher ── */}
+        {!isOrgLoading && orgs.length > 1 && !collapsed && (
+          <div className="px-2 pb-1">
+            <TenantSwitcher
+              tenants={orgs.map(o => ({
+                id: o.id,
+                name: o.name,
+                slug: o.slug,
+                logoUrl: o.logo_url,
+              }))}
+              currentTenantId={org?.id}
+              onSwitch={t => switchOrg(t.id)}
+              className="w-full"
+            />
+          </div>
+        )}
 
         {/* ── Grouped Navigation ── */}
         <nav
