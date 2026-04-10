@@ -87,3 +87,24 @@ export function useDeleteUser() {
     },
   })
 }
+
+export function useBulkDeactivateUsers() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: string[]) => usersService.bulkDeactivate(ids),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.all })
+    },
+  })
+}
+
+export function useBulkChangeUserRole() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ ids, role }: { ids: string[]; role: string }) =>
+      usersService.bulkChangeRole(ids, role),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: userKeys.all })
+    },
+  })
+}

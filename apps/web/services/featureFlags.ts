@@ -13,8 +13,9 @@ export type { FeatureFlag, FeatureFlagCreate, FeatureFlagUpdate } from '@templat
 // ============================================================================
 
 export const featureFlagsService = {
-  list: async (): Promise<{ items: FeatureFlag[]; total: number }> => {
-    return fetchJson<{ items: FeatureFlag[]; total: number }>('/api/feature-flags')
+  list: async (orgId?: string): Promise<{ items: FeatureFlag[]; total: number }> => {
+    const qs = orgId ? `?org_id=${encodeURIComponent(orgId)}` : ''
+    return fetchJson<{ items: FeatureFlag[]; total: number }>(`/api/feature-flags${qs}`)
   },
 
   create: async (payload: FeatureFlagCreate): Promise<FeatureFlag> => {

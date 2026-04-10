@@ -74,3 +74,45 @@ export const logger = {
   error: (message: string, context?: string, data?: Record<string, unknown>) =>
     log('error', message, context, data),
 }
+
+// ============================================================================
+// API Route Logging Wrapper
+// ============================================================================
+
+import type { NextRequest } from 'next/server'
+
+type RouteHandler = (request: NextRequest, ...args: never[]) => Promise<Response>
+
+/**
+ * Wraps an API route handler with structured request/response logging.
+ * Logs: method, path, status, duration_ms.
+ */
+export function withApiLog<T extends RouteHandler>(routeName: string, handler: T): T {
+  const wrapped = async (request: NextRequest, ...args: never[]) => {
+    const start = Date.now()
+    const method = request.method
+    const path = request.nextUrl.pathname
+    try {
+      const response = await handler(request, ...args)
+      const duration = Date.now() - start
+      const level = response.status >= 500 ? 'error' : response.status >= 400 ? 'warn' : 'info'
+      log(level, `${method} ${path} ${response.status} ${duration}ms`, routeName, {
+        method,
+        path,
+        status: response.status,
+        duration_ms: duration,
+      })
+      return response
+    } catch (err) {
+      const duration = Date.now() - start
+      log('error', `${method} ${path} UNHANDLED ${duration}ms`, routeName, {
+        method,
+        path,
+        duration_ms: duration,
+        error: err instanceof Error ? err.message : String(err),
+      })
+      throw err
+    }
+  }
+  return wrapped as T
+}

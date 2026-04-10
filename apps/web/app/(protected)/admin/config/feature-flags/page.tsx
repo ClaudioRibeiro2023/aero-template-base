@@ -11,6 +11,7 @@ import {
   useDeleteFeatureFlag,
   type FeatureFlag,
 } from '@/hooks/useFeatureFlagsAdmin'
+import { useOrganization } from '@/hooks/useOrganization'
 
 // ── Toggle row with rollout slider ──
 function FlagRow({ flag }: { flag: FeatureFlag }) {
@@ -220,7 +221,9 @@ function AddFlagForm({ onClose }: { onClose: () => void }) {
 
 // ── Page ──
 export default function FeatureFlagsPage() {
-  const { data, isLoading } = useFeatureFlags()
+  const { orgs } = useOrganization()
+  const [selectedOrgId, setSelectedOrgId] = useState<string | undefined>(undefined)
+  const { data, isLoading } = useFeatureFlags(selectedOrgId)
   const [showForm, setShowForm] = useState(false)
   const flags = data?.items ?? []
 
@@ -249,6 +252,28 @@ export default function FeatureFlagsPage() {
           Nova flag
         </button>
       </div>
+
+      {/* Filtro por organização */}
+      {orgs.length > 1 && (
+        <div className="relative z-10 mb-4">
+          <label htmlFor="org-filter" className="sr-only">
+            Filtrar por organização
+          </label>
+          <select
+            id="org-filter"
+            value={selectedOrgId ?? ''}
+            onChange={e => setSelectedOrgId(e.target.value || undefined)}
+            className="px-3 py-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-sm text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary)]/50"
+          >
+            <option value="">Minha organização</option>
+            {orgs.map(org => (
+              <option key={org.id} value={org.id}>
+                {org.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div className="relative z-10 glass-panel divide-y divide-[var(--glass-border)]">
         {/* Header row */}

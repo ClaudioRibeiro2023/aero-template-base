@@ -17,10 +17,11 @@ import {
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthUser } from '@/lib/auth-guard'
 import { auditLog } from '@/lib/audit-log'
+import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
+export const GET = withApiLog('feature-flags', async function GET(request: NextRequest) {
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
@@ -40,7 +41,10 @@ export async function GET(request: NextRequest) {
   if (!profile?.tenant_id) {
     return badRequest('Nenhum tenant associado ao usuario')
   }
-  const tenantId = profile.tenant_id
+
+  // ADMIN pode filtrar por org_id; demais veem apenas o próprio tenant
+  const orgIdParam = request.nextUrl.searchParams.get('org_id')
+  const tenantId = user.role === 'ADMIN' && orgIdParam ? orgIdParam : profile.tenant_id
 
   const { data, error: dbError } = await supabase
     .from('feature_flags')
@@ -54,9 +58,9 @@ export async function GET(request: NextRequest) {
   }
 
   return ok({ items: data ?? [], total: data?.length ?? 0 })
-}
+})
 
-export async function POST(request: NextRequest) {
+export const POST = withApiLog('feature-flags', async function POST(request: NextRequest) {
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 
@@ -117,4 +121,4 @@ export async function POST(request: NextRequest) {
   })
 
   return created(data)
-}
+})

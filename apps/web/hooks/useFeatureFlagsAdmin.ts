@@ -14,15 +14,15 @@ export type { FeatureFlag, FeatureFlagCreate, FeatureFlagUpdate } from '@/servic
 
 const featureFlagKeys = {
   all: ['feature-flags'] as const,
-  list: () => [...featureFlagKeys.all, 'list'] as const,
+  list: (orgId?: string) => [...featureFlagKeys.all, 'list', orgId] as const,
 }
 
 // ── Hooks ──
 
-export function useFeatureFlags() {
+export function useFeatureFlags(orgId?: string) {
   return useQuery<{ items: FeatureFlag[]; total: number }>({
-    queryKey: featureFlagKeys.list(),
-    queryFn: () => featureFlagsService.list(),
+    queryKey: featureFlagKeys.list(orgId),
+    queryFn: () => featureFlagsService.list(orgId),
     staleTime: 30_000,
   })
 }

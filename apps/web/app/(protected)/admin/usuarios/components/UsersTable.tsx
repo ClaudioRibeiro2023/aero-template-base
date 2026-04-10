@@ -9,11 +9,13 @@ import {
   ShieldAlert,
   Loader2,
   FileDown,
+  UserX,
+  ShieldCheck,
 } from 'lucide-react'
 import { EmptyState, ToastItem } from '@template/design-system'
 import { BulkActionBar } from '@/components/common/BulkActionBar'
 import { exportToCsv } from '@/lib/export-csv'
-import type { Profile } from '@/hooks/useUsers'
+import { useBulkDeactivateUsers, useBulkChangeUserRole, type Profile } from '@/hooks/useUsers'
 
 const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
   ADMIN: { bg: 'rgba(167,139,250,0.10)', text: '#a78bfa' },
@@ -48,6 +50,9 @@ export function UsersTable({
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
+  const bulkDeactivate = useBulkDeactivateUsers()
+  const bulkChangeRole = useBulkChangeUserRole()
+
   function toggleSelect(id: string) {
     setSelected(prev => {
       const next = new Set(prev)
@@ -78,6 +83,28 @@ export function UsersTable({
     ])
     setToast({ message: `${selectedUsers.length} usuários exportados`, type: 'success' })
     setSelected(new Set())
+  }
+
+  async function handleBulkDeactivate() {
+    if (!confirm(`Desativar ${selected.size} usuários selecionados?`)) return
+    try {
+      await bulkDeactivate.mutateAsync(Array.from(selected))
+      setToast({ message: `${selected.size} usuários desativados`, type: 'success' })
+      setSelected(new Set())
+    } catch {
+      setToast({ message: 'Erro ao desativar usuários', type: 'error' })
+    }
+  }
+
+  async function handleBulkChangeRole(role: string) {
+    if (!confirm(`Alterar role de ${selected.size} usuários para ${role}?`)) return
+    try {
+      await bulkChangeRole.mutateAsync({ ids: Array.from(selected), role })
+      setToast({ message: `${selected.size} usuários alterados para ${role}`, type: 'success' })
+      setSelected(new Set())
+    } catch {
+      setToast({ message: 'Erro ao alterar role dos usuários', type: 'error' })
+    }
   }
 
   return (
@@ -317,6 +344,20 @@ export function UsersTable({
         selectedCount={selected.size}
         onClear={() => setSelected(new Set())}
         actions={[
+          {
+            label: 'Desativar',
+            icon: <UserX size={14} />,
+            onClick: handleBulkDeactivate,
+            variant: 'danger',
+            disabled: bulkDeactivate.isPending,
+          },
+          {
+            label: 'Role → OPERADOR',
+            icon: <ShieldCheck size={14} />,
+            onClick: () => handleBulkChangeRole('OPERADOR'),
+            variant: 'primary',
+            disabled: bulkChangeRole.isPending,
+          },
           {
             label: 'Exportar CSV',
             icon: <FileDown size={14} />,

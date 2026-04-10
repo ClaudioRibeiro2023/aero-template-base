@@ -1,12 +1,26 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Loader2, Headphones, ChevronLeft, ChevronRight, FileDown } from 'lucide-react'
+import {
+  Plus,
+  Loader2,
+  Headphones,
+  ChevronLeft,
+  ChevronRight,
+  FileDown,
+  XCircle,
+  UserCheck,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { EmptyState, ToastItem } from '@template/design-system'
 import { useRealtimeTickets } from '@/hooks/useRealtimeSubscription'
-import { useTickets, type TicketFilters } from '@/hooks/useSupportTickets'
+import {
+  useTickets,
+  useBulkCloseTickets,
+  useBulkReassignTickets,
+  type TicketFilters,
+} from '@/hooks/useSupportTickets'
 import { TicketCard } from '@/components/support/TicketCard'
 import { BulkActionBar } from '@/components/common/BulkActionBar'
 import { exportToCsv } from '@/lib/export-csv'
@@ -39,6 +53,9 @@ export function TicketsListClient() {
   const { data, isLoading, isError } = useTickets(filters)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  const bulkClose = useBulkCloseTickets()
+  const bulkReassign = useBulkReassignTickets()
 
   // Real-time: lista atualiza automaticamente
   useRealtimeTickets()
@@ -85,6 +102,29 @@ export function TicketsListClient() {
     ])
     setToast({ message: `${selectedTickets.length} tickets exportados`, type: 'success' })
     setSelected(new Set())
+  }
+
+  async function handleBulkClose() {
+    if (!confirm(`Fechar ${selected.size} tickets selecionados?`)) return
+    try {
+      await bulkClose.mutateAsync(Array.from(selected))
+      setToast({ message: `${selected.size} tickets fechados`, type: 'success' })
+      setSelected(new Set())
+    } catch {
+      setToast({ message: 'Erro ao fechar tickets', type: 'error' })
+    }
+  }
+
+  async function handleBulkReassign() {
+    const assigneeId = prompt('ID do responsável para reatribuir:')
+    if (!assigneeId?.trim()) return
+    try {
+      await bulkReassign.mutateAsync({ ids: Array.from(selected), assigneeId: assigneeId.trim() })
+      setToast({ message: `${selected.size} tickets reatribuídos`, type: 'success' })
+      setSelected(new Set())
+    } catch {
+      setToast({ message: 'Erro ao reatribuir tickets', type: 'error' })
+    }
   }
 
   return (
@@ -220,6 +260,20 @@ export function TicketsListClient() {
         selectedCount={selected.size}
         onClear={() => setSelected(new Set())}
         actions={[
+          {
+            label: 'Fechar',
+            icon: <XCircle size={14} />,
+            onClick: handleBulkClose,
+            variant: 'danger',
+            disabled: bulkClose.isPending,
+          },
+          {
+            label: 'Reatribuir',
+            icon: <UserCheck size={14} />,
+            onClick: handleBulkReassign,
+            variant: 'primary',
+            disabled: bulkReassign.isPending,
+          },
           {
             label: 'Exportar CSV',
             icon: <FileDown size={14} />,

@@ -95,4 +95,20 @@ export const supportTicketsService = {
     })
     return res.data
   },
+
+  bulkClose: async (ids: string[]): Promise<{ affected: number }> => {
+    return fetchJson<{ affected: number }>('/api/support/tickets/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'close', ids }),
+    })
+  },
+
+  bulkReassign: async (ids: string[], assigneeId: string): Promise<{ affected: number }> => {
+    return fetchJson<{ affected: number }>('/api/support/tickets/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'reassign', ids, assignee_id: assigneeId }),
+    })
+  },
 }

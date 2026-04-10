@@ -61,4 +61,20 @@ export const usersService = {
   delete: async (id: string): Promise<void> => {
     await fetchJson(`/api/users/${id}`, { method: 'DELETE' })
   },
+
+  bulkDeactivate: async (ids: string[]): Promise<{ affected: number }> => {
+    return fetchJson<{ affected: number }>('/api/users/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'deactivate', ids }),
+    })
+  },
+
+  bulkChangeRole: async (ids: string[], role: string): Promise<{ affected: number }> => {
+    return fetchJson<{ affected: number }>('/api/users/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'change_role', ids, role }),
+    })
+  },
 }

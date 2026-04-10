@@ -109,3 +109,24 @@ export function useRateTicket(id: string) {
     },
   })
 }
+
+export function useBulkCloseTickets() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ids: string[]) => supportTicketsService.bulkClose(ids),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ticketKeys.all })
+    },
+  })
+}
+
+export function useBulkReassignTickets() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ ids, assigneeId }: { ids: string[]; assigneeId: string }) =>
+      supportTicketsService.bulkReassign(ids, assigneeId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ticketKeys.all })
+    },
+  })
+}
