@@ -1,5 +1,11 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+/**
+ * Auth guard — delega para @template/data SupabaseAuthGateway.
+ *
+ * @deprecated v3.0: Use `getAuthGateway()` de `@/lib/data` diretamente.
+ * Assinaturas mantidas para backward-compatibility durante transição.
+ * Este arquivo será removido no Sprint 7 (cleanup).
+ */
+import { SupabaseAuthGateway } from '@template/data/supabase'
 import type { UserRole } from '@template/types'
 
 interface GuardResult {
@@ -7,48 +13,25 @@ interface GuardResult {
   error: string | null
 }
 
+/** @deprecated Use `getAuthGateway().getUser()` de `@/lib/data` */
 export async function getAuthUser(): Promise<GuardResult> {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (c: { name: string; value: string; options?: Record<string, unknown> }[]) =>
-          c.forEach(({ name, value, options }) => cookieStore.set(name, value, options as never)),
-      },
-    }
-  )
-
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-  if (error || !user) return { user: null, error: 'Unauthorized' }
-
-  // Get role from profile
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
+  const gateway = new SupabaseAuthGateway()
+  const result = await gateway.getUser()
   return {
-    user: {
-      id: user.id,
-      email: user.email ?? '',
-      role: (profile?.role ?? 'VIEWER') as UserRole,
-    },
-    error: null,
+    user: result.user
+      ? { id: result.user.id, email: result.user.email, role: result.user.role as UserRole }
+      : null,
+    error: result.error,
   }
 }
 
+/** @deprecated Use `getAuthGateway().getUser()` de `@/lib/data` */
 export async function requireAuth(): Promise<{ id: string; email: string; role: UserRole } | null> {
   const { user } = await getAuthUser()
   return user
 }
 
+/** @deprecated Use `getAuthGateway().requireRole()` de `@/lib/data` */
 export async function requireRole(
   roles: UserRole | UserRole[]
 ): Promise<{ id: string; email: string; role: UserRole } | null> {

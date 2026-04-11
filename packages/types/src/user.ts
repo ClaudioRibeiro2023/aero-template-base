@@ -42,8 +42,8 @@ export interface UserUpdate {
   email?: string
   role?: UserRole
   is_active?: boolean
-  phone?: string
-  department?: string
+  phone?: string | null
+  department?: string | null
 }
 
 /**

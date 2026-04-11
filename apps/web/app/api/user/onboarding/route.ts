@@ -1,23 +1,26 @@
 /**
  * GET  /api/user/onboarding — Retorna progresso atual do onboarding
  * PATCH /api/user/onboarding — Atualiza progresso do onboarding
+ *
+ * v3.0: Migrado para @template/data auth gateway + SupabaseDbClient.
  */
 import type { NextRequest } from 'next/server'
-import { createServerSupabase } from '@/app/lib/supabase-server'
 import { requireJson } from '@/lib/api-guard'
 import { ok, badRequest, unauthorized, serverError } from '@/lib/api-response'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getAuthGateway } from '@/lib/data'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
 export const GET = withApiLog('user-onboarding', async function GET(_request: NextRequest) {
-  const { user, error } = await getAuthUser()
+  const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 
   try {
-    const supabase = await createServerSupabase()
-    const { data } = await supabase
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
+    const { data } = await client
       .from('profiles')
       .select('onboarding_step')
       .eq('id', user.id)
@@ -33,7 +36,7 @@ export const PATCH = withApiLog('user-onboarding', async function PATCH(request:
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 
-  const { user, error } = await getAuthUser()
+  const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 
   const body = await request.json().catch(() => null)
@@ -42,14 +45,15 @@ export const PATCH = withApiLog('user-onboarding', async function PATCH(request:
   }
 
   try {
-    const supabase = await createServerSupabase()
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
     const updateData: Record<string, unknown> = { onboarding_step: body.step }
 
     if (body.step >= 5) {
       updateData.onboarding_completed_at = new Date().toISOString()
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await client
       .from('profiles')
       .update(updateData)
       .eq('id', user.id)

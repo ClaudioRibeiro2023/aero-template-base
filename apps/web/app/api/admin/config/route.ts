@@ -2,11 +2,11 @@
  * GET   /api/admin/config  — busca config do tenant do usuario
  * PATCH /api/admin/config  — atualiza config (ADMIN/GESTOR)
  *
- * Megaplan V4 Sprint B: Cookie auth (padrao tasks), sem x-tenant-id header.
+ * v3.0: Migrado para @template/data auth gateway + SupabaseDbClient.
  */
 import type { NextRequest } from 'next/server'
 import { z } from 'zod'
-import { createServerSupabase } from '@/app/lib/supabase-server'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import {
   ok,
@@ -17,7 +17,7 @@ import {
   tooManyRequests,
   notFound,
 } from '@/lib/api-response'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -67,14 +67,15 @@ export const GET = withApiLog('admin-config', async function GET(request: NextRe
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()
 
-  const { user } = await getAuthUser()
+  const { user } = await getAuthGateway().getUser()
   if (!user) return unauthorized()
   if (user.role !== 'ADMIN' && user.role !== 'GESTOR') return forbidden('Acesso restrito')
 
-  const supabase = createServerSupabase()
+  const db = new SupabaseDbClient()
+  const client = db.asAdmin()
 
   // Buscar tenant_id do profile do usuario
-  const { data: profile } = await supabase
+  const { data: profile } = await client
     .from('profiles')
     .select('tenant_id')
     .eq('id', user.id)
@@ -83,12 +84,12 @@ export const GET = withApiLog('admin-config', async function GET(request: NextRe
   const tenantId = profile?.tenant_id
   if (!tenantId) {
     // Fallback: buscar config do primeiro tenant
-    const { data, error } = await supabase.from('admin_config').select('*').limit(1).single()
+    const { data, error } = await client.from('admin_config').select('*').limit(1).single()
     if (error) return notFound('Nenhuma configuracao encontrada')
     return ok(data)
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await client
     .from('admin_config')
     .select('*')
     .eq('tenant_id', tenantId)
@@ -106,7 +107,7 @@ export const PATCH = withApiLog('admin-config', async function PATCH(request: Ne
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()
 
-  const { user } = await getAuthUser()
+  const { user } = await getAuthGateway().getUser()
   if (!user) return unauthorized()
   if (user.role !== 'ADMIN' && user.role !== 'GESTOR') return forbidden('Acesso restrito')
 
@@ -120,10 +121,11 @@ export const PATCH = withApiLog('admin-config', async function PATCH(request: Ne
     return badRequest('JSON invalido')
   }
 
-  const supabase = createServerSupabase()
+  const db = new SupabaseDbClient()
+  const client = db.asAdmin()
 
   // Buscar tenant_id do profile
-  const { data: profile } = await supabase
+  const { data: profile } = await client
     .from('profiles')
     .select('tenant_id')
     .eq('id', user.id)
@@ -142,7 +144,7 @@ export const PATCH = withApiLog('admin-config', async function PATCH(request: Ne
   if (body.default_language !== undefined) updatePayload.default_language = body.default_language
   if (body.default_timezone !== undefined) updatePayload.default_timezone = body.default_timezone
 
-  let query = supabase.from('admin_config').update(updatePayload)
+  let query = client.from('admin_config').update(updatePayload)
 
   if (tenantId) {
     query = query.eq('tenant_id', tenantId)

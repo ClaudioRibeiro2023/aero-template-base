@@ -3,13 +3,9 @@ import { cookies } from 'next/headers'
 
 /**
  * Creates a cookie-based Supabase client for API routes (async, Next.js 15+).
- * Uses the anon key + cookie auth (respects RLS per-user).
  *
- * Centraliza o cookie adapter — nenhuma route precisa repetir esse boilerplate.
- *
- * Nota: o generic <Database> não é passado porque o tipo manual (não gerado por
- * `supabase gen types`) não inclui __InternalSupabase, tornando as queries `never`.
- * Ao migrar para tipos gerados automaticamente, adicionar <Database> aqui.
+ * @deprecated v3.0: Use `new SupabaseDbClient().asUser()` de `@template/data/supabase`.
+ * Este arquivo será removido no Sprint 7 (cleanup).
  */
 export async function createSupabaseCookieClient() {
   const cookieStore = await cookies()

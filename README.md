@@ -127,6 +127,19 @@ Configura nome do projeto, namespace, Supabase e branding interativamente.
 pnpm create-module
 ```
 
+### Setup QA User (Aero Studio Squad)
+
+Para habilitar auditoria interna pela squad (Ana, Valentina, etc.), crie o usuário QA padrão no Supabase do projeto:
+
+```bash
+bash scripts/setup-qa-user.sh <SUPABASE_URL> <SERVICE_ROLE_KEY>
+```
+
+- Email: `qa@aeroeng.tech` / Role: `super_admin`
+- Key disponível em: Supabase Dashboard → Project Settings → API → service_role
+- Idempotente: seguro para rodar múltiplas vezes
+- Credenciais centralizadas em `factory/quality/.qa-credentials.yaml` (gitignored)
+
 Gera a estrutura de um novo modulo com CRUD, rotas e componentes.
 
 ---

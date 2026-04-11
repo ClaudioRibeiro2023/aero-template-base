@@ -1,10 +1,11 @@
 import { ok, serverError } from '@/lib/api-response'
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { SupabaseDbClient } from '@template/data/supabase'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST() {
-  const supabase = await createSupabaseCookieClient()
+  const db = new SupabaseDbClient()
+  const supabase = await db.asUser()
 
   const { error } = await supabase.auth.signOut()
   if (error) {

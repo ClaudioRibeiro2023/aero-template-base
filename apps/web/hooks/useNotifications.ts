@@ -122,5 +122,36 @@ export function useNotifications() {
     dismiss,
     clearAll,
     wsStatus: ws.status,
+    // Bulk operation helpers
+    notifyBulkClose: (count: number) =>
+      addNotification(
+        'Tickets Fechados',
+        `${count} ticket${count > 1 ? 's' : ''} fechado${count > 1 ? 's' : ''} com sucesso.`,
+        'success'
+      ),
+    notifyBulkReassign: (count: number) =>
+      addNotification(
+        'Tickets Reatribuídos',
+        `${count} ticket${count > 1 ? 's' : ''} reatribuído${count > 1 ? 's' : ''} com sucesso.`,
+        'info'
+      ),
+    notifyBulkDeactivate: (count: number) =>
+      addNotification(
+        'Usuários Desativados',
+        `${count} usuário${count > 1 ? 's' : ''} desativado${count > 1 ? 's' : ''}.`,
+        'warning'
+      ),
+    notifyBulkRoleChange: (count: number, role: string) =>
+      addNotification(
+        'Role Alterado',
+        `${count} usuário${count > 1 ? 's' : ''} alterado${count > 1 ? 's' : ''} para ${role}.`,
+        'info'
+      ),
+    notifyBulkExport: (count: number, format: string) =>
+      addNotification(
+        'Exportação Concluída',
+        `${count} registro${count > 1 ? 's' : ''} exportado${count > 1 ? 's' : ''} em ${format}.`,
+        'success'
+      ),
   }
 }

@@ -1,10 +1,12 @@
 /**
  * GET /api/quality/reports/[id] — busca relatório de qualidade por ID
+ *
+ * v3.0: Migrado para @template/data repository pattern.
  */
 import type { NextRequest } from 'next/server'
 import { ok, unauthorized, notFound, tooManyRequests, serverError } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { getRepository, getAuthGateway } from '@/lib/data'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,23 +15,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (!success) return tooManyRequests()
 
-  const supabase = await createSupabaseCookieClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return unauthorized()
+  const { user, error } = await getAuthGateway().getUser()
+  if (error || !user) return unauthorized()
 
-  const { id } = await params
-  const { data, error } = await supabase
-    .from('quality_reports')
-    .select('id, overall_score, results, created_by, created_at')
-    .eq('id', id)
-    .single()
-
-  if (error?.code === 'PGRST116') return notFound()
-  if (error) {
-    console.error('[quality/reports/GET:id]', error)
+  try {
+    const { id } = await params
+    const reports = getRepository('qualityReports')
+    const data = await reports.findById(id)
+    if (!data) return notFound()
+    return ok(data)
+  } catch (err) {
+    console.error('[quality/reports/GET:id]', err)
     return serverError()
   }
-  return ok(data)
 }

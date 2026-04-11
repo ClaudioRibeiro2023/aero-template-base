@@ -3,7 +3,7 @@ import { ok, tooManyRequests } from '@/lib/api-response'
 import { parseBody } from '@/lib/validate'
 import { ResetPasswordSchema } from '@/schemas/auth'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { SupabaseDbClient } from '@template/data/supabase'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
   const { data, error: parseError } = await parseBody(request, ResetPasswordSchema)
   if (parseError) return parseError
 
-  const supabase = await createSupabaseCookieClient()
+  const db = new SupabaseDbClient()
+  const supabase = await db.asUser()
 
   // Validate APP_URL to prevent redirect to arbitrary domains
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''

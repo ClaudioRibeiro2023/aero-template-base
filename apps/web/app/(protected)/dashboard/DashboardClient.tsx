@@ -293,16 +293,16 @@ interface DashboardClientProps {
 }
 
 const STORAGE_KEY = 'dashboard-widget-order'
+const SECTION_STORAGE_KEY = 'dashboard-section-order'
 
-function useWidgetOrder(defaultKeys: string[]) {
+function useWidgetOrder(defaultKeys: string[], storageKey = STORAGE_KEY) {
   const [order, setOrder] = useState<string[]>(defaultKeys)
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY)
+      const saved = localStorage.getItem(storageKey)
       if (saved) {
         const parsed: string[] = JSON.parse(saved)
-        // Only restore if saved keys match current keys
         if (parsed.length === defaultKeys.length && parsed.every(k => defaultKeys.includes(k))) {
           setOrder(parsed)
         }
@@ -312,14 +312,17 @@ function useWidgetOrder(defaultKeys: string[]) {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const saveOrder = useCallback((newOrder: string[]) => {
-    setOrder(newOrder)
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrder))
-    } catch {
-      // ignore
-    }
-  }, [])
+  const saveOrder = useCallback(
+    (newOrder: string[]) => {
+      setOrder(newOrder)
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(newOrder))
+      } catch {
+        // ignore
+      }
+    },
+    [storageKey]
+  )
 
   return { order, saveOrder }
 }
@@ -341,12 +344,22 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
   const latestMetric = metrics[0]
   const previousMetric = metrics[1]
 
-  // Drag-and-drop widget ordering
+  // Drag-and-drop widget ordering (KPI cards)
   const { order, saveOrder } = useWidgetOrder(KPI_CARDS.map(c => c.key))
   const orderedCards = order.map(key => KPI_CARDS.find(c => c.key === key)!).filter(Boolean)
   const dragIndexRef = useRef<number | null>(null)
   const [dragOver, setDragOver] = useState<number | null>(null)
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
+
+  // Drag-and-drop section ordering (bottom sections)
+  const DEFAULT_SECTIONS = ['chart-actions', 'status-activity'] as const
+  const { order: sectionOrder, saveOrder: saveSectionOrder } = useWidgetOrder(
+    [...DEFAULT_SECTIONS],
+    SECTION_STORAGE_KEY
+  )
+  const sectionDragRef = useRef<number | null>(null)
+  const [sectionDragOver, setSectionDragOver] = useState<number | null>(null)
+  const [sectionFocused, setSectionFocused] = useState<number | null>(null)
 
   function handleDragStart(index: number) {
     dragIndexRef.current = index
@@ -375,6 +388,58 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
   function handleDragEnd() {
     dragIndexRef.current = null
     setDragOver(null)
+  }
+
+  // Section DnD handlers
+  function handleSectionDragStart(index: number) {
+    sectionDragRef.current = index
+  }
+
+  function handleSectionDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault()
+    setSectionDragOver(index)
+  }
+
+  function handleSectionDrop(index: number) {
+    const from = sectionDragRef.current
+    if (from === null || from === index) {
+      sectionDragRef.current = null
+      setSectionDragOver(null)
+      return
+    }
+    const newOrder = [...sectionOrder]
+    const [moved] = newOrder.splice(from, 1)
+    newOrder.splice(index, 0, moved)
+    saveSectionOrder(newOrder)
+    sectionDragRef.current = null
+    setSectionDragOver(null)
+  }
+
+  function handleSectionDragEnd() {
+    sectionDragRef.current = null
+    setSectionDragOver(null)
+  }
+
+  function handleSectionKeyDown(e: React.KeyboardEvent, index: number) {
+    const len = sectionOrder.length
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      ;(e.currentTarget as HTMLElement).blur()
+      return
+    }
+    if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return
+    e.preventDefault()
+    const newOrder = [...sectionOrder]
+    let targetIndex = index
+    if (e.key === 'ArrowUp') targetIndex = Math.max(0, index - 1)
+    else if (e.key === 'ArrowDown') targetIndex = Math.min(len - 1, index + 1)
+    else if (e.key === 'Home') targetIndex = 0
+    else if (e.key === 'End') targetIndex = len - 1
+    if (targetIndex === index) return
+    const [moved] = newOrder.splice(index, 1)
+    newOrder.splice(targetIndex, 0, moved)
+    saveSectionOrder(newOrder)
+    setSectionFocused(targetIndex)
   }
 
   function handleKeyDown(e: React.KeyboardEvent, index: number) {
@@ -547,135 +612,203 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
         </section>
       )}
 
-      {/* Bento Grid — Charts + Quick Actions */}
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Chart card — spans 3 cols */}
-        <div className="lg:col-span-3 glass-panel p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="text-sm font-semibold text-[var(--text-primary)]">Atividade Mensal</h2>
-              <p className="text-xs text-[var(--text-muted)]">Últimos 6 meses</p>
+      {/* Reorderable Sections */}
+      <div className="relative z-10 space-y-4">
+        {sectionOrder.map((sectionId, sIdx) => (
+          <div
+            key={sectionId}
+            data-section-id={sectionId}
+            draggable
+            tabIndex={0}
+            role="listitem"
+            aria-label={`Seção ${sectionId === 'chart-actions' ? 'Gráfico e Ações' : 'Status e Atividade'}, posição ${sIdx + 1} de ${sectionOrder.length}. Use setas para mover.`}
+            onDragStart={() => handleSectionDragStart(sIdx)}
+            onDragOver={e => handleSectionDragOver(e, sIdx)}
+            onDrop={() => handleSectionDrop(sIdx)}
+            onDragEnd={handleSectionDragEnd}
+            onFocus={() => setSectionFocused(sIdx)}
+            onBlur={() => setSectionFocused(null)}
+            onKeyDown={e => handleSectionKeyDown(e, sIdx)}
+            className="group/section relative"
+            style={{
+              opacity: sectionDragRef.current === sIdx ? 0.5 : 1,
+              outline:
+                sectionFocused === sIdx
+                  ? '2px solid var(--brand-primary)'
+                  : sectionDragOver === sIdx
+                    ? '2px dashed var(--brand-primary)'
+                    : undefined,
+              borderRadius: 'var(--radius-lg)',
+            }}
+          >
+            {/* Section drag handle */}
+            <div
+              className="absolute top-3 right-3 z-10 opacity-0 group-hover/section:opacity-60 transition-opacity cursor-grab active:cursor-grabbing"
+              aria-hidden="true"
+            >
+              <GripVertical size={14} className="text-[var(--text-muted)]" />
             </div>
-            <div className="p-2 rounded-lg bg-[var(--brand-primary)]/10" aria-hidden="true">
-              <TrendingUp size={16} className="text-[var(--brand-primary)]" />
-            </div>
-          </div>
-          {loading ? (
-            <div className="h-36 flex items-end gap-3" aria-label="Carregando gráfico">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton
-                  key={i}
-                  className="flex-1 rounded-t-md"
-                  style={{ height: `${40 + i * 10}%` }}
-                />
-              ))}
-            </div>
-          ) : (
-            <MiniBarChart />
-          )}
-        </div>
 
-        {/* Quick Actions — spans 2 cols */}
-        <div className="lg:col-span-2 glass-panel p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-sm font-semibold text-[var(--text-primary)]">Ações Rápidas</h2>
-            <div className="p-2 rounded-lg bg-[var(--accent-purple)]/10" aria-hidden="true">
-              <Zap size={16} className="text-[var(--accent-purple)]" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            {QUICK_ACTIONS.map(action => {
-              const ActionIcon = action.icon
-              return (
-                <Link
-                  key={action.path}
-                  href={action.path}
-                  className="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-white/[0.03] group"
-                >
-                  <div className="p-2 rounded-lg bg-[var(--brand-primary)]/10 flex-shrink-0 group-hover:bg-[var(--brand-primary)]/20 transition-colors">
-                    <ActionIcon
-                      size={14}
-                      className="text-[var(--brand-primary)]"
-                      aria-hidden="true"
-                    />
+            {sectionId === 'chart-actions' && (
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                {/* Chart card — spans 3 cols */}
+                <div className="lg:col-span-3 glass-panel p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <div>
+                      <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+                        Atividade Mensal
+                      </h2>
+                      <p className="text-xs text-[var(--text-muted)]">Últimos 6 meses</p>
+                    </div>
+                    <div className="p-2 rounded-lg bg-[var(--brand-primary)]/10" aria-hidden="true">
+                      <TrendingUp size={16} className="text-[var(--brand-primary)]" />
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] transition-colors">
-                      {action.label}
-                    </p>
-                    <p className="text-xs text-[var(--text-muted)] truncate">
-                      {action.description}
-                    </p>
-                  </div>
-                  <ArrowUpRight
-                    size={14}
-                    className="flex-shrink-0 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-hidden="true"
-                  />
-                </Link>
-              )
-            })}
-          </div>
-        </div>
-      </div>
+                  {loading ? (
+                    <div className="h-36 flex items-end gap-3" aria-label="Carregando gráfico">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <Skeleton
+                          key={i}
+                          className="flex-1 rounded-t-md"
+                          style={{ height: `${40 + i * 10}%` }}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <MiniBarChart />
+                  )}
+                </div>
 
-      {/* Bottom Bento Row — Status + Activity */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* System Status */}
-        <div className="glass-panel p-6">
-          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">
-            Status do Sistema
-          </h3>
-          <div className="space-y-3">
-            {[
-              { label: 'API', status: 'Operacional', color: 'bg-emerald-400' },
-              { label: 'Banco de Dados', status: 'Operacional', color: 'bg-emerald-400' },
-              { label: 'Autenticação', status: 'Operacional', color: 'bg-emerald-400' },
-            ].map(item => (
-              <div key={item.label} className="flex items-center justify-between">
-                <span className="text-sm text-[var(--text-secondary)]">{item.label}</span>
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${item.color}`} aria-hidden="true" />
-                  <span className="text-xs text-[var(--text-muted)]">{item.status}</span>
+                {/* Quick Actions — spans 2 cols */}
+                <div className="lg:col-span-2 glass-panel p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+                      Ações Rápidas
+                    </h2>
+                    <div className="p-2 rounded-lg bg-[var(--accent-purple)]/10" aria-hidden="true">
+                      <Zap size={16} className="text-[var(--accent-purple)]" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {QUICK_ACTIONS.map(action => {
+                      const ActionIcon = action.icon
+                      return (
+                        <Link
+                          key={action.path}
+                          href={action.path}
+                          className="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-white/[0.03] group"
+                        >
+                          <div className="p-2 rounded-lg bg-[var(--brand-primary)]/10 flex-shrink-0 group-hover:bg-[var(--brand-primary)]/20 transition-colors">
+                            <ActionIcon
+                              size={14}
+                              className="text-[var(--brand-primary)]"
+                              aria-hidden="true"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] transition-colors">
+                              {action.label}
+                            </p>
+                            <p className="text-xs text-[var(--text-muted)] truncate">
+                              {action.description}
+                            </p>
+                          </div>
+                          <ArrowUpRight
+                            size={14}
+                            className="flex-shrink-0 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity"
+                            aria-hidden="true"
+                          />
+                        </Link>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+            )}
 
-        {/* Recent Activity */}
-        <div className="lg:col-span-2 glass-panel p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Atividade Recente</h3>
-            <Link
-              href="/dashboard/analytics"
-              className="text-xs text-[var(--brand-primary)] hover:underline flex items-center gap-1"
-            >
-              Ver tudo <ArrowUpRight size={12} aria-hidden="true" />
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {[
-              { action: 'Novo usuário cadastrado', time: 'Há 5 min', icon: Users },
-              { action: 'Relatório exportado', time: 'Há 12 min', icon: FileText },
-              { action: 'Configuração atualizada', time: 'Há 1h', icon: Settings },
-              { action: 'Login do administrador', time: 'Há 2h', icon: Activity },
-            ].map((item, i) => {
-              const ItemIcon = item.icon
-              return (
-                <div key={i} className="flex items-center gap-3 py-1">
-                  <div className="p-1.5 rounded-lg bg-white/[0.03]">
-                    <ItemIcon size={14} className="text-[var(--text-muted)]" aria-hidden="true" />
+            {sectionId === 'status-activity' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* System Status */}
+                <div className="glass-panel p-6">
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-4">
+                    Status do Sistema
+                  </h3>
+                  <div className="space-y-3">
+                    {[
+                      { label: 'API', status: 'Operacional', color: 'bg-emerald-400' },
+                      {
+                        label: 'Banco de Dados',
+                        status: 'Operacional',
+                        color: 'bg-emerald-400',
+                      },
+                      {
+                        label: 'Autenticação',
+                        status: 'Operacional',
+                        color: 'bg-emerald-400',
+                      },
+                    ].map(item => (
+                      <div key={item.label} className="flex items-center justify-between">
+                        <span className="text-sm text-[var(--text-secondary)]">{item.label}</span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-2 h-2 rounded-full ${item.color}`}
+                            aria-hidden="true"
+                          />
+                          <span className="text-xs text-[var(--text-muted)]">{item.status}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <p className="flex-1 text-sm text-[var(--text-secondary)]">{item.action}</p>
-                  <span className="text-xs text-[var(--text-muted)] flex-shrink-0">
-                    {item.time}
-                  </span>
                 </div>
-              )
-            })}
+
+                {/* Recent Activity */}
+                <div className="lg:col-span-2 glass-panel p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                      Atividade Recente
+                    </h3>
+                    <Link
+                      href="/dashboard/analytics"
+                      className="text-xs text-[var(--brand-primary)] hover:underline flex items-center gap-1"
+                    >
+                      Ver tudo <ArrowUpRight size={12} aria-hidden="true" />
+                    </Link>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      { action: 'Novo usuário cadastrado', time: 'Há 5 min', icon: Users },
+                      { action: 'Relatório exportado', time: 'Há 12 min', icon: FileText },
+                      { action: 'Configuração atualizada', time: 'Há 1h', icon: Settings },
+                      { action: 'Login do administrador', time: 'Há 2h', icon: Activity },
+                    ].map((item, i) => {
+                      const ItemIcon = item.icon
+                      return (
+                        <div key={i} className="flex items-center gap-3 py-1">
+                          <div className="p-1.5 rounded-lg bg-white/[0.03]">
+                            <ItemIcon
+                              size={14}
+                              className="text-[var(--text-muted)]"
+                              aria-hidden="true"
+                            />
+                          </div>
+                          <p className="flex-1 text-sm text-[var(--text-secondary)]">
+                            {item.action}
+                          </p>
+                          <span className="text-xs text-[var(--text-muted)] flex-shrink-0">
+                            {item.time}
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        ))}
+        <p className="text-[11px] text-[var(--text-muted)] text-right">
+          Arraste seções para reordenar
+        </p>
       </div>
     </main>
   )

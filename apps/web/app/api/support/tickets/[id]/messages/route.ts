@@ -1,6 +1,9 @@
 /**
  * GET  /api/support/tickets/[id]/messages  — lista mensagens do ticket
  * POST /api/support/tickets/[id]/messages  — cria mensagem no ticket
+ *
+ * v3.0: Usa SupabaseDbClient para acesso a support_messages.
+ * (Tabela support_messages não tem repositório dedicado — CRUD simples via client direto.)
  */
 import type { NextRequest } from 'next/server'
 import { messageCreateSchema } from '@template/shared/schemas'
@@ -14,7 +17,8 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { getAuthGateway } from '@/lib/data'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -29,24 +33,25 @@ export const GET = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
     if (!success) return tooManyRequests()
 
-    const supabase = await createSupabaseCookieClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return unauthorized()
+    const { user, error } = await getAuthGateway().getUser()
+    if (error || !user) return unauthorized()
 
-    const { id } = await params
-    const { data, error } = await supabase
-      .from('support_messages')
-      .select(MSG_COLUMNS)
-      .eq('ticket_id', id)
-      .order('created_at', { ascending: true })
+    try {
+      const { id } = await params
+      const db = new SupabaseDbClient()
+      const client = await db.asUser()
+      const { data, error: dbError } = await client
+        .from('support_messages')
+        .select(MSG_COLUMNS)
+        .eq('ticket_id', id)
+        .order('created_at', { ascending: true })
 
-    if (error) {
-      console.error('[support/messages/GET]', error)
+      if (dbError) throw dbError
+      return ok(data)
+    } catch (err) {
+      console.error('[support/messages/GET]', err)
       return serverError()
     }
-    return ok(data)
   }
 )
 
@@ -61,11 +66,8 @@ export const POST = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
     if (!success) return tooManyRequests()
 
-    const supabase = await createSupabaseCookieClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return unauthorized()
+    const { user, error } = await getAuthGateway().getUser()
+    if (error || !user) return unauthorized()
 
     let body: unknown
     try {
@@ -79,23 +81,27 @@ export const POST = withApiLog(
       return badRequest('Dados inválidos', parsed.error.flatten().fieldErrors)
     }
 
-    const { id } = await params
-    const { data, error } = await supabase
-      .from('support_messages')
-      .insert({
-        ticket_id: id,
-        content: parsed.data.content,
-        is_internal: parsed.data.is_internal,
-        message_type: parsed.data.is_internal ? 'internal_note' : 'reply',
-        created_by: user.id,
-      })
-      .select(MSG_COLUMNS)
-      .single()
+    try {
+      const { id } = await params
+      const db = new SupabaseDbClient()
+      const client = await db.asUser()
+      const { data, error: dbError } = await client
+        .from('support_messages')
+        .insert({
+          ticket_id: id,
+          content: parsed.data.content,
+          is_internal: parsed.data.is_internal,
+          message_type: parsed.data.is_internal ? 'internal_note' : 'reply',
+          created_by: user.id,
+        })
+        .select(MSG_COLUMNS)
+        .single()
 
-    if (error) {
-      console.error('[support/messages/POST]', error)
+      if (dbError) throw dbError
+      return created(data)
+    } catch (err) {
+      console.error('[support/messages/POST]', err)
       return serverError()
     }
-    return created(data)
   }
 )

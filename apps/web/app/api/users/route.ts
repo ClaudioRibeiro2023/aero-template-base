@@ -2,7 +2,7 @@
  * GET  /api/users  — lista profiles (ADMIN only)
  * POST /api/users  — cria novo usuario + profile (ADMIN only)
  *
- * Megaplan V4 Sprint A: Users CRUD real.
+ * v3.0: Migrado para @template/data repository pattern.
  */
 import type { NextRequest } from 'next/server'
 import { userCreateSchema } from '@template/shared/schemas'
@@ -17,8 +17,7 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { getAuthUser } from '@/lib/auth-guard'
-import { createServerSupabase } from '@/app/lib/supabase-server'
+import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -29,12 +28,10 @@ export const GET = withApiLog('users', async function GET(request: NextRequest) 
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (!success) return tooManyRequests()
 
-  const { user, error: authError } = await getAuthUser()
+  const { user, error: authError } = await getAuthGateway().getUser()
   if (!user) return unauthorized(authError ?? undefined)
   if (user.role !== 'ADMIN' && user.role !== 'GESTOR')
     return forbidden('Acesso restrito a administradores')
-
-  const supabase = createServerSupabase()
 
   const url = new URL(request.url)
   const search = url.searchParams.get('search')
@@ -46,38 +43,72 @@ export const GET = withApiLog('users', async function GET(request: NextRequest) 
     Math.max(1, parseInt(url.searchParams.get('page_size') ?? '20', 10))
   )
 
-  let query = supabase
-    .from('profiles')
-    .select(
-      'id, email, display_name, avatar_url, phone, department, role, is_active, tenant_id, created_at, updated_at',
-      { count: 'exact' }
-    )
-    .order('created_at', { ascending: false })
-    .range((page - 1) * pageSize, page * pageSize - 1)
+  try {
+    const users = getRepository('users')
 
-  if (search) {
-    // Sanitize: escape SQL wildcards + remove PostgREST special chars, limit length
-    const safe = search
-      .slice(0, 50)
-      .replace(/[%_]/g, '')
-      .replace(/[,.()"'\\]/g, '')
-    if (safe) query = query.or(`display_name.ilike.%${safe}%,email.ilike.%${safe}%`)
-  }
-  if (role) query = query.eq('role', role)
-  if (activeOnly === 'true') query = query.eq('is_active', true)
+    // Search com or() requer acesso direto ao client por ora
+    // (IRepository não suporta OR nativo — será adicionado em versão futura)
+    if (search) {
+      const { SupabaseDbClient } = await import('@template/data/supabase')
+      const db = new SupabaseDbClient()
+      const client = db.asAdmin()
 
-  const { data, error, count } = await query
-  if (error) {
-    console.error('[users/GET]', error)
+      const safe = search
+        .slice(0, 50)
+        .replace(/[%_]/g, '')
+        .replace(/[,.()"'\\]/g, '')
+
+      let query = client
+        .from('profiles')
+        .select(
+          'id, email, display_name, avatar_url, phone, department, role, is_active, tenant_id, created_at, updated_at',
+          { count: 'exact' }
+        )
+        .order('created_at', { ascending: false })
+        .range((page - 1) * pageSize, page * pageSize - 1)
+
+      if (safe) query = query.or(`display_name.ilike.%${safe}%,email.ilike.%${safe}%`)
+      if (role) query = query.eq('role', role)
+      if (activeOnly === 'true') query = query.eq('is_active', true)
+
+      const { data, error, count } = await query
+      if (error) {
+        console.error('[users/GET]', error)
+        return serverError()
+      }
+
+      return ok(data, {
+        page,
+        page_size: pageSize,
+        total: count ?? 0,
+        pages: Math.ceil((count ?? 0) / pageSize),
+      })
+    }
+
+    // Sem search: usa repository puro
+    const filters = [
+      ...(role ? [{ field: 'role', operator: 'eq' as const, value: role }] : []),
+      ...(activeOnly === 'true'
+        ? [{ field: 'is_active', operator: 'eq' as const, value: true }]
+        : []),
+    ]
+
+    const result = await users.findMany({
+      filters,
+      sort: [{ field: 'created_at', ascending: false }],
+      pagination: { page, pageSize },
+    })
+
+    return ok(result.data, {
+      page,
+      page_size: pageSize,
+      total: result.total,
+      pages: result.pages,
+    })
+  } catch (err) {
+    console.error('[users/GET]', err)
     return serverError()
   }
-
-  return ok(data, {
-    page,
-    page_size: pageSize,
-    total: count ?? 0,
-    pages: Math.ceil((count ?? 0) / pageSize),
-  })
 })
 
 // ── POST /api/users ──
@@ -89,7 +120,7 @@ export const POST = withApiLog('users', async function POST(request: NextRequest
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 15 })
   if (!success) return tooManyRequests()
 
-  const { user, error: authError } = await getAuthUser()
+  const { user, error: authError } = await getAuthGateway().getUser()
   if (!user) return unauthorized(authError ?? undefined)
   if (user.role !== 'ADMIN') return forbidden('Apenas administradores podem criar usuarios')
 
@@ -105,45 +136,16 @@ export const POST = withApiLog('users', async function POST(request: NextRequest
     return badRequest('Dados invalidos', parsed.error.flatten().fieldErrors)
   }
 
-  const supabase = createServerSupabase()
-  const { display_name, email, role: userRole, is_active, phone, department } = parsed.data
-
-  // 1. Criar auth user via admin API
-  const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
-    email,
-    email_confirm: true,
-    user_metadata: { display_name },
-    app_metadata: { role: userRole },
-  })
-
-  if (authErr) {
-    if (authErr.message.includes('already been registered')) {
+  try {
+    const users = getRepository('users')
+    const profile = await users.createWithAuth(parsed.data)
+    return created(profile)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : ''
+    if (msg.includes('already been registered')) {
       return badRequest('Este email ja esta cadastrado')
     }
-    console.error('[users/POST] auth', authErr)
+    console.error('[users/POST]', err)
     return serverError()
   }
-
-  // 2. Atualizar profile (trigger handle_new_user ja criou o basico)
-  const { data: profile, error: profileErr } = await supabase
-    .from('profiles')
-    .update({
-      display_name,
-      role: userRole,
-      is_active,
-      phone: phone || null,
-      department: department || null,
-    })
-    .eq('id', authData.user.id)
-    .select(
-      'id, email, display_name, avatar_url, phone, department, role, is_active, tenant_id, created_at, updated_at'
-    )
-    .single()
-
-  if (profileErr) {
-    console.error('[users/POST] profile', profileErr)
-    return serverError()
-  }
-
-  return created(profile)
 })

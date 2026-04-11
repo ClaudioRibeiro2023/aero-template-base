@@ -1,12 +1,14 @@
 /**
  * PATCH /api/user/locale — Atualiza locale do usuário no perfil
  * GET   /api/user/locale — Retorna locale atual
+ *
+ * v3.0: Migrado para @template/data auth gateway + SupabaseDbClient.
  */
 import type { NextRequest } from 'next/server'
-import { createServerSupabase } from '@/app/lib/supabase-server'
 import { requireJson } from '@/lib/api-guard'
 import { ok, badRequest, unauthorized, serverError } from '@/lib/api-response'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getAuthGateway } from '@/lib/data'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -14,12 +16,13 @@ export const dynamic = 'force-dynamic'
 const SUPPORTED_LOCALES = ['pt-BR', 'en-US', 'es']
 
 export const GET = withApiLog('user-locale', async function GET(_request: NextRequest) {
-  const { user, error } = await getAuthUser()
+  const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 
   try {
-    const supabase = await createServerSupabase()
-    const { data } = await supabase.from('profiles').select('locale').eq('id', user.id).single()
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
+    const { data } = await client.from('profiles').select('locale').eq('id', user.id).single()
 
     return ok({ locale: data?.locale || 'pt-BR' })
   } catch (err) {
@@ -31,7 +34,7 @@ export const PATCH = withApiLog('user-locale', async function PATCH(request: Nex
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 
-  const { user, error } = await getAuthUser()
+  const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 
   const body = await request.json().catch(() => null)
@@ -40,8 +43,9 @@ export const PATCH = withApiLog('user-locale', async function PATCH(request: Nex
   }
 
   try {
-    const supabase = await createServerSupabase()
-    const { error: updateError } = await supabase
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
+    const { error: updateError } = await client
       .from('profiles')
       .update({ locale: body.locale })
       .eq('id', user.id)

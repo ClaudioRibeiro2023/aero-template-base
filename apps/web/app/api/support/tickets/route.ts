@@ -1,6 +1,8 @@
 /**
  * GET  /api/support/tickets  — lista tickets (filtros: status, priority, category)
  * POST /api/support/tickets  — cria novo ticket
+ *
+ * v3.0: Migrado para @template/data repository pattern.
  */
 import type { NextRequest } from 'next/server'
 import { ticketCreateSchema } from '@template/shared/schemas'
@@ -14,13 +16,10 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
-
-const TICKET_COLUMNS =
-  'id, title, description, status, priority, category, created_by, assignee_id, satisfaction_rating, satisfaction_comment, created_at, updated_at'
 
 // ── GET /api/support/tickets ──
 export const GET = withApiLog('support-tickets', async function GET(request: NextRequest) {
@@ -28,11 +27,8 @@ export const GET = withApiLog('support-tickets', async function GET(request: Nex
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
 
-  const supabase = await createSupabaseCookieClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return unauthorized()
+  const { user, error } = await getAuthGateway().getUser()
+  if (error || !user) return unauthorized()
 
   const url = new URL(request.url)
   const status = url.searchParams.get('status')
@@ -44,28 +40,28 @@ export const GET = withApiLog('support-tickets', async function GET(request: Nex
     Math.max(1, parseInt(url.searchParams.get('page_size') ?? '20', 10))
   )
 
-  let query = supabase
-    .from('support_tickets')
-    .select(TICKET_COLUMNS, { count: 'exact' })
-    .order('updated_at', { ascending: false })
-    .range((page - 1) * pageSize, page * pageSize - 1)
+  try {
+    const tickets = getRepository('tickets')
+    const result = await tickets.findMany({
+      filters: [
+        ...(status ? [{ field: 'status', operator: 'eq' as const, value: status }] : []),
+        ...(priority ? [{ field: 'priority', operator: 'eq' as const, value: priority }] : []),
+        ...(category ? [{ field: 'category', operator: 'eq' as const, value: category }] : []),
+      ],
+      sort: [{ field: 'updated_at', ascending: false }],
+      pagination: { page, pageSize },
+    })
 
-  if (status) query = query.eq('status', status)
-  if (priority) query = query.eq('priority', priority)
-  if (category) query = query.eq('category', category)
-
-  const { data, error, count } = await query
-  if (error) {
-    console.error('[support/tickets/GET]', error)
+    return ok(result.data, {
+      page,
+      page_size: pageSize,
+      total: result.total,
+      pages: result.pages,
+    })
+  } catch (err) {
+    console.error('[support/tickets/GET]', err)
     return serverError()
   }
-
-  return ok(data, {
-    page,
-    page_size: pageSize,
-    total: count ?? 0,
-    pages: Math.ceil((count ?? 0) / pageSize),
-  })
 })
 
 // ── POST /api/support/tickets ──
@@ -77,11 +73,8 @@ export const POST = withApiLog('support-tickets', async function POST(request: N
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()
 
-  const supabase = await createSupabaseCookieClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return unauthorized()
+  const { user, error } = await getAuthGateway().getUser()
+  if (error || !user) return unauthorized()
 
   let body: unknown
   try {
@@ -95,18 +88,15 @@ export const POST = withApiLog('support-tickets', async function POST(request: N
     return badRequest('Dados inválidos', parsed.error.flatten().fieldErrors)
   }
 
-  const { data, error } = await supabase
-    .from('support_tickets')
-    .insert({
+  try {
+    const tickets = getRepository('tickets')
+    const data = await tickets.create({
       ...parsed.data,
       created_by: user.id,
     })
-    .select(TICKET_COLUMNS)
-    .single()
-
-  if (error) {
-    console.error('[support/tickets/POST]', error)
+    return created(data)
+  } catch (err) {
+    console.error('[support/tickets/POST]', err)
     return serverError()
   }
-  return created(data)
 })

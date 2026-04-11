@@ -2,6 +2,8 @@
  * GET    /api/support/tickets/[id]  — busca ticket por ID
  * PUT    /api/support/tickets/[id]  — atualiza ticket
  * DELETE /api/support/tickets/[id]  — remove ticket
+ *
+ * v3.0: Migrado para @template/data repository pattern.
  */
 import type { NextRequest } from 'next/server'
 import { ticketUpdateSchema } from '@template/shared/schemas'
@@ -16,13 +18,10 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
-
-const TICKET_COLUMNS =
-  'id, title, description, status, priority, category, created_by, assignee_id, satisfaction_rating, satisfaction_comment, created_at, updated_at'
 
 // ── GET /api/support/tickets/[id] ──
 export const GET = withApiLog(
@@ -32,25 +31,19 @@ export const GET = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
     if (!success) return tooManyRequests()
 
-    const supabase = await createSupabaseCookieClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return unauthorized()
+    const { user, error } = await getAuthGateway().getUser()
+    if (error || !user) return unauthorized()
 
-    const { id } = await params
-    const { data, error } = await supabase
-      .from('support_tickets')
-      .select(TICKET_COLUMNS)
-      .eq('id', id)
-      .single()
-
-    if (error?.code === 'PGRST116') return notFound()
-    if (error) {
-      console.error('[support/tickets/GET:id]', error)
+    try {
+      const { id } = await params
+      const tickets = getRepository('tickets')
+      const data = await tickets.findById(id)
+      if (!data) return notFound()
+      return ok(data)
+    } catch (err) {
+      console.error('[support/tickets/GET:id]', err)
       return serverError()
     }
-    return ok(data)
   }
 )
 
@@ -65,11 +58,8 @@ export const PUT = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
     if (!success) return tooManyRequests()
 
-    const supabase = await createSupabaseCookieClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return unauthorized()
+    const { user, error } = await getAuthGateway().getUser()
+    if (error || !user) return unauthorized()
 
     let body: unknown
     try {
@@ -83,26 +73,22 @@ export const PUT = withApiLog(
       return badRequest('Dados inválidos', parsed.error.flatten().fieldErrors)
     }
 
-    const { id } = await params
-    const { assignee_id, ...rest } = parsed.data
-    const updatePayload = {
-      ...rest,
-      ...(assignee_id !== undefined ? { assignee_id: assignee_id || null } : {}),
-    }
+    try {
+      const { id } = await params
+      const { assignee_id, ...rest } = parsed.data
+      const updatePayload = {
+        ...rest,
+        ...(assignee_id !== undefined ? { assignee_id: assignee_id || null } : {}),
+      }
 
-    const { data, error } = await supabase
-      .from('support_tickets')
-      .update(updatePayload)
-      .eq('id', id)
-      .select(TICKET_COLUMNS)
-      .single()
-
-    if (error?.code === 'PGRST116') return notFound()
-    if (error) {
-      console.error('[support/tickets/PUT:id]', error)
+      const tickets = getRepository('tickets')
+      const data = await tickets.update(id, updatePayload)
+      if (!data) return notFound()
+      return ok(data)
+    } catch (err) {
+      console.error('[support/tickets/PUT:id]', err)
       return serverError()
     }
-    return ok(data)
   }
 )
 
@@ -114,19 +100,17 @@ export const DELETE = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
     if (!success) return tooManyRequests()
 
-    const supabase = await createSupabaseCookieClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return unauthorized()
+    const { user, error } = await getAuthGateway().getUser()
+    if (error || !user) return unauthorized()
 
-    const { id } = await params
-    const { error } = await supabase.from('support_tickets').delete().eq('id', id)
-
-    if (error) {
-      console.error('[support/tickets/DELETE:id]', error)
+    try {
+      const { id } = await params
+      const tickets = getRepository('tickets')
+      await tickets.delete(id)
+      return noContent()
+    } catch (err) {
+      console.error('[support/tickets/DELETE:id]', err)
       return serverError()
     }
-    return noContent()
   }
 )

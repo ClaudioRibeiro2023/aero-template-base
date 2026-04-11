@@ -1,10 +1,12 @@
 /**
  * GET /api/organizations — Lista organizações do usuário
+ *
+ * v3.0: Migrado para @template/data auth gateway + SupabaseDbClient.
  */
 import type { NextRequest } from 'next/server'
-import { createServerSupabase } from '@/app/lib/supabase-server'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { ok, unauthorized, serverError } from '@/lib/api-response'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getAuthGateway } from '@/lib/data'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { withApiLog } from '@/lib/logger'
 
@@ -17,13 +19,14 @@ export const GET = withApiLog('organizations', async function GET(request: NextR
     return new Response('Too many requests', { status: 429 })
   }
 
-  const { user, error } = await getAuthUser()
+  const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 
   try {
-    const supabase = await createServerSupabase()
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
 
-    const { data: memberships } = await supabase
+    const { data: memberships } = await client
       .from('organization_members')
       .select('org_id, role, organizations(id, name, slug, plan, settings, logo_url)')
       .eq('user_id', user.id)

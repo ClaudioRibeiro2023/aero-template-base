@@ -1,5 +1,7 @@
 /**
  * PUT /api/support/tickets/[id]/assign — atribui ticket a um responsável
+ *
+ * v3.0: Migrado para @template/data repository pattern.
  */
 import type { NextRequest } from 'next/server'
 import { ticketAssignSchema } from '@template/shared/schemas'
@@ -13,7 +15,7 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -28,11 +30,8 @@ export const PUT = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
     if (!success) return tooManyRequests()
 
-    const supabase = await createSupabaseCookieClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return unauthorized()
+    const { user, error } = await getAuthGateway().getUser()
+    if (error || !user) return unauthorized()
 
     let body: unknown
     try {
@@ -46,22 +45,18 @@ export const PUT = withApiLog(
       return badRequest('Dados inválidos', parsed.error.flatten().fieldErrors)
     }
 
-    const { id } = await params
-    const { data, error } = await supabase
-      .from('support_tickets')
-      .update({
+    try {
+      const { id } = await params
+      const tickets = getRepository('tickets')
+      const data = await tickets.update(id, {
         assignee_id: parsed.data.assignee_id,
         status: 'in_progress',
       })
-      .eq('id', id)
-      .select('id, title, status, assignee_id, updated_at')
-      .single()
-
-    if (error?.code === 'PGRST116') return notFound()
-    if (error) {
-      console.error('[support/tickets/assign]', error)
+      if (!data) return notFound()
+      return ok(data)
+    } catch (err) {
+      console.error('[support/tickets/assign]', err)
       return serverError()
     }
-    return ok(data)
   }
 )

@@ -65,33 +65,101 @@ export const semanticTokens = {
   },
 } as const
 
+export const glassTokens = {
+  light: {
+    glassBg: 'rgba(255, 255, 255, 0.7)',
+    glassBorder: 'rgba(0, 0, 0, 0.06)',
+    glassBorderHover: 'rgba(0, 0, 0, 0.1)',
+    glassBlur: '12px',
+  },
+  dark: {
+    glassBg: 'rgba(255, 255, 255, 0.03)',
+    glassBorder: 'rgba(255, 255, 255, 0.06)',
+    glassBorderHover: 'rgba(255, 255, 255, 0.1)',
+    glassBlur: '12px',
+  },
+} as const
+
+export const glowTokens = {
+  light: {
+    glowBrand: 'rgba(0, 180, 216, 0.10)',
+    glowBrandStrong: 'rgba(0, 180, 216, 0.18)',
+    glowPurple: 'rgba(167, 139, 250, 0.10)',
+    glowError: 'rgba(239, 68, 68, 0.10)',
+  },
+  dark: {
+    glowBrand: 'rgba(0, 180, 216, 0.15)',
+    glowBrandStrong: 'rgba(0, 180, 216, 0.25)',
+    glowPurple: 'rgba(167, 139, 250, 0.15)',
+    glowError: 'rgba(239, 68, 68, 0.15)',
+  },
+} as const
+
+export const shadowTokens = {
+  light: {
+    shadowSm: '0 1px 2px rgba(0, 0, 0, 0.05)',
+    shadowMd: '0 4px 12px rgba(0, 0, 0, 0.08)',
+    shadowLg: '0 8px 24px rgba(0, 0, 0, 0.12)',
+  },
+  dark: {
+    shadowSm: '0 1px 2px rgba(0, 0, 0, 0.3)',
+    shadowMd: '0 4px 12px rgba(0, 0, 0, 0.4)',
+    shadowLg: '0 8px 24px rgba(0, 0, 0, 0.5)',
+  },
+} as const
+
 /** Gera string CSS custom properties para injetar via <style> ou theme provider */
 export function tokensToCssVars(mode: 'light' | 'dark' = 'dark'): string {
   const sem = semanticTokens[mode]
+  const glass = glassTokens[mode]
+  const glow = glowTokens[mode]
+  const shadow = shadowTokens[mode]
+
   return [
+    // Brand
     `--brand-primary: ${brandTokens.primary}`,
     `--brand-secondary: ${brandTokens.secondary}`,
     `--brand-accent: ${brandTokens.accent}`,
+    // Accent
     `--accent-purple: ${accentTokens.purple}`,
     `--accent-amber: ${accentTokens.amber}`,
     `--accent-emerald: ${accentTokens.emerald}`,
     `--accent-rose: ${accentTokens.rose}`,
+    // Radius
     `--radius-sm: ${radiusTokens.sm}`,
     `--radius-md: ${radiusTokens.md}`,
     `--radius-lg: ${radiusTokens.lg}`,
     `--radius-xl: ${radiusTokens.xl}`,
+    // Backgrounds
     `--bg-root: ${sem.bgRoot}`,
     `--bg-surface: ${sem.bgSurface}`,
     `--bg-elevated: ${sem.bgElevated}`,
     `--bg-muted: ${sem.bgMuted}`,
     `--bg-subtle: ${sem.bgSubtle}`,
+    // Text
     `--text-primary: ${sem.textPrimary}`,
     `--text-secondary: ${sem.textSecondary}`,
     `--text-muted: ${sem.textMuted}`,
     `--text-disabled: ${sem.textDisabled}`,
+    // Borders
     `--border-default: ${sem.borderDefault}`,
     `--border-muted: ${sem.borderMuted}`,
     `--border-strong: ${sem.borderStrong}`,
+    // Glass
+    `--glass-bg: ${glass.glassBg}`,
+    `--glass-border: ${glass.glassBorder}`,
+    `--glass-border-hover: ${glass.glassBorderHover}`,
+    `--glass-blur: ${glass.glassBlur}`,
+    // Glow
+    `--glow-brand: ${glow.glowBrand}`,
+    `--glow-brand-strong: ${glow.glowBrandStrong}`,
+    `--glow-purple: ${glow.glowPurple}`,
+    `--glow-error: ${glow.glowError}`,
+    // Shadows
+    `--shadow-sm: ${shadow.shadowSm}`,
+    `--shadow-md: ${shadow.shadowMd}`,
+    `--shadow-lg: ${shadow.shadowLg}`,
+    `--shadow-glow: 0 0 20px ${glow.glowBrand}`,
   ].join(';\n')
 }
 
@@ -99,3 +167,7 @@ export type BrandTokens = typeof brandTokens
 export type AccentTokens = typeof accentTokens
 export type RadiusTokens = typeof radiusTokens
 export type SemanticTokens = typeof semanticTokens
+export type GlassTokens = typeof glassTokens
+export type GlowTokens = typeof glowTokens
+export type ShadowTokens = typeof shadowTokens
+export type ThemeMode = 'light' | 'dark'

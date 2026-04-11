@@ -1,5 +1,7 @@
 /**
  * POST /api/support/tickets/[id]/rate — avalia satisfação do ticket (criador apenas)
+ *
+ * v3.0: Migrado para @template/data repository pattern.
  */
 import type { NextRequest } from 'next/server'
 import { ticketRateSchema } from '@template/shared/schemas'
@@ -14,7 +16,7 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -29,11 +31,8 @@ export const POST = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
     if (!success) return tooManyRequests()
 
-    const supabase = await createSupabaseCookieClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return unauthorized()
+    const { user, error } = await getAuthGateway().getUser()
+    if (error || !user) return unauthorized()
 
     let body: unknown
     try {
@@ -47,40 +46,26 @@ export const POST = withApiLog(
       return badRequest('Dados inválidos', parsed.error.flatten().fieldErrors)
     }
 
-    const { id } = await params
+    try {
+      const { id } = await params
+      const tickets = getRepository('tickets')
 
-    // Verificar se o ticket pertence ao usuário e está resolved/closed
-    const { data: ticket, error: fetchErr } = await supabase
-      .from('support_tickets')
-      .select('id, created_by, status')
-      .eq('id', id)
-      .single()
+      // Verificar se o ticket pertence ao usuário e está resolved/closed
+      const ticket = await tickets.findById(id, 'id, created_by, status')
+      if (!ticket) return notFound()
+      if (ticket.created_by !== user.id) return forbidden('Apenas o criador pode avaliar')
+      if (!['resolved', 'closed'].includes(ticket.status)) {
+        return badRequest('Ticket precisa estar resolvido ou fechado para avaliação')
+      }
 
-    if (fetchErr?.code === 'PGRST116' || !ticket) return notFound()
-    if (fetchErr) {
-      console.error('[support/tickets/rate:fetch]', fetchErr)
-      return serverError()
-    }
-
-    if (ticket.created_by !== user.id) return forbidden('Apenas o criador pode avaliar')
-    if (!['resolved', 'closed'].includes(ticket.status)) {
-      return badRequest('Ticket precisa estar resolvido ou fechado para avaliação')
-    }
-
-    const { data, error } = await supabase
-      .from('support_tickets')
-      .update({
+      const data = await tickets.update(id, {
         satisfaction_rating: parsed.data.satisfaction_rating,
         satisfaction_comment: parsed.data.satisfaction_comment || null,
       })
-      .eq('id', id)
-      .select('id, satisfaction_rating, satisfaction_comment, updated_at')
-      .single()
-
-    if (error) {
-      console.error('[support/tickets/rate]', error)
+      return ok(data)
+    } catch (err) {
+      console.error('[support/tickets/rate]', err)
       return serverError()
     }
-    return ok(data)
   }
 )

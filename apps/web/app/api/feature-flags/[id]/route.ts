@@ -1,9 +1,10 @@
 /**
  * PATCH  /api/feature-flags/[id] — atualiza flag (toggle enabled, description)
  * DELETE /api/feature-flags/[id] — remove flag
+ *
+ * v3.0: Migrado para @template/data repository pattern.
  */
 import type { NextRequest } from 'next/server'
-import { createServerSupabase } from '@/app/lib/supabase-server'
 import {
   ok,
   badRequest,
@@ -14,7 +15,7 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getRepository, getAuthGateway } from '@/lib/data'
 import { auditLog } from '@/lib/audit-log'
 import { withApiLog } from '@/lib/logger'
 
@@ -28,7 +29,7 @@ export const PATCH = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
     if (!success) return tooManyRequests()
 
-    const { user, error } = await getAuthUser()
+    const { user, error } = await getAuthGateway().getUser()
     if (error || !user) return unauthorized()
     if (!['ADMIN', 'GESTOR'].includes(user.role)) return forbidden()
 
@@ -49,26 +50,24 @@ export const PATCH = withApiLog(
     if (typeof parsed.data.flag_name === 'string') update.flag_name = parsed.data.flag_name
     if (Object.keys(update).length === 0) return badRequest('Nenhum campo para atualizar')
 
-    const supabase = createServerSupabase()
+    try {
+      const flags = getRepository('featureFlags')
+      const data = await flags.update(id, update)
+      if (!data) return notFound()
 
-    const { data, error: dbError } = await supabase
-      .from('feature_flags')
-      .update(update)
-      .eq('id', id)
-      .select()
-      .single()
+      await auditLog({
+        userId: user.id,
+        action: 'UPDATE',
+        resource: 'feature_flags',
+        resourceId: id,
+        details: update,
+      })
 
-    if (dbError || !data) return notFound()
-
-    await auditLog({
-      userId: user.id,
-      action: 'UPDATE',
-      resource: 'feature_flags',
-      resourceId: id,
-      details: update,
-    })
-
-    return ok(data)
+      return ok(data)
+    } catch (err) {
+      console.error('[feature-flags/PATCH:id]', err)
+      return serverError()
+    }
   }
 )
 
@@ -80,26 +79,25 @@ export const DELETE = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
     if (!success) return tooManyRequests()
 
-    const { user, error } = await getAuthUser()
+    const { user, error } = await getAuthGateway().getUser()
     if (error || !user) return unauthorized()
     if (user.role !== 'ADMIN') return forbidden()
 
-    const supabase = createServerSupabase()
+    try {
+      const flags = getRepository('featureFlags')
+      await flags.delete(id)
 
-    const { error: dbError } = await supabase.from('feature_flags').delete().eq('id', id)
+      await auditLog({
+        userId: user.id,
+        action: 'DELETE',
+        resource: 'feature_flags',
+        resourceId: id,
+      })
 
-    if (dbError) {
-      console.error('[feature-flags/DELETE:id]', dbError)
+      return ok({ deleted: true })
+    } catch (err) {
+      console.error('[feature-flags/DELETE:id]', err)
       return serverError()
     }
-
-    await auditLog({
-      userId: user.id,
-      action: 'DELETE',
-      resource: 'feature_flags',
-      resourceId: id,
-    })
-
-    return ok({ deleted: true })
   }
 )

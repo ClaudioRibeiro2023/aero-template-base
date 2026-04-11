@@ -8,7 +8,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true, // Lint runs as separate CI step
   },
-  transpilePackages: ['@template/design-system', '@template/shared', '@template/types'],
+  transpilePackages: ['@template/design-system', '@template/shared', '@template/types', '@template/data'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '**.supabase.co' },

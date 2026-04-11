@@ -3,7 +3,7 @@
  * PUT    /api/users/[id]  — atualiza profile
  * DELETE /api/users/[id]  — desativa usuario (soft delete)
  *
- * Megaplan V4 Sprint A: Users CRUD real.
+ * v3.0: Migrado para @template/data repository pattern.
  */
 import type { NextRequest } from 'next/server'
 import { userUpdateSchema } from '@template/shared/schemas'
@@ -18,8 +18,7 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { getAuthUser } from '@/lib/auth-guard'
-import { createServerSupabase } from '@/app/lib/supabase-server'
+import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -32,25 +31,19 @@ export const GET = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
     if (!success) return tooManyRequests()
 
-    const { user, error: authError } = await getAuthUser()
+    const { user, error: authError } = await getAuthGateway().getUser()
     if (!user) return unauthorized(authError ?? undefined)
 
-    const supabase = createServerSupabase()
-    const { id } = await params
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(
-        'id, email, display_name, avatar_url, phone, department, role, is_active, tenant_id, metadata, created_at, updated_at'
-      )
-      .eq('id', id)
-      .single()
-
-    if (error?.code === 'PGRST116') return notFound('Usuario nao encontrado')
-    if (error) {
-      console.error('[users/GET:id]', error)
+    try {
+      const { id } = await params
+      const users = getRepository('users')
+      const data = await users.findById(id)
+      if (!data) return notFound('Usuario nao encontrado')
+      return ok(data)
+    } catch (err) {
+      console.error('[users/GET:id]', err)
       return serverError()
     }
-    return ok(data)
   }
 )
 
@@ -65,12 +58,10 @@ export const PUT = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
     if (!success) return tooManyRequests()
 
-    const { user, error: authError } = await getAuthUser()
+    const { user, error: authError } = await getAuthGateway().getUser()
     if (!user) return unauthorized(authError ?? undefined)
 
     const { id } = await params
-
-    // Usuarios podem editar o proprio perfil; ADMIN pode editar qualquer um
     const isSelf = user.id === id
     if (!isSelf && user.role !== 'ADMIN') {
       return forbidden('Apenas administradores podem editar outros usuarios')
@@ -88,7 +79,6 @@ export const PUT = withApiLog(
       return badRequest('Dados invalidos', parsed.error.flatten().fieldErrors)
     }
 
-    // Non-admin cannot change role or is_active
     const updateData = { ...parsed.data }
     if (!isSelf && user.role !== 'ADMIN') {
       delete updateData.role
@@ -99,39 +89,33 @@ export const PUT = withApiLog(
       delete updateData.is_active
     }
 
-    const supabase = createServerSupabase()
+    try {
+      const { phone, department, ...rest } = updateData
+      const profilePayload = {
+        ...rest,
+        ...(phone !== undefined ? { phone: phone || null } : {}),
+        ...(department !== undefined ? { department: department || null } : {}),
+      }
 
-    // Update profile
-    const { phone, department, ...rest } = updateData
-    const profilePayload = {
-      ...rest,
-      ...(phone !== undefined ? { phone: phone || null } : {}),
-      ...(department !== undefined ? { department: department || null } : {}),
-    }
+      const users = getRepository('users')
+      const data = await users.update(id, profilePayload)
+      if (!data) return notFound('Usuario nao encontrado')
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(profilePayload)
-      .eq('id', id)
-      .select(
-        'id, email, display_name, avatar_url, phone, department, role, is_active, tenant_id, metadata, created_at, updated_at'
-      )
-      .single()
+      // Sync role to app_metadata if changed by admin
+      if (updateData.role) {
+        const { SupabaseDbClient } = await import('@template/data/supabase')
+        const db = new SupabaseDbClient()
+        const admin = db.asAdmin()
+        await admin.auth.admin.updateUserById(id, {
+          app_metadata: { role: updateData.role },
+        })
+      }
 
-    if (error?.code === 'PGRST116') return notFound('Usuario nao encontrado')
-    if (error) {
-      console.error('[users/PUT:id]', error)
+      return ok(data)
+    } catch (err) {
+      console.error('[users/PUT:id]', err)
       return serverError()
     }
-
-    // Sync role to app_metadata if changed by admin
-    if (updateData.role) {
-      await supabase.auth.admin.updateUserById(id, {
-        app_metadata: { role: updateData.role },
-      })
-    }
-
-    return ok(data)
   }
 )
 
@@ -143,28 +127,21 @@ export const DELETE = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 15 })
     if (!success) return tooManyRequests()
 
-    const { user, error: authError } = await getAuthUser()
+    const { user, error: authError } = await getAuthGateway().getUser()
     if (!user) return unauthorized(authError ?? undefined)
     if (user.role !== 'ADMIN') return forbidden('Apenas administradores podem desativar usuarios')
 
     const { id } = await params
-
-    // Impedir auto-desativacao
     if (user.id === id) return badRequest('Voce nao pode desativar a si mesmo')
 
-    const supabase = createServerSupabase()
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ is_active: false })
-      .eq('id', id)
-      .select('id, email, display_name, role, is_active, updated_at')
-      .single()
-
-    if (error?.code === 'PGRST116') return notFound('Usuario nao encontrado')
-    if (error) {
-      console.error('[users/DELETE:id]', error)
+    try {
+      const users = getRepository('users')
+      const data = await users.update(id, { is_active: false })
+      if (!data) return notFound('Usuario nao encontrado')
+      return ok(data)
+    } catch (err) {
+      console.error('[users/DELETE:id]', err)
       return serverError()
     }
-    return ok(data)
   }
 )

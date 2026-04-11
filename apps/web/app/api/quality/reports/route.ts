@@ -1,6 +1,8 @@
 /**
- * GET  /api/quality/reports  — lista relatórios de qualidade (admin only)
+ * GET  /api/quality/reports  — lista relatórios de qualidade
  * POST /api/quality/reports  — salva novo relatório de diagnóstico
+ *
+ * v3.0: Migrado para @template/data repository pattern.
  */
 import type { NextRequest } from 'next/server'
 import { qualityReportCreateSchema } from '@template/shared/schemas'
@@ -14,11 +16,9 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { getRepository, getAuthGateway } from '@/lib/data'
 
 export const dynamic = 'force-dynamic'
-
-const REPORT_COLUMNS = 'id, overall_score, results, created_by, created_at'
 
 // ── GET /api/quality/reports ──
 export async function GET(request: NextRequest) {
@@ -26,11 +26,8 @@ export async function GET(request: NextRequest) {
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (!success) return tooManyRequests()
 
-  const supabase = await createSupabaseCookieClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return unauthorized()
+  const { user, error } = await getAuthGateway().getUser()
+  if (error || !user) return unauthorized()
 
   const url = new URL(request.url)
   const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10))
@@ -39,23 +36,23 @@ export async function GET(request: NextRequest) {
     Math.max(1, parseInt(url.searchParams.get('page_size') ?? '10', 10))
   )
 
-  const { data, error, count } = await supabase
-    .from('quality_reports')
-    .select(REPORT_COLUMNS, { count: 'exact' })
-    .order('created_at', { ascending: false })
-    .range((page - 1) * pageSize, page * pageSize - 1)
+  try {
+    const reports = getRepository('qualityReports')
+    const result = await reports.findMany({
+      sort: [{ field: 'created_at', ascending: false }],
+      pagination: { page, pageSize },
+    })
 
-  if (error) {
-    console.error('[quality/reports/GET]', error)
+    return ok(result.data, {
+      page,
+      page_size: pageSize,
+      total: result.total,
+      pages: result.pages,
+    })
+  } catch (err) {
+    console.error('[quality/reports/GET]', err)
     return serverError()
   }
-
-  return ok(data, {
-    page,
-    page_size: pageSize,
-    total: count ?? 0,
-    pages: Math.ceil((count ?? 0) / pageSize),
-  })
 }
 
 // ── POST /api/quality/reports ──
@@ -67,11 +64,8 @@ export async function POST(request: NextRequest) {
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 10 })
   if (!success) return tooManyRequests()
 
-  const supabase = await createSupabaseCookieClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return unauthorized()
+  const { user, error } = await getAuthGateway().getUser()
+  if (error || !user) return unauthorized()
 
   let body: unknown
   try {
@@ -85,19 +79,16 @@ export async function POST(request: NextRequest) {
     return badRequest('Dados inválidos', parsed.error.flatten().fieldErrors)
   }
 
-  const { data, error } = await supabase
-    .from('quality_reports')
-    .insert({
+  try {
+    const reports = getRepository('qualityReports')
+    const data = await reports.create({
       overall_score: parsed.data.overall_score,
       results: parsed.data.results,
       created_by: user.id,
     })
-    .select(REPORT_COLUMNS)
-    .single()
-
-  if (error) {
-    console.error('[quality/reports/POST]', error)
+    return created(data)
+  } catch (err) {
+    console.error('[quality/reports/POST]', err)
     return serverError()
   }
-  return created(data)
 }

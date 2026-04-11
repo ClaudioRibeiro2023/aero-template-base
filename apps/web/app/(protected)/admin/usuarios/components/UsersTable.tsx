@@ -19,6 +19,7 @@ import { UndoToast } from '@/components/common/UndoToast'
 import { useUndoToast } from '@/hooks/useUndoToast'
 import { exportToCsv, exportToXlsx } from '@/lib/export-csv'
 import { useBulkDeactivateUsers, useBulkChangeUserRole, type Profile } from '@/hooks/useUsers'
+import { useNotifications } from '@/hooks/useNotifications'
 
 const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
   ADMIN: { bg: 'rgba(167,139,250,0.10)', text: '#a78bfa' },
@@ -57,6 +58,7 @@ export function UsersTable({
   const bulkChangeRole = useBulkChangeUserRole()
   const { toast: undoToast, show: showUndo, dismiss: dismissUndo, handleUndo } = useUndoToast()
   const deactivatedIdsRef = useRef<string[]>([])
+  const { notifyBulkDeactivate, notifyBulkRoleChange, notifyBulkExport } = useNotifications()
 
   function toggleSelect(id: string) {
     setSelected(prev => {
@@ -87,6 +89,7 @@ export function UsersTable({
       { key: 'is_active', label: 'Status', format: v => (v ? 'Ativo' : 'Inativo') },
     ])
     setToast({ message: `${selectedUsers.length} usuários exportados`, type: 'success' })
+    notifyBulkExport(selectedUsers.length, 'CSV')
     setSelected(new Set())
   }
 
@@ -102,6 +105,7 @@ export function UsersTable({
       { key: 'is_active', label: 'Status', format: v => (v ? 'Ativo' : 'Inativo') },
     ])
     setToast({ message: `${selectedUsers.length} usuários exportados (.xls)`, type: 'success' })
+    notifyBulkExport(selectedUsers.length, 'XLSX')
     setSelected(new Set())
   }
 
@@ -111,6 +115,7 @@ export function UsersTable({
     deactivatedIdsRef.current = ids
     try {
       await bulkDeactivate.mutateAsync(ids)
+      notifyBulkDeactivate(count)
       setSelected(new Set())
       showUndo({
         message: `${count} usuário${count > 1 ? 's' : ''} desativado${count > 1 ? 's' : ''}`,
@@ -135,6 +140,7 @@ export function UsersTable({
     if (!confirm(`Alterar role de ${selected.size} usuários para ${role}?`)) return
     try {
       await bulkChangeRole.mutateAsync({ ids: Array.from(selected), role })
+      notifyBulkRoleChange(selected.size, role)
       setToast({ message: `${selected.size} usuários alterados para ${role}`, type: 'success' })
       setSelected(new Set())
     } catch {

@@ -1,24 +1,27 @@
 /**
  * GET /api/platform/metrics — Retorna métricas semanais da plataforma
  * Acessível apenas para ADMIN e GESTOR.
+ *
+ * v3.0: Migrado para @template/data auth gateway + SupabaseDbClient.
  */
 import type { NextRequest } from 'next/server'
-import { createServerSupabase } from '@/app/lib/supabase-server'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { ok, unauthorized, forbidden, serverError } from '@/lib/api-response'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
 export const GET = withApiLog('platform-metrics', async function GET(_request: NextRequest) {
-  const { user, error } = await getAuthUser()
+  const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 
   try {
-    const supabase = await createServerSupabase()
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
 
-    // Verificar role
-    const { data: profile } = await supabase
+    // Verificar role — já disponível via auth gateway, mas confirma via profile
+    const { data: profile } = await client
       .from('profiles')
       .select('role')
       .eq('id', user.id)
@@ -29,7 +32,7 @@ export const GET = withApiLog('platform-metrics', async function GET(_request: N
     }
 
     // Buscar últimas 4 semanas de métricas
-    const { data: metrics, error: metricsError } = await supabase
+    const { data: metrics, error: metricsError } = await client
       .from('platform_metrics')
       .select('*')
       .order('week_start', { ascending: false })

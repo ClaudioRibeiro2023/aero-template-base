@@ -61,7 +61,8 @@ export * from './validate'
 
 // --- Supabase ---
 export { createSupabaseBrowserClient } from './supabase-browser'
-export { createSupabaseCookieClient } from './supabase-cookies'
+// @deprecated: createSupabaseCookieClient removido no Sprint 7.
+// Use: new SupabaseDbClient().asUser() de @template/data/supabase
 
 // --- PWA ---
 export {

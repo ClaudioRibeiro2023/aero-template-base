@@ -1,11 +1,13 @@
 /**
  * POST /api/auth/switch-org — Troca organização ativa do usuário
+ *
+ * v3.0: Migrado para @template/data auth gateway + SupabaseDbClient.
  */
 import type { NextRequest } from 'next/server'
-import { createServerSupabase } from '@/app/lib/supabase-server'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { requireJson } from '@/lib/api-guard'
 import { ok, badRequest, unauthorized, forbidden, serverError } from '@/lib/api-response'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getAuthGateway } from '@/lib/data'
 import { auditLog } from '@/lib/audit-log'
 import { withApiLog } from '@/lib/logger'
 
@@ -15,7 +17,7 @@ export const POST = withApiLog('auth-switch-org', async function POST(request: N
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 
-  const { user, error } = await getAuthUser()
+  const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 
   const body = await request.json().catch(() => null)
@@ -24,10 +26,11 @@ export const POST = withApiLog('auth-switch-org', async function POST(request: N
   }
 
   try {
-    const supabase = await createServerSupabase()
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
 
     // Verificar se o usuário é membro da organização
-    const { data: membership } = await supabase
+    const { data: membership } = await client
       .from('organization_members')
       .select('id')
       .eq('org_id', body.orgId)
@@ -39,7 +42,7 @@ export const POST = withApiLog('auth-switch-org', async function POST(request: N
     }
 
     // Atualizar org_id no perfil
-    const { error: updateError } = await supabase
+    const { error: updateError } = await client
       .from('profiles')
       .update({ org_id: body.orgId })
       .eq('id', user.id)

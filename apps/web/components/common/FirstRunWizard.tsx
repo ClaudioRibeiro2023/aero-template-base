@@ -82,6 +82,8 @@ export interface WizardData {
 export interface FirstRunWizardProps {
   onComplete: (data: WizardData) => void
   onSkip?: () => void
+  onStepChange?: (step: number) => void
+  initialStep?: number
   initialData?: Partial<WizardData>
 }
 
@@ -145,8 +147,14 @@ export function validateWizardStep(step: string, data: WizardData): string[] {
 // Component
 // ============================================================================
 
-export function FirstRunWizard({ onComplete, onSkip, initialData }: FirstRunWizardProps) {
-  const [currentStep, setCurrentStep] = useState(0)
+export function FirstRunWizard({
+  onComplete,
+  onSkip,
+  onStepChange,
+  initialStep = 0,
+  initialData,
+}: FirstRunWizardProps) {
+  const [currentStep, setCurrentStep] = useState(initialStep)
   const [data, setData] = useState<WizardData>({ ...DEFAULT_WIZARD_DATA, ...initialData })
   const [errors, setErrors] = useState<string[]>([])
   const trapRef = useFocusTrap(true)
@@ -169,15 +177,19 @@ export function FirstRunWizard({ onComplete, onSkip, initialData }: FirstRunWiza
     if (isLast) {
       onComplete(data)
     } else {
-      setCurrentStep(i => i + 1)
+      const nextStep = currentStep + 1
+      setCurrentStep(nextStep)
       setErrors([])
+      onStepChange?.(nextStep)
     }
   }
 
   function handleBack() {
     if (!isFirst) {
-      setCurrentStep(i => i - 1)
+      const prevStep = currentStep - 1
+      setCurrentStep(prevStep)
       setErrors([])
+      onStepChange?.(prevStep)
     }
   }
 

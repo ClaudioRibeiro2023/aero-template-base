@@ -1,12 +1,13 @@
 /**
  * GET /api/audit-logs — lista audit logs paginado com filtros
  * ADMIN only.
+ *
+ * v3.0: Migrado para @template/data repository pattern.
  */
 import type { NextRequest } from 'next/server'
-import { createServerSupabase } from '@/app/lib/supabase-server'
 import { ok, unauthorized, forbidden, tooManyRequests } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -16,7 +17,7 @@ export const GET = withApiLog('audit-logs', async function GET(request: NextRequ
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (!success) return tooManyRequests()
 
-  const { user, error } = await getAuthUser()
+  const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
   if (user.role !== 'ADMIN') return forbidden()
 
@@ -29,37 +30,34 @@ export const GET = withApiLog('audit-logs', async function GET(request: NextRequ
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
   const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get('page_size') ?? '50', 10)))
 
-  const supabase = createServerSupabase()
+  const filters = [
+    ...(action ? [{ field: 'action', operator: 'eq' as const, value: action }] : []),
+    ...(resource
+      ? [
+          {
+            field: 'resource',
+            operator: 'ilike' as const,
+            value: `%${resource.replace(/[,.()"'\\%]/g, '')}%`,
+          },
+        ]
+      : []),
+    ...(userId ? [{ field: 'user_id', operator: 'eq' as const, value: userId }] : []),
+    ...(dateFrom ? [{ field: 'created_at', operator: 'gte' as const, value: dateFrom }] : []),
+    ...(dateTo ? [{ field: 'created_at', operator: 'lte' as const, value: dateTo }] : []),
+  ]
 
-  let query = supabase
-    .from('audit_logs')
-    .select('id, user_id, action, resource, resource_id, ip_address, created_at', {
-      count: 'exact',
-    })
-    .order('created_at', { ascending: false })
-    .range((page - 1) * pageSize, page * pageSize - 1)
-
-  if (action) query = query.eq('action', action)
-  if (resource) {
-    const safeResource = resource.replace(/[,.()"'\\%]/g, '')
-    if (safeResource) query = query.ilike('resource', `%${safeResource}%`)
-  }
-  if (userId) query = query.eq('user_id', userId)
-  if (dateFrom) query = query.gte('created_at', dateFrom)
-  if (dateTo) query = query.lte('created_at', dateTo)
-
-  const { data, count, error: dbError } = await query
-
-  if (dbError) {
-    // audit_logs pode nao existir — retornar lista vazia
-    return ok({ items: [], total: 0, page, page_size: pageSize, total_pages: 0 })
-  }
+  const auditLogs = getRepository('auditLogs')
+  const result = await auditLogs.findManyGraceful({
+    filters,
+    sort: [{ field: 'created_at', ascending: false }],
+    pagination: { page, pageSize },
+  })
 
   return ok({
-    items: data ?? [],
-    total: count ?? 0,
+    items: result.data,
+    total: result.total,
     page,
     page_size: pageSize,
-    total_pages: Math.ceil((count ?? 0) / pageSize),
+    total_pages: result.pages,
   })
 })

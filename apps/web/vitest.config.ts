@@ -21,6 +21,16 @@ export default defineConfig({
       '@template/design-system': path.resolve(__dirname, '../../packages/design-system/src'),
       '@template/shared': path.resolve(__dirname, '../../packages/shared/src'),
       '@template/types': path.resolve(__dirname, '../../packages/types/src'),
+      '@template/data/supabase': path.resolve(
+        __dirname,
+        '../../packages/data/src/providers/supabase/index.ts'
+      ),
+      '@template/data/resend': path.resolve(
+        __dirname,
+        '../../packages/data/src/providers/resend/index.ts'
+      ),
+      '@template/data': path.resolve(__dirname, '../../packages/data/src/index.ts'),
+      '@template/modules': path.resolve(__dirname, '../../packages/modules/src/index.ts'),
     },
   },
 })

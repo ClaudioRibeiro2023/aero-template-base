@@ -1,11 +1,11 @@
 /**
  * GET /api/platform/public-config — branding publico (sem auth)
  *
- * Megaplan V4 Sprint B: Serve branding para tela de login.
  * Sem autenticacao — qualquer visitor pode ver cores/logo.
+ * v3.0: Migrado para @template/data SupabaseDbClient.
  */
 import type { NextRequest } from 'next/server'
-import { createServerSupabase } from '@/app/lib/supabase-server'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { ok, tooManyRequests } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
@@ -52,9 +52,10 @@ export async function GET(request: NextRequest) {
       return ok(DEFAULT_PUBLIC_CONFIG)
     }
 
-    const supabase = createServerSupabase()
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('admin_config')
       .select(
         'branding, theme, notifications, default_language, default_timezone, maintenance_mode'

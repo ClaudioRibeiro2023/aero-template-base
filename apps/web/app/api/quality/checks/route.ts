@@ -5,11 +5,13 @@
  * - Variáveis de ambiente configuradas
  * - Status de dependências
  * - Configuração de segurança (headers)
+ *
+ * v3.0: Migrado para @template/data auth gateway.
  */
 import type { NextRequest } from 'next/server'
 import { ok, unauthorized, tooManyRequests } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { getAuthGateway } from '@/lib/data'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,11 +20,8 @@ export async function GET(request: NextRequest) {
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 10 })
   if (!success) return tooManyRequests()
 
-  const supabase = await createSupabaseCookieClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return unauthorized()
+  const { user, error } = await getAuthGateway().getUser()
+  if (error || !user) return unauthorized()
 
   const checks = {
     env: {

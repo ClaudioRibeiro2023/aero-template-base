@@ -1,4 +1,4 @@
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
   const next = safePath(searchParams.get('next'))
 
   if (code) {
-    const supabase = await createSupabaseCookieClient()
+    const db = new SupabaseDbClient()
+    const supabase = await db.asUser()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`)

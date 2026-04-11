@@ -13,7 +13,9 @@
       "@template/shared": ["../../packages/shared/src"],
       "@template/shared/*": ["../../packages/shared/src/*"],
       "@template/types": ["../../packages/types/src"],
-      "@template/types/*": ["../../packages/types/src/*"]
+      "@template/types/*": ["../../packages/types/src/*"],
+      "@template/data": ["../../packages/data/src"],
+      "@template/data/*": ["../../packages/data/src/providers/*"]
     },
     "module": "esnext",
     "moduleResolution": "bundler",

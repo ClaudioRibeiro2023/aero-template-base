@@ -1,6 +1,6 @@
 /**
  * Testes da API route /api/tasks (GET + POST).
- * Mockam: rate-limit, supabase-cookies, next/server.
+ * v3.0: Mockam @/lib/data (getAuthGateway, getRepository) em vez de supabase-cookies.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -14,21 +14,33 @@ vi.mock('next/server', () => ({
   },
 }))
 
-// ── Mock rate-limit: sempre permite por padrão ──
+// ── Mock rate-limit ──
 const mockRateLimit = vi.fn(() => ({ success: true, remaining: 99 }))
 vi.mock('@/lib/rate-limit', () => ({
   rateLimit: (...args: unknown[]) => mockRateLimit(...args),
   getClientIp: vi.fn(() => '127.0.0.1'),
 }))
 
-// ── Mock supabase-cookies ──
+// ── Mock @/lib/data (v3.0) ──
 const mockGetUser = vi.fn()
-const mockFrom = vi.fn()
-vi.mock('@/lib/supabase-cookies', () => ({
-  createSupabaseCookieClient: vi.fn(async () => ({
-    auth: { getUser: mockGetUser },
-    from: mockFrom,
+const mockFindMany = vi.fn()
+const mockCreate = vi.fn()
+
+vi.mock('@/lib/data', () => ({
+  getAuthGateway: vi.fn(() => ({ getUser: mockGetUser })),
+  getRepository: vi.fn(() => ({
+    findMany: mockFindMany,
+    create: mockCreate,
+    findById: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
   })),
+}))
+
+// ── Mock logger ──
+vi.mock('@/lib/logger', () => ({
+  withApiLog: (_name: string, handler: unknown) => handler,
 }))
 
 // ── Mock @template/shared/schemas ──
@@ -56,31 +68,16 @@ function makeRequest(options: {
   } as unknown as import('next/server').NextRequest
 }
 
-// ── Helper: chain de supabase query ──
-function makeQueryChain(result: { data?: unknown; error?: unknown; count?: number }) {
-  const chain = {
-    select: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    range: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue(result),
-    then: undefined as unknown,
-  }
-  // Para o GET que retorna promise diretamente (sem .single())
-  const promise = Promise.resolve(result)
-  Object.assign(chain, promise)
-  return chain
-}
-
 describe('GET /api/tasks', () => {
   beforeEach(() => {
     vi.resetModules()
     mockRateLimit.mockReturnValue({ success: true, remaining: 99 })
+    mockGetUser.mockReset()
+    mockFindMany.mockReset()
   })
 
   it('retorna 401 quando usuario nao esta autenticado', async () => {
-    mockGetUser.mockResolvedValueOnce({ data: { user: null } })
+    mockGetUser.mockResolvedValueOnce({ user: null, error: 'Não autenticado' })
     const { GET } = await import('../../app/api/tasks/route')
     const req = makeRequest({ url: 'http://localhost:3000/api/tasks' })
     const res = await GET(req)
@@ -96,25 +93,22 @@ describe('GET /api/tasks', () => {
   })
 
   it('retorna lista de tasks com sucesso para usuario autenticado', async () => {
-    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-123' } } })
-
+    mockGetUser.mockResolvedValueOnce({
+      user: { id: 'user-123', email: 'user@test.com', role: 'COLABORADOR' },
+      error: null,
+    })
     const tasks = [
       {
         id: 't1',
         title: 'Task teste',
         status: 'todo',
         priority: 'medium',
-        description: null,
-        assignee_id: null,
         created_by: 'user-123',
-        tenant_id: null,
         created_at: '2026-01-01T00:00:00Z',
         updated_at: '2026-01-01T00:00:00Z',
       },
     ]
-
-    const chain = makeQueryChain({ data: tasks, error: null, count: 1 })
-    mockFrom.mockReturnValue(chain)
+    mockFindMany.mockResolvedValueOnce(tasks)
 
     const { GET } = await import('../../app/api/tasks/route')
     const req = makeRequest({ url: 'http://localhost:3000/api/tasks' })
@@ -123,16 +117,24 @@ describe('GET /api/tasks', () => {
   })
 
   it('filtra por status quando parametro fornecido', async () => {
-    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-123' } } })
-    const chain = makeQueryChain({ data: [], error: null, count: 0 })
-    mockFrom.mockReturnValue(chain)
+    mockGetUser.mockResolvedValueOnce({
+      user: { id: 'user-123', email: 'user@test.com', role: 'COLABORADOR' },
+      error: null,
+    })
+    mockFindMany.mockResolvedValueOnce([])
 
     const { GET } = await import('../../app/api/tasks/route')
     const req = makeRequest({ url: 'http://localhost:3000/api/tasks?status=done' })
     const res = await GET(req)
     expect(res.status).toBe(200)
-    // .eq deve ter sido chamado com 'status', 'done'
-    expect(chain.eq).toHaveBeenCalledWith('status', 'done')
+    // Verifica que findMany foi chamado com filtro de status
+    expect(mockFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filters: expect.arrayContaining([
+          expect.objectContaining({ field: 'status', value: 'done' }),
+        ]),
+      })
+    )
   })
 })
 
@@ -140,10 +142,12 @@ describe('POST /api/tasks', () => {
   beforeEach(() => {
     vi.resetModules()
     mockRateLimit.mockReturnValue({ success: true, remaining: 99 })
+    mockGetUser.mockReset()
+    mockCreate.mockReset()
   })
 
   it('retorna 401 quando usuario nao esta autenticado', async () => {
-    mockGetUser.mockResolvedValueOnce({ data: { user: null } })
+    mockGetUser.mockResolvedValueOnce({ user: null, error: 'Não autenticado' })
     const { POST } = await import('../../app/api/tasks/route')
     const req = makeRequest({
       method: 'POST',
@@ -162,23 +166,20 @@ describe('POST /api/tasks', () => {
   })
 
   it('cria task com sucesso e retorna 201', async () => {
-    mockGetUser.mockResolvedValueOnce({ data: { user: { id: 'user-123' } } })
-
+    mockGetUser.mockResolvedValueOnce({
+      user: { id: 'user-123', email: 'user@test.com', role: 'COLABORADOR' },
+      error: null,
+    })
     const createdTask = {
       id: 'new-task',
       title: 'Nova Task',
       status: 'todo',
       priority: 'medium',
-      description: null,
-      assignee_id: null,
       created_by: 'user-123',
-      tenant_id: null,
       created_at: '2026-01-01T00:00:00Z',
       updated_at: '2026-01-01T00:00:00Z',
     }
-
-    const chain = makeQueryChain({ data: createdTask, error: null })
-    mockFrom.mockReturnValue(chain)
+    mockCreate.mockResolvedValueOnce(createdTask)
 
     const { POST } = await import('../../app/api/tasks/route')
     const req = makeRequest({

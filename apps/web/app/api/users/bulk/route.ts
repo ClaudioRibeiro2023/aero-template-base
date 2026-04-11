@@ -3,12 +3,14 @@
  *
  * Body: { action: 'deactivate' | 'change_role', ids: string[], role?: string }
  * Requer ADMIN.
+ *
+ * v3.0: Usa SupabaseDbClient para batch update via .in()
  */
 import type { NextRequest } from 'next/server'
-import { createServerSupabase } from '@/app/lib/supabase-server'
 import { requireJson } from '@/lib/api-guard'
 import { ok, badRequest, unauthorized, forbidden, serverError } from '@/lib/api-response'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getAuthGateway } from '@/lib/data'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { withApiLog } from '@/lib/logger'
 import { auditLog } from '@/lib/audit-log'
 
@@ -22,7 +24,7 @@ export const POST = withApiLog('users-bulk', async function POST(request: NextRe
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 
-  const { user, error } = await getAuthUser()
+  const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
   if (user.role !== 'ADMIN') return forbidden('Apenas ADMIN pode executar operações em massa')
 
@@ -40,17 +42,17 @@ export const POST = withApiLog('users-bulk', async function POST(request: NextRe
     return badRequest('ids deve ser um array com 1-100 elementos')
   }
 
-  // Prevenir auto-operação
   if (ids.includes(user.id)) {
     return badRequest('Não é possível executar operação em massa no próprio usuário')
   }
 
   try {
-    const supabase = await createServerSupabase()
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
     let affected = 0
 
     if (action === 'deactivate') {
-      const { count, error: updateError } = await supabase
+      const { count, error: updateError } = await client
         .from('profiles')
         .update({ is_active: false, updated_at: new Date().toISOString() })
         .in('id', ids)
@@ -65,7 +67,7 @@ export const POST = withApiLog('users-bulk', async function POST(request: NextRe
         return badRequest(`Role inválido. Válidos: ${VALID_ROLES.join(', ')}`)
       }
 
-      const { count, error: updateError } = await supabase
+      const { count, error: updateError } = await client
         .from('profiles')
         .update({ role, updated_at: new Date().toISOString() })
         .in('id', ids)

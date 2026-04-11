@@ -10,7 +10,8 @@
     "./auth": "./src/auth/index.ts",
     "./api": "./src/api/index.ts",
     "./utils": "./src/utils/index.ts",
-    "./schemas": "./src/schemas/index.ts"
+    "./schemas": "./src/schemas/index.ts",
+    "./cache": "./src/cache/index.ts"
   },
   "scripts": {
     "build": "tsc",
@@ -24,6 +25,7 @@
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.100.1",
     "@tanstack/react-query": "^5.12.2",
+    "@template/data": "workspace:*",
     "@template/types": "workspace:*"
   },
   "peerDependencies": {

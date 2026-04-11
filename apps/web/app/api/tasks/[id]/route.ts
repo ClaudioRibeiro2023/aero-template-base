@@ -3,7 +3,7 @@
  * PUT    /api/tasks/[id]  — atualiza task
  * DELETE /api/tasks/[id]  — remove task
  *
- * Sprint 7 (P1-01): CRUD de referência.
+ * v3.0: Migrado para @template/data repository pattern.
  */
 import type { NextRequest } from 'next/server'
 import { taskUpdateSchema } from '@template/shared/schemas'
@@ -18,7 +18,7 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
@@ -31,27 +31,19 @@ export const GET = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
     if (!success) return tooManyRequests()
 
-    const supabase = await createSupabaseCookieClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return unauthorized()
+    const { user, error } = await getAuthGateway().getUser()
+    if (error || !user) return unauthorized()
 
-    const { id } = await params
-    const { data, error } = await supabase
-      .from('tasks')
-      .select(
-        'id, title, description, status, priority, assignee_id, created_by, tenant_id, created_at, updated_at'
-      )
-      .eq('id', id)
-      .single()
-
-    if (error?.code === 'PGRST116') return notFound()
-    if (error) {
-      console.error('[tasks/GET:id]', error)
+    try {
+      const { id } = await params
+      const tasks = getRepository('tasks')
+      const data = await tasks.findById(id)
+      if (!data) return notFound()
+      return ok(data)
+    } catch (err) {
+      console.error('[tasks/GET:id]', err)
       return serverError()
     }
-    return ok(data)
   }
 )
 
@@ -66,11 +58,8 @@ export const PUT = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
     if (!success) return tooManyRequests()
 
-    const supabase = await createSupabaseCookieClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return unauthorized()
+    const { user, error } = await getAuthGateway().getUser()
+    if (error || !user) return unauthorized()
 
     let body: unknown
     try {
@@ -84,28 +73,22 @@ export const PUT = withApiLog(
       return badRequest('Dados inválidos', parsed.error.flatten().fieldErrors)
     }
 
-    const { id } = await params
-    const { assignee_id, ...rest } = parsed.data
-    const updatePayload = {
-      ...rest,
-      ...(assignee_id !== undefined ? { assignee_id: assignee_id || null } : {}),
-    }
+    try {
+      const { id } = await params
+      const { assignee_id, ...rest } = parsed.data
+      const updatePayload = {
+        ...rest,
+        ...(assignee_id !== undefined ? { assignee_id: assignee_id || null } : {}),
+      }
 
-    const { data, error } = await supabase
-      .from('tasks')
-      .update(updatePayload)
-      .eq('id', id)
-      .select(
-        'id, title, description, status, priority, assignee_id, created_by, tenant_id, created_at, updated_at'
-      )
-      .single()
-
-    if (error?.code === 'PGRST116') return notFound()
-    if (error) {
-      console.error('[tasks/PUT:id]', error)
+      const tasks = getRepository('tasks')
+      const data = await tasks.update(id, updatePayload)
+      if (!data) return notFound()
+      return ok(data)
+    } catch (err) {
+      console.error('[tasks/PUT:id]', err)
       return serverError()
     }
-    return ok(data)
   }
 )
 
@@ -117,19 +100,17 @@ export const DELETE = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
     if (!success) return tooManyRequests()
 
-    const supabase = await createSupabaseCookieClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return unauthorized()
+    const { user, error } = await getAuthGateway().getUser()
+    if (error || !user) return unauthorized()
 
-    const { id } = await params
-    const { error } = await supabase.from('tasks').delete().eq('id', id)
-
-    if (error) {
-      console.error('[tasks/DELETE:id]', error)
+    try {
+      const { id } = await params
+      const tasks = getRepository('tasks')
+      await tasks.delete(id)
+      return noContent()
+    } catch (err) {
+      console.error('[tasks/DELETE:id]', err)
       return serverError()
     }
-    return noContent()
   }
 )

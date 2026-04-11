@@ -1,9 +1,11 @@
 /**
  * GET  /api/admin/roles — lista role_definitions do tenant
  * POST /api/admin/roles — cria role custom (ADMIN only)
+ *
+ * v3.0: Migrado para @template/data auth gateway + SupabaseDbClient.
  */
 import type { NextRequest } from 'next/server'
-import { createServerSupabase } from '@/app/lib/supabase-server'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { requireJson } from '@/lib/api-guard'
 import {
   ok,
@@ -15,7 +17,7 @@ import {
   serverError,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getAuthGateway } from '@/lib/data'
 import { auditLog } from '@/lib/audit-log'
 import { withApiLog } from '@/lib/logger'
 
@@ -26,13 +28,14 @@ export const GET = withApiLog('admin-roles', async function GET(request: NextReq
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
 
-  const { user, error } = await getAuthUser()
+  const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
   if (!['ADMIN', 'GESTOR'].includes(user.role)) return forbidden()
 
-  const supabase = createServerSupabase()
+  const db = new SupabaseDbClient()
+  const client = db.asAdmin()
 
-  const { data: profile } = await supabase
+  const { data: profile } = await client
     .from('profiles')
     .select('tenant_id')
     .eq('id', user.id)
@@ -43,7 +46,7 @@ export const GET = withApiLog('admin-roles', async function GET(request: NextReq
   }
   const tenantId = profile.tenant_id
 
-  const { data, error: dbError } = await supabase
+  const { data, error: dbError } = await client
     .from('role_definitions')
     .select('*')
     .eq('tenant_id', tenantId)
@@ -65,7 +68,7 @@ export const POST = withApiLog('admin-roles', async function POST(request: NextR
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()
 
-  const { user, error } = await getAuthUser()
+  const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
   if (user.role !== 'ADMIN') return forbidden()
 
@@ -80,9 +83,10 @@ export const POST = withApiLog('admin-roles', async function POST(request: NextR
   const parsed = roleCreateSchema.safeParse(body)
   if (!parsed.success) return badRequest(parsed.error.issues[0]?.message ?? 'Dados invalidos')
 
-  const supabase = createServerSupabase()
+  const db = new SupabaseDbClient()
+  const client = db.asAdmin()
 
-  const { data: profile } = await supabase
+  const { data: profile } = await client
     .from('profiles')
     .select('tenant_id')
     .eq('id', user.id)
@@ -93,7 +97,7 @@ export const POST = withApiLog('admin-roles', async function POST(request: NextR
   }
   const tenantId = profile.tenant_id
 
-  const { data, error: dbError } = await supabase
+  const { data, error: dbError } = await client
     .from('role_definitions')
     .insert({
       tenant_id: tenantId,

@@ -27,6 +27,7 @@ import { BulkActionBar } from '@/components/common/BulkActionBar'
 import { UndoToast } from '@/components/common/UndoToast'
 import { useUndoToast } from '@/hooks/useUndoToast'
 import { exportToCsv, exportToXlsx } from '@/lib/export-csv'
+import { useNotifications } from '@/hooks/useNotifications'
 
 const STATUS_FILTERS = [
   { value: '', label: 'Todos' },
@@ -61,6 +62,7 @@ export function TicketsListClient() {
   const bulkReassign = useBulkReassignTickets()
   const { toast: undoToast, show: showUndo, dismiss: dismissUndo, handleUndo } = useUndoToast()
   const closedIdsRef = useRef<string[]>([])
+  const { notifyBulkClose, notifyBulkReassign, notifyBulkExport } = useNotifications()
 
   // Real-time: lista atualiza automaticamente
   useRealtimeTickets()
@@ -106,6 +108,7 @@ export function TicketsListClient() {
       },
     ])
     setToast({ message: `${selectedTickets.length} tickets exportados`, type: 'success' })
+    notifyBulkExport(selectedTickets.length, 'CSV')
     setSelected(new Set())
   }
 
@@ -130,6 +133,7 @@ export function TicketsListClient() {
       },
     ])
     setToast({ message: `${selectedTickets.length} tickets exportados (.xls)`, type: 'success' })
+    notifyBulkExport(selectedTickets.length, 'XLSX')
     setSelected(new Set())
   }
 
@@ -139,6 +143,7 @@ export function TicketsListClient() {
     closedIdsRef.current = ids
     try {
       await bulkClose.mutateAsync(ids)
+      notifyBulkClose(count)
       setSelected(new Set())
       showUndo({
         message: `${count} ticket${count > 1 ? 's' : ''} fechado${count > 1 ? 's' : ''}`,
@@ -165,6 +170,7 @@ export function TicketsListClient() {
     if (!assigneeId?.trim()) return
     try {
       await bulkReassign.mutateAsync({ ids: Array.from(selected), assigneeId: assigneeId.trim() })
+      notifyBulkReassign(selected.size)
       setToast({ message: `${selected.size} tickets reatribuídos`, type: 'success' })
       setSelected(new Set())
     } catch {

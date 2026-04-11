@@ -2,9 +2,11 @@
  * GET    /api/admin/roles/[id] — detalhes + contagem de users
  * PUT    /api/admin/roles/[id] — atualizar (system: apenas display_name/description)
  * DELETE /api/admin/roles/[id] — remover (bloqueado se is_system ou tem users)
+ *
+ * v3.0: Migrado para @template/data auth gateway + SupabaseDbClient.
  */
 import type { NextRequest } from 'next/server'
-import { createServerSupabase } from '@/app/lib/supabase-server'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { requireJson } from '@/lib/api-guard'
 import {
   ok,
@@ -15,7 +17,7 @@ import {
   tooManyRequests,
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getAuthGateway } from '@/lib/data'
 import { auditLog } from '@/lib/audit-log'
 import { withApiLog } from '@/lib/logger'
 
@@ -29,13 +31,14 @@ export const GET = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
     if (!success) return tooManyRequests()
 
-    const { user, error } = await getAuthUser()
+    const { user, error } = await getAuthGateway().getUser()
     if (error || !user) return unauthorized()
     if (!['ADMIN', 'GESTOR'].includes(user.role)) return forbidden()
 
-    const supabase = createServerSupabase()
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
 
-    const { data: role, error: dbError } = await supabase
+    const { data: role, error: dbError } = await client
       .from('role_definitions')
       .select('*')
       .eq('id', id)
@@ -43,7 +46,7 @@ export const GET = withApiLog(
 
     if (dbError || !role) return notFound()
 
-    const { count } = await supabase
+    const { count } = await client
       .from('profiles')
       .select('id', { count: 'exact', head: true })
       .eq('tenant_id', role.tenant_id)
@@ -64,7 +67,7 @@ export const PUT = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
     if (!success) return tooManyRequests()
 
-    const { user, error } = await getAuthUser()
+    const { user, error } = await getAuthGateway().getUser()
     if (error || !user) return unauthorized()
     if (user.role !== 'ADMIN') return forbidden()
 
@@ -79,9 +82,10 @@ export const PUT = withApiLog(
     const parsed = roleUpdateSchema.safeParse(body)
     if (!parsed.success) return badRequest(parsed.error.issues[0]?.message ?? 'Dados invalidos')
 
-    const supabase = createServerSupabase()
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
 
-    const { data: existing } = await supabase
+    const { data: existing } = await client
       .from('role_definitions')
       .select('id, is_system')
       .eq('id', id)
@@ -98,7 +102,7 @@ export const PUT = withApiLog(
         update.hierarchy_level = parsed.data.hierarchy_level
     }
 
-    const { data, error: dbError } = await supabase
+    const { data, error: dbError } = await client
       .from('role_definitions')
       .update(update)
       .eq('id', id)
@@ -127,13 +131,14 @@ export const DELETE = withApiLog(
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
     if (!success) return tooManyRequests()
 
-    const { user, error } = await getAuthUser()
+    const { user, error } = await getAuthGateway().getUser()
     if (error || !user) return unauthorized()
     if (user.role !== 'ADMIN') return forbidden()
 
-    const supabase = createServerSupabase()
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
 
-    const { data: role } = await supabase
+    const { data: role } = await client
       .from('role_definitions')
       .select('id, name, is_system, tenant_id')
       .eq('id', id)
@@ -142,7 +147,7 @@ export const DELETE = withApiLog(
     if (!role) return notFound()
     if (role.is_system) return badRequest('Roles do sistema nao podem ser removidas')
 
-    const { count } = await supabase
+    const { count } = await client
       .from('profiles')
       .select('id', { count: 'exact', head: true })
       .eq('tenant_id', role.tenant_id)
@@ -152,7 +157,7 @@ export const DELETE = withApiLog(
       return badRequest(`Nao e possivel remover: ${count} usuario(s) com esta role`)
     }
 
-    const { error: dbError } = await supabase.from('role_definitions').delete().eq('id', id)
+    const { error: dbError } = await client.from('role_definitions').delete().eq('id', id)
 
     if (dbError) return badRequest(dbError.message)
 

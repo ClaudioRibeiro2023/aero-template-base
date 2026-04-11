@@ -6,7 +6,7 @@
  *   export default { presets: [templatePreset], content: [...] }
  */
 
-import { brandTokens, accentTokens, radiusTokens } from './index'
+import { brandTokens, accentTokens, radiusTokens, glassTokens, glowTokens } from './index'
 
 export const templatePreset = {
   theme: {
@@ -41,6 +41,11 @@ export const templatePreset = {
           muted: 'var(--border-muted)',
           strong: 'var(--border-strong)',
         },
+        glass: {
+          bg: `var(--glass-bg, ${glassTokens.dark.glassBg})`,
+          border: `var(--glass-border, ${glassTokens.dark.glassBorder})`,
+          'border-hover': `var(--glass-border-hover, ${glassTokens.dark.glassBorderHover})`,
+        },
       },
       borderRadius: {
         sm: `var(--radius-sm, ${radiusTokens.sm})`,
@@ -48,6 +53,17 @@ export const templatePreset = {
         md: `var(--radius-md, ${radiusTokens.md})`,
         lg: `var(--radius-lg, ${radiusTokens.lg})`,
         xl: `var(--radius-xl, ${radiusTokens.xl})`,
+      },
+      boxShadow: {
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
+        glow: `0 0 20px var(--glow-brand, ${glowTokens.dark.glowBrand})`,
+        'glow-strong': `0 0 32px var(--glow-brand-strong, ${glowTokens.dark.glowBrandStrong})`,
+        'glow-purple': `0 0 20px var(--glow-purple, ${glowTokens.dark.glowPurple})`,
+      },
+      backdropBlur: {
+        glass: `var(--glass-blur, ${glassTokens.dark.glassBlur})`,
       },
     },
   },

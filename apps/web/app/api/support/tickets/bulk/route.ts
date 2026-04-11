@@ -2,12 +2,14 @@
  * POST /api/support/tickets/bulk — Operações em massa em tickets
  *
  * Body: { action: 'close' | 'reassign', ids: string[], assignee_id?: string }
+ *
+ * v3.0: Usa SupabaseDbClient para batch update via .in()
  */
 import type { NextRequest } from 'next/server'
-import { createServerSupabase } from '@/app/lib/supabase-server'
 import { requireJson } from '@/lib/api-guard'
 import { ok, badRequest, unauthorized, serverError } from '@/lib/api-response'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getAuthGateway } from '@/lib/data'
+import { SupabaseDbClient } from '@template/data/supabase'
 import { withApiLog } from '@/lib/logger'
 import { auditLog } from '@/lib/audit-log'
 
@@ -20,7 +22,7 @@ export const POST = withApiLog('tickets-bulk', async function POST(request: Next
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 
-  const { user, error } = await getAuthUser()
+  const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 
   const body = await request.json().catch(() => null)
@@ -38,11 +40,12 @@ export const POST = withApiLog('tickets-bulk', async function POST(request: Next
   }
 
   try {
-    const supabase = await createServerSupabase()
+    const db = new SupabaseDbClient()
+    const client = db.asAdmin()
     let affected = 0
 
     if (action === 'close') {
-      const { count, error: updateError } = await supabase
+      const { count, error: updateError } = await client
         .from('support_tickets')
         .update({ status: 'closed', updated_at: new Date().toISOString() })
         .in('id', ids)
@@ -55,7 +58,7 @@ export const POST = withApiLog('tickets-bulk', async function POST(request: Next
       const assigneeId = body.assignee_id as string | undefined
       if (!assigneeId) return badRequest('assignee_id é obrigatório para reassign')
 
-      const { count, error: updateError } = await supabase
+      const { count, error: updateError } = await client
         .from('support_tickets')
         .update({
           assignee_id: assigneeId,

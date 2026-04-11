@@ -3,7 +3,9 @@ import { createClient } from '@supabase/supabase-js'
 
 /**
  * Creates a Supabase client with service role key for server-side operations.
- * Only use in API routes and server actions — never expose to the client.
+ *
+ * @deprecated v3.0: Use `new SupabaseDbClient().asAdmin()` de `@template/data/supabase`.
+ * Este arquivo será removido no Sprint 7 (cleanup).
  */
 export function createServerSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -18,6 +20,8 @@ export function createServerSupabase() {
 
 /**
  * Creates a Supabase client with anon key for verifying user tokens.
+ *
+ * @deprecated v3.0: Use `new SupabaseDbClient().asUser()` de `@template/data/supabase`.
  */
 export function createAnonSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL

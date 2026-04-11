@@ -4,7 +4,7 @@ import { requireJson } from '@/lib/api-guard'
 import { parseBody } from '@/lib/validate'
 import { SignupSchema } from '@/schemas/auth'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
-import { createSupabaseCookieClient } from '@/lib/supabase-cookies'
+import { SupabaseDbClient } from '@template/data/supabase'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
   const { data, error: parseError } = await parseBody(request, SignupSchema)
   if (parseError) return parseError
 
-  const supabase = await createSupabaseCookieClient()
+  const db = new SupabaseDbClient()
+  const supabase = await db.asUser()
 
   const { data: authData, error } = await supabase.auth.signUp({
     email: data.email,
