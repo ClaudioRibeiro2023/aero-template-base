@@ -1,0 +1,33 @@
+:root {
+  --brand-primary: #0087a8;
+  --brand-secondary: #005f73;
+  --brand-accent: #94d2bd;
+  --surface-base: #f8fafc;
+  --surface-elevated: #ffffff;
+  --surface-muted: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border-default: #e2e8f0;
+}
+.dark {
+  --surface-base: #0f172a;
+  --surface-elevated: #1e293b;
+  --surface-muted: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #64748b;
+  --border-default: #475569;
+}
+body {
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.sb-show-main.sb-main-padded {
+  padding: 2rem;
+}

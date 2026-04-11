@@ -1,0 +1,61 @@
+.ds-accordion {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+.ds-accordion__item {
+  border-bottom: 1px solid #e2e8f0;
+}
+.ds-accordion__item:last-child {
+  border-bottom: none;
+}
+.ds-accordion__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0f172a;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease;
+  font-family: inherit;
+}
+.ds-accordion__trigger:hover {
+  background-color: #f8fafc;
+}
+.ds-accordion__trigger:focus-visible {
+  outline: 2px solid #00b4d8;
+  outline-offset: -2px;
+}
+.ds-accordion__trigger[aria-expanded='true'] {
+  background-color: #f8fafc;
+}
+.ds-accordion__icon {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  color: #64748b;
+}
+.ds-accordion__icon--open {
+  transform: rotate(180deg);
+}
+.ds-accordion__content {
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+}
+.ds-accordion__content--closed {
+  max-height: 0;
+}
+.ds-accordion__content--open {
+  max-height: 500px;
+}
+.ds-accordion__body {
+  padding: 0 1rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #475569;
+}

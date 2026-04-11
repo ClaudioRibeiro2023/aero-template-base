@@ -1,0 +1,11 @@
+{
+  "wave": 2,
+  "agent_id": "sofia",
+  "run_id": "73291acb-8a21-464f-a7f2-6ff64ed2a652",
+  "timestamp": "2026-04-03T20:08:47Z",
+  "files_count": 579,
+  "components": 103,
+  "pages": 19,
+  "enforcement": "enforce-wave.sh",
+  "status": "completed"
+}

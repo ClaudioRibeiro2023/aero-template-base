@@ -1,0 +1,99 @@
+.ds-skeleton {
+  background: var(--surface-muted, #e2e8f0);
+}
+.ds-skeleton--text {
+  height: 1rem;
+  border-radius: 0.25rem;
+}
+.ds-skeleton--circular {
+  border-radius: 50%;
+}
+.ds-skeleton--rectangular {
+  border-radius: 0;
+}
+.ds-skeleton--rounded {
+  border-radius: 0.5rem;
+}
+.ds-skeleton--pulse {
+  animation: ds-skeleton-pulse 1.5s ease-in-out infinite;
+}
+.ds-skeleton--wave {
+  position: relative;
+  overflow: hidden;
+}
+.ds-skeleton--wave:after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translate(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: ds-skeleton-wave 1.5s linear infinite;
+}
+@keyframes ds-skeleton-pulse {
+  0%,
+  to {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+@keyframes ds-skeleton-wave {
+  0% {
+    transform: translate(-100%);
+  }
+  to {
+    transform: translate(100%);
+  }
+}
+.ds-skeleton-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.ds-skeleton-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-elevated, #ffffff);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--border-default, #e2e8f0);
+}
+.ds-skeleton-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+.ds-skeleton-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--surface-elevated, #ffffff);
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-default, #e2e8f0);
+}
+.ds-skeleton-table__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+}
+.ds-skeleton-table__header {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-default, #e2e8f0);
+}
+.dark .ds-skeleton {
+  background: var(--surface-muted, #334155);
+}
+.dark .ds-skeleton--wave:after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+.dark .ds-skeleton-card,
+.dark .ds-skeleton-table {
+  background: var(--surface-elevated, #1e293b);
+  border-color: var(--border-default, #475569);
+}
+.dark .ds-skeleton-table__header {
+  border-color: var(--border-default, #475569);
+}

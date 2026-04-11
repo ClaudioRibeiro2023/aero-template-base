@@ -1,0 +1,11 @@
+{
+  "wave": 5,
+  "agent_id": "marcus",
+  "run_id": "73291acb-8a21-464f-a7f2-6ff64ed2a652",
+  "timestamp": "2026-04-03T20:15:42Z",
+  "files_count": 586,
+  "components": 103,
+  "pages": 19,
+  "enforcement": "enforce-wave.sh",
+  "status": "completed"
+}

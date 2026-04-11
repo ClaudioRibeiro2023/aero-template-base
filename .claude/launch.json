@@ -3,10 +3,9 @@
   "configurations": [
     {
       "name": "template-web",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev", "--port", "3005"],
-      "port": 3005,
-      "cwd": "B:/aero-studio/projects/.bases/template.base/apps/web"
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@template/web", "run", "dev"],
+      "port": 3005
     }
   ]
 }

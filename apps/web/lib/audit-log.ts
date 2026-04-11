@@ -4,7 +4,17 @@
  */
 export interface AuditEntry {
   userId: string
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'READ' | 'LOGIN' | 'LOGOUT'
+  action:
+    | 'CREATE'
+    | 'UPDATE'
+    | 'DELETE'
+    | 'READ'
+    | 'LOGIN'
+    | 'LOGOUT'
+    | 'BULK_CLOSE'
+    | 'BULK_REASSIGN'
+    | 'BULK_DEACTIVATE'
+    | 'BULK_ROLE_CHANGE'
   resource: string
   resourceId?: string
   details?: Record<string, unknown>

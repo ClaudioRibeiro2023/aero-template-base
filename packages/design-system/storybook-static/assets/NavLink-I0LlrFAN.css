@@ -1,0 +1,67 @@
+.ds-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  border-radius: 0.375rem;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+.ds-nav-link:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+.ds-nav-link--active {
+  background-color: #0087a814;
+  color: #00b4d8;
+  font-weight: 600;
+}
+.ds-nav-link--active:hover {
+  background-color: #0087a81f;
+}
+.ds-nav-link--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.ds-nav-link__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+}
+.ds-nav-link__badge {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.375rem;
+  border-radius: 9999px;
+  background-color: #e2e8f0;
+  color: #475569;
+}
+.ds-nav-link--active .ds-nav-link__badge {
+  background-color: #0087a826;
+  color: #00b4d8;
+}
+.ds-nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.ds-nav-group__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  padding: 0.5rem 0.75rem 0.25rem;
+}

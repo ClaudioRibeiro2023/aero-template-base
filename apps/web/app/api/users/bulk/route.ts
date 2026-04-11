@@ -10,6 +10,7 @@ import { requireJson } from '@/lib/api-guard'
 import { ok, badRequest, unauthorized, forbidden, serverError } from '@/lib/api-response'
 import { getAuthUser } from '@/lib/auth-guard'
 import { withApiLog } from '@/lib/logger'
+import { auditLog } from '@/lib/audit-log'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,6 +73,14 @@ export const POST = withApiLog('users-bulk', async function POST(request: NextRe
       if (updateError) throw updateError
       affected = count ?? ids.length
     }
+
+    const auditAction = action === 'deactivate' ? 'BULK_DEACTIVATE' : 'BULK_ROLE_CHANGE'
+    await auditLog({
+      userId: user.id,
+      action: auditAction,
+      resource: 'profiles',
+      details: { ids, affected, ...(action === 'change_role' ? { role: body.role } : {}) },
+    })
 
     return ok({ action, affected, ids })
   } catch (err) {

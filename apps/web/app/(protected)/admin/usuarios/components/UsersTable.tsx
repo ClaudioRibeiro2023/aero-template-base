@@ -11,12 +11,13 @@ import {
   FileDown,
   UserX,
   ShieldCheck,
+  Sheet,
 } from 'lucide-react'
 import { EmptyState, ToastItem } from '@template/design-system'
 import { BulkActionBar } from '@/components/common/BulkActionBar'
 import { UndoToast } from '@/components/common/UndoToast'
 import { useUndoToast } from '@/hooks/useUndoToast'
-import { exportToCsv } from '@/lib/export-csv'
+import { exportToCsv, exportToXlsx } from '@/lib/export-csv'
 import { useBulkDeactivateUsers, useBulkChangeUserRole, type Profile } from '@/hooks/useUsers'
 
 const ROLE_COLORS: Record<string, { bg: string; text: string }> = {
@@ -86,6 +87,21 @@ export function UsersTable({
       { key: 'is_active', label: 'Status', format: v => (v ? 'Ativo' : 'Inativo') },
     ])
     setToast({ message: `${selectedUsers.length} usuários exportados`, type: 'success' })
+    setSelected(new Set())
+  }
+
+  function handleBulkExportXlsx() {
+    const selectedUsers = users.filter(u => selected.has(u.id)) as unknown as Record<
+      string,
+      unknown
+    >[]
+    exportToXlsx(selectedUsers, 'usuarios', [
+      { key: 'display_name', label: 'Nome' },
+      { key: 'email', label: 'Email' },
+      { key: 'role', label: 'Role' },
+      { key: 'is_active', label: 'Status', format: v => (v ? 'Ativo' : 'Inativo') },
+    ])
+    setToast({ message: `${selectedUsers.length} usuários exportados (.xls)`, type: 'success' })
     setSelected(new Set())
   }
 
@@ -378,9 +394,15 @@ export function UsersTable({
             disabled: bulkChangeRole.isPending,
           },
           {
-            label: 'Exportar CSV',
+            label: 'CSV',
             icon: <FileDown size={14} />,
             onClick: handleBulkExport,
+            variant: 'secondary',
+          },
+          {
+            label: 'XLSX',
+            icon: <Sheet size={14} />,
+            onClick: handleBulkExportXlsx,
             variant: 'secondary',
           },
         ]}

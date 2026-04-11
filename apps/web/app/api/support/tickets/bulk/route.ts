@@ -9,6 +9,7 @@ import { requireJson } from '@/lib/api-guard'
 import { ok, badRequest, unauthorized, serverError } from '@/lib/api-response'
 import { getAuthUser } from '@/lib/auth-guard'
 import { withApiLog } from '@/lib/logger'
+import { auditLog } from '@/lib/audit-log'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,6 +67,18 @@ export const POST = withApiLog('tickets-bulk', async function POST(request: Next
       if (updateError) throw updateError
       affected = count ?? ids.length
     }
+
+    const auditAction = action === 'close' ? 'BULK_CLOSE' : 'BULK_REASSIGN'
+    await auditLog({
+      userId: user.id,
+      action: auditAction,
+      resource: 'support_tickets',
+      details: {
+        ids,
+        affected,
+        ...(action === 'reassign' ? { assignee_id: body.assignee_id } : {}),
+      },
+    })
 
     return ok({ action, affected, ids })
   } catch (err) {

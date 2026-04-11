@@ -12,6 +12,10 @@ const ACTION_COLORS: Record<string, string> = {
   READ: 'text-gray-300 bg-gray-400/10',
   LOGIN: 'text-violet-400 bg-violet-400/10',
   LOGOUT: 'text-orange-400 bg-orange-400/10',
+  BULK_CLOSE: 'text-rose-300 bg-rose-400/10',
+  BULK_REASSIGN: 'text-amber-400 bg-amber-400/10',
+  BULK_DEACTIVATE: 'text-rose-400 bg-rose-500/10',
+  BULK_ROLE_CHANGE: 'text-cyan-400 bg-cyan-400/10',
 }
 
 function AuditRow({ log }: { log: AuditLog }) {
@@ -101,6 +105,12 @@ export default function AuditoriaPage() {
           <option value="DELETE">DELETE</option>
           <option value="LOGIN">LOGIN</option>
           <option value="LOGOUT">LOGOUT</option>
+          <optgroup label="Operações em massa">
+            <option value="BULK_CLOSE">BULK_CLOSE</option>
+            <option value="BULK_REASSIGN">BULK_REASSIGN</option>
+            <option value="BULK_DEACTIVATE">BULK_DEACTIVATE</option>
+            <option value="BULK_ROLE_CHANGE">BULK_ROLE_CHANGE</option>
+          </optgroup>
         </select>
         <input
           type="text"

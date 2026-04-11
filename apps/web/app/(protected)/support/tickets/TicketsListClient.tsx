@@ -10,6 +10,7 @@ import {
   FileDown,
   XCircle,
   UserCheck,
+  Sheet,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -25,7 +26,7 @@ import { TicketCard } from '@/components/support/TicketCard'
 import { BulkActionBar } from '@/components/common/BulkActionBar'
 import { UndoToast } from '@/components/common/UndoToast'
 import { useUndoToast } from '@/hooks/useUndoToast'
-import { exportToCsv } from '@/lib/export-csv'
+import { exportToCsv, exportToXlsx } from '@/lib/export-csv'
 
 const STATUS_FILTERS = [
   { value: '', label: 'Todos' },
@@ -105,6 +106,30 @@ export function TicketsListClient() {
       },
     ])
     setToast({ message: `${selectedTickets.length} tickets exportados`, type: 'success' })
+    setSelected(new Set())
+  }
+
+  function handleBulkExportXlsx() {
+    const selectedTickets = tickets.filter(t => selected.has(t.id)) as unknown as Record<
+      string,
+      unknown
+    >[]
+    exportToXlsx(selectedTickets, 'tickets', [
+      { key: 'title', label: 'Título' },
+      { key: 'status', label: 'Status', format: v => STATUS_LABELS[v as string] || String(v) },
+      {
+        key: 'priority',
+        label: 'Prioridade',
+        format: v => PRIORITY_LABELS[v as string] || String(v),
+      },
+      { key: 'category', label: 'Categoria' },
+      {
+        key: 'created_at',
+        label: 'Criado em',
+        format: v => new Date(v as string).toLocaleDateString('pt-BR'),
+      },
+    ])
+    setToast({ message: `${selectedTickets.length} tickets exportados (.xls)`, type: 'success' })
     setSelected(new Set())
   }
 
@@ -295,9 +320,15 @@ export function TicketsListClient() {
             disabled: bulkReassign.isPending,
           },
           {
-            label: 'Exportar CSV',
+            label: 'CSV',
             icon: <FileDown size={14} />,
             onClick: handleBulkExport,
+            variant: 'secondary',
+          },
+          {
+            label: 'XLSX',
+            icon: <Sheet size={14} />,
+            onClick: handleBulkExportXlsx,
             variant: 'secondary',
           },
         ]}

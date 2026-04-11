@@ -39,6 +39,29 @@ export function getClientIp(headers: Headers): string {
   )
 }
 
+/**
+ * Rate limit by authenticated user ID, falling back to IP when unauthenticated.
+ * Provides more accurate per-user limiting regardless of IP changes/shared IPs.
+ */
+export function rateLimitByUser(
+  userId: string | undefined,
+  ip: string,
+  config: RateLimitConfig = {}
+): { success: boolean; remaining: number } {
+  // If userId available, rate limit per userId (more precise)
+  // If not, fallback to IP
+  const identifier = userId ? `user:${userId}` : `ip:${ip}`
+  return rateLimit(identifier, config)
+}
+
+/**
+ * Extract the authenticated user ID from request headers.
+ * Reads the x-user-id header set by middleware after auth validation.
+ */
+export function getUserIdFromHeaders(headers: Headers): string | undefined {
+  return headers.get('x-user-id') ?? undefined
+}
+
 // Periodic cleanup of expired entries (every 5 min)
 if (typeof setInterval !== 'undefined') {
   setInterval(() => {

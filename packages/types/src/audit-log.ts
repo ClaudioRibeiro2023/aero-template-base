@@ -5,7 +5,17 @@
 /**
  * Audit log action types
  */
-export type AuditLogAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'READ' | 'LOGIN' | 'LOGOUT'
+export type AuditLogAction =
+  | 'CREATE'
+  | 'UPDATE'
+  | 'DELETE'
+  | 'READ'
+  | 'LOGIN'
+  | 'LOGOUT'
+  | 'BULK_CLOSE'
+  | 'BULK_REASSIGN'
+  | 'BULK_DEACTIVATE'
+  | 'BULK_ROLE_CHANGE'
 
 /**
  * Audit log entity

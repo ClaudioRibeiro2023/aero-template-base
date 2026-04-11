@@ -252,6 +252,41 @@ function MiniBarChart() {
   )
 }
 
+function Sparkline({
+  values,
+  color = 'var(--brand-primary)',
+}: {
+  values: number[]
+  color?: string
+}) {
+  if (values.length < 2) return null
+  const max = Math.max(...values)
+  const min = Math.min(...values)
+  const range = max - min || 1
+  const w = 64,
+    h = 24,
+    pad = 2
+  const points = values
+    .map((v, i) => {
+      const x = pad + (i / (values.length - 1)) * (w - pad * 2)
+      const y = h - pad - ((v - min) / range) * (h - pad * 2)
+      return `${x},${y}`
+    })
+    .join(' ')
+  return (
+    <svg width={w} height={h} aria-hidden="true" className="opacity-70">
+      <polyline
+        points={points}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 interface DashboardClientProps {
   appName: string
   dateLabel: string
@@ -311,6 +346,7 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
   const orderedCards = order.map(key => KPI_CARDS.find(c => c.key === key)!).filter(Boolean)
   const dragIndexRef = useRef<number | null>(null)
   const [dragOver, setDragOver] = useState<number | null>(null)
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
 
   function handleDragStart(index: number) {
     dragIndexRef.current = index
@@ -341,6 +377,33 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
     setDragOver(null)
   }
 
+  function handleKeyDown(e: React.KeyboardEvent, index: number) {
+    const len = orderedCards.length
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      ;(e.currentTarget as HTMLElement).blur()
+      return
+    }
+    if (!['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'Home', 'End'].includes(e.key)) return
+    e.preventDefault()
+    const newOrder = [...order]
+    let targetIndex = index
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      targetIndex = Math.max(0, index - 1)
+    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      targetIndex = Math.min(len - 1, index + 1)
+    } else if (e.key === 'Home') {
+      targetIndex = 0
+    } else if (e.key === 'End') {
+      targetIndex = len - 1
+    }
+    if (targetIndex === index) return
+    const [moved] = newOrder.splice(index, 1)
+    newOrder.splice(targetIndex, 0, moved)
+    saveOrder(newOrder)
+    setFocusedIndex(targetIndex)
+  }
+
   return (
     <main className="page-enter ambient-gradient max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
@@ -353,19 +416,33 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
 
       {/* Bento Grid — KPI Cards (draggable) */}
       <section aria-label="Indicadores principais" className="relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 stagger-children">
+        <div
+          role="list"
+          className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 stagger-children"
+        >
           {orderedCards.map(({ key, ...card }, index) => (
             <div
               key={key}
+              role="listitem"
+              tabIndex={0}
               draggable
+              aria-label={`${card.label}, posição ${index + 1} de ${orderedCards.length}. Use as teclas de seta para mover.`}
               onDragStart={() => handleDragStart(index)}
               onDragOver={e => handleDragOver(e, index)}
               onDrop={() => handleDrop(index)}
               onDragEnd={handleDragEnd}
+              onFocus={() => setFocusedIndex(index)}
+              onBlur={() => setFocusedIndex(null)}
+              onKeyDown={e => handleKeyDown(e, index)}
               className="group/drag relative"
               style={{
                 opacity: dragIndexRef.current === index ? 0.5 : 1,
-                outline: dragOver === index ? '2px dashed var(--brand-primary)' : undefined,
+                outline:
+                  focusedIndex === index
+                    ? '2px solid var(--brand-primary)'
+                    : dragOver === index
+                      ? '2px dashed var(--brand-primary)'
+                      : undefined,
                 borderRadius: 'var(--radius-lg)',
               }}
             >
@@ -409,18 +486,24 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
                   value: latestMetric.active_users,
                   prev: previousMetric?.active_users,
                   icon: Users,
+                  sparkValues: metrics.map(m => m.active_users).reverse(),
+                  sparkColor: 'var(--brand-primary)',
                 },
                 {
                   label: 'Tickets Criados',
                   value: latestMetric.tickets_created,
                   prev: previousMetric?.tickets_created,
                   icon: FileText,
+                  sparkValues: metrics.map(m => m.tickets_created).reverse(),
+                  sparkColor: 'var(--accent-purple)',
                 },
                 {
                   label: 'Tasks Concluídas',
                   value: latestMetric.tasks_completed,
                   prev: previousMetric?.tasks_completed,
                   icon: Activity,
+                  sparkValues: metrics.map(m => m.tasks_completed).reverse(),
+                  sparkColor: 'var(--accent-purple)',
                 },
               ].map(metric => {
                 const MetricIcon = metric.icon
@@ -445,14 +528,17 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
                       </p>
                       <p className="text-xs text-[var(--text-muted)]">{metric.label}</p>
                     </div>
-                    {deltaPct !== 0 && (
-                      <span
-                        className={`text-xs font-medium ${deltaPct > 0 ? 'text-emerald-400' : 'text-rose-400'}`}
-                      >
-                        {deltaPct > 0 ? '+' : ''}
-                        {deltaPct}%
-                      </span>
-                    )}
+                    <div className="flex flex-col items-end gap-1">
+                      {deltaPct !== 0 && (
+                        <span
+                          className={`text-xs font-medium ${deltaPct > 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+                        >
+                          {deltaPct > 0 ? '+' : ''}
+                          {deltaPct}%
+                        </span>
+                      )}
+                      <Sparkline values={metric.sparkValues} color={metric.sparkColor} />
+                    </div>
                   </div>
                 )
               })}
