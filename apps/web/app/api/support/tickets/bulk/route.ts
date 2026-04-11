@@ -41,7 +41,7 @@ export const POST = withApiLog('tickets-bulk', async function POST(request: Next
 
   try {
     const db = new SupabaseDbClient()
-    const client = db.asAdmin()
+    const client = await db.asUser()
     let affected = 0
 
     if (action === 'close') {

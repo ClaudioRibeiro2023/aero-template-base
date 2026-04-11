@@ -21,7 +21,7 @@ import {
   AuditLogRepository,
   OrganizationRepository,
 } from '@template/data'
-import type { IAuthGateway } from '@template/data'
+import type { IAuthGateway, AuthenticatedUser, AuthGatewayResult } from '@template/data'
 
 // ── Singleton do DbClient ──
 const dbClient = new SupabaseDbClient()
@@ -58,6 +58,28 @@ export function getRepository(name: RepositoryName) {
 }
 
 // ── Auth Gateway ──
+
+/** Demo auth gateway — retorna usuário mock quando DEMO_MODE ativo */
+class DemoAuthGateway implements IAuthGateway {
+  private readonly demoUser: AuthenticatedUser = {
+    id: 'demo-user-id',
+    email: 'admin@demo.com',
+    role: 'ADMIN' as const,
+  }
+
+  async getUser(): Promise<AuthGatewayResult> {
+    return { user: this.demoUser, error: null }
+  }
+
+  async requireRole(): Promise<AuthenticatedUser | null> {
+    return this.demoUser
+  }
+}
+
 export function getAuthGateway(): IAuthGateway {
+  // Se DEMO_MODE ativo, retornar demo gateway sem chamar Supabase
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || process.env.DEMO_MODE === 'true') {
+    return new DemoAuthGateway()
+  }
   return new SupabaseAuthGateway()
 }

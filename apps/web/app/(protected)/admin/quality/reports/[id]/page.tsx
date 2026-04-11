@@ -3,7 +3,7 @@
 import { use } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Loader2 } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useFormatter } from 'next-intl'
 import { useQualityReport } from '@/hooks/useQualityDiagnostic'
 import { QualityOverallScore } from '@/components/quality/QualityOverallScore'
 import { QualityCategoryDetail } from '@/components/quality/QualityCategoryDetail'
@@ -11,6 +11,7 @@ import { QualityCategoryDetail } from '@/components/quality/QualityCategoryDetai
 export default function QualityReportPage({ params }: { params: Promise<{ id: string }> }) {
   const t = useTranslations('quality')
   const tc = useTranslations('common')
+  const format = useFormatter()
   const { id } = use(params)
   const { data: report, isLoading, isError } = useQualityReport(id)
 
@@ -46,7 +47,11 @@ export default function QualityReportPage({ params }: { params: Promise<{ id: st
         </Link>
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('reportTitle')}</h1>
         <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-          {t('generatedAt')} {new Date(report.created_at).toLocaleString('pt-BR')}
+          {t('generatedAt')}{' '}
+          {format.dateTime(new Date(report.created_at), {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+          })}
         </p>
       </div>
 

@@ -35,7 +35,10 @@ export function rateLimit(
  */
 export function getClientIp(headers: Headers): string {
   return (
-    headers.get('x-forwarded-for')?.split(',')[0]?.trim() || headers.get('x-real-ip') || 'unknown'
+    headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() ||
+    headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    headers.get('x-real-ip') ||
+    'unknown'
   )
 }
 

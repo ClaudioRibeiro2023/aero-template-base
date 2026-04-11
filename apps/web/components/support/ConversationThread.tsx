@@ -1,6 +1,7 @@
 'use client'
 
 import { User, Shield } from 'lucide-react'
+import { useTranslations, useFormatter } from 'next-intl'
 import type { SupportMessage } from '@/services/supportMessages'
 
 export function ConversationThread({
@@ -10,11 +11,12 @@ export function ConversationThread({
   messages: SupportMessage[]
   currentUserId: string
 }) {
+  const t = useTranslations('support')
+  const format = useFormatter()
+
   if (messages.length === 0) {
     return (
-      <div className="text-center py-8 text-sm text-[var(--text-muted)]">
-        Nenhuma mensagem ainda. Envie a primeira resposta.
-      </div>
+      <div className="text-center py-8 text-sm text-[var(--text-muted)]">{t('noMessages')}</div>
     )
   }
 
@@ -44,15 +46,18 @@ export function ConversationThread({
                 )}
               </div>
               <span className="text-xs font-medium text-[var(--text-secondary)]">
-                {isOwn ? 'Você' : 'Suporte'}
+                {isOwn ? t('you') : t('supportAgent')}
               </span>
               {isInternal && (
                 <span className="text-[10px] font-medium text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded">
-                  Nota Interna
+                  {t('thread.internalNote')}
                 </span>
               )}
               <span className="text-[11px] text-[var(--text-muted)] ml-auto">
-                {new Date(msg.created_at).toLocaleString('pt-BR')}
+                {format.dateTime(new Date(msg.created_at), {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
               </span>
             </div>
             <p className="text-sm text-[var(--text-primary)] whitespace-pre-wrap">{msg.content}</p>

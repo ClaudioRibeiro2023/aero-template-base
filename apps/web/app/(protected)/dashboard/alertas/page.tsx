@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Bell, ChevronLeft, Info, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
 
 export const metadata: Metadata = { title: 'Alertas' }
 
@@ -40,27 +41,28 @@ const LEVEL_CONFIG: Record<AlertLevel, { icon: React.ElementType; color: string;
   error: { icon: XCircle, color: 'text-rose-400', bg: 'bg-rose-500/10' },
 }
 
-export default function AlertasPage() {
+export default async function AlertasPage() {
+  const t = await getTranslations('alerts')
+  const tc = await getTranslations('common')
+
   return (
     <main className="page-enter ambient-gradient max-w-3xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       <div className="relative z-10 flex items-center gap-3">
         <Link
           href="/dashboard"
           className="p-1.5 rounded-xl hover:bg-white/[0.03] transition-colors"
-          aria-label="Voltar ao dashboard"
+          aria-label={tc('back')}
         >
           <ChevronLeft size={20} className="text-[var(--text-muted)]" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Alertas</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-            Notificações e alertas do sistema
-          </p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('title')}</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-0.5">{t('subtitle')}</p>
         </div>
         <div className="ml-auto flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--brand-primary)]/10">
           <Bell size={14} className="text-[var(--brand-primary)]" aria-hidden="true" />
           <span className="text-xs font-medium text-[var(--brand-primary)]">
-            {ALERTS.length} alertas
+            {t('count', { count: ALERTS.length })}
           </span>
         </div>
       </div>

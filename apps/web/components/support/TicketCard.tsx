@@ -1,21 +1,17 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { MessageSquare } from 'lucide-react'
+import { useTranslations, useFormatter } from 'next-intl'
 import { TicketStatusBadge } from './TicketStatusBadge'
 import { TicketPriorityIndicator } from './TicketPriorityIndicator'
 import type { SupportTicket } from '@/services/supportTickets'
 
-const CATEGORY_LABELS: Record<string, string> = {
-  bug: 'Bug',
-  feature: 'Feature',
-  question: 'Dúvida',
-  access: 'Acesso',
-  performance: 'Performance',
-  other: 'Outro',
-}
+export const TicketCard = memo(function TicketCard({ ticket }: { ticket: SupportTicket }) {
+  const t = useTranslations('support')
+  const format = useFormatter()
 
-export function TicketCard({ ticket }: { ticket: SupportTicket }) {
   return (
     <Link
       href={`/support/tickets/${ticket.id}`}
@@ -29,16 +25,16 @@ export function TicketCard({ ticket }: { ticket: SupportTicket }) {
           <TicketStatusBadge status={ticket.status} />
           <TicketPriorityIndicator priority={ticket.priority} />
           <span className="text-[11px] text-[var(--text-muted)]">
-            {CATEGORY_LABELS[ticket.category] ?? ticket.category}
+            {t(`category.${ticket.category}`)}
           </span>
         </div>
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
         <span className="text-[11px] text-[var(--text-muted)] hidden sm:block">
-          {new Date(ticket.updated_at).toLocaleDateString('pt-BR')}
+          {format.dateTime(new Date(ticket.updated_at), { dateStyle: 'medium' })}
         </span>
         <MessageSquare size={14} className="text-[var(--text-muted)]" aria-hidden="true" />
       </div>
     </Link>
   )
-}
+})

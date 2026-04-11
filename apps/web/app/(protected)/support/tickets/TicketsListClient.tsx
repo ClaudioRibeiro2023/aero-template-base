@@ -13,6 +13,7 @@ import {
   Sheet,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslations, useFormatter } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { EmptyState, ToastItem } from '@template/design-system'
 import { useRealtimeTickets } from '@/hooks/useRealtimeSubscription'
@@ -52,6 +53,8 @@ const PRIORITY_LABELS: Record<string, string> = {
 }
 
 export function TicketsListClient() {
+  const ts = useTranslations('support')
+  const intlFormat = useFormatter()
   const router = useRouter()
   const [filters, setFilters] = useState<TicketFilters>({ page: 1, page_size: 20 })
   const { data, isLoading, isError } = useTickets(filters)
@@ -93,18 +96,22 @@ export function TicketsListClient() {
       unknown
     >[]
     exportToCsv(selectedTickets, 'tickets', [
-      { key: 'title', label: 'Título' },
-      { key: 'status', label: 'Status', format: v => STATUS_LABELS[v as string] || String(v) },
+      { key: 'title', label: ts('form.title') },
+      {
+        key: 'status',
+        label: ts('form.category'),
+        format: v => STATUS_LABELS[v as string] || String(v),
+      },
       {
         key: 'priority',
-        label: 'Prioridade',
+        label: ts('form.priority'),
         format: v => PRIORITY_LABELS[v as string] || String(v),
       },
-      { key: 'category', label: 'Categoria' },
+      { key: 'category', label: ts('form.category') },
       {
         key: 'created_at',
-        label: 'Criado em',
-        format: v => new Date(v as string).toLocaleDateString('pt-BR'),
+        label: ts('createdAt', { date: '' }),
+        format: v => intlFormat.dateTime(new Date(v as string), { dateStyle: 'medium' }),
       },
     ])
     setToast({ message: `${selectedTickets.length} tickets exportados`, type: 'success' })
@@ -118,18 +125,22 @@ export function TicketsListClient() {
       unknown
     >[]
     exportToXlsx(selectedTickets, 'tickets', [
-      { key: 'title', label: 'Título' },
-      { key: 'status', label: 'Status', format: v => STATUS_LABELS[v as string] || String(v) },
+      { key: 'title', label: ts('form.title') },
+      {
+        key: 'status',
+        label: ts('form.category'),
+        format: v => STATUS_LABELS[v as string] || String(v),
+      },
       {
         key: 'priority',
-        label: 'Prioridade',
+        label: ts('form.priority'),
         format: v => PRIORITY_LABELS[v as string] || String(v),
       },
-      { key: 'category', label: 'Categoria' },
+      { key: 'category', label: ts('form.category') },
       {
         key: 'created_at',
-        label: 'Criado em',
-        format: v => new Date(v as string).toLocaleDateString('pt-BR'),
+        label: ts('createdAt', { date: '' }),
+        format: v => intlFormat.dateTime(new Date(v as string), { dateStyle: 'medium' }),
       },
     ])
     setToast({ message: `${selectedTickets.length} tickets exportados (.xls)`, type: 'success' })

@@ -19,7 +19,7 @@ export const GET = withApiLog('user-onboarding', async function GET(_request: Ne
 
   try {
     const db = new SupabaseDbClient()
-    const client = db.asAdmin()
+    const client = await db.asUser()
     const { data } = await client
       .from('profiles')
       .select('onboarding_step')
@@ -46,7 +46,7 @@ export const PATCH = withApiLog('user-onboarding', async function PATCH(request:
 
   try {
     const db = new SupabaseDbClient()
-    const client = db.asAdmin()
+    const client = await db.asUser()
     const updateData: Record<string, unknown> = { onboarding_step: body.step }
 
     if (body.step >= 5) {

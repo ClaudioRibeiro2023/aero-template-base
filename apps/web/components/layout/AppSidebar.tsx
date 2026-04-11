@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@template/shared'
@@ -9,11 +8,8 @@ import {
   Home,
   User,
   Settings,
-  LogOut,
   ChevronDown,
   ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   LayoutGrid,
   LayoutDashboard,
   BarChart3,
@@ -23,7 +19,6 @@ import {
   ShieldCheck,
   FileText,
   Activity,
-  Search,
   Boxes,
   Gauge,
   BookOpen,
@@ -40,6 +35,8 @@ import { useNavigationConfig } from '@/hooks/useNavigationConfig'
 import { useGlobalSearch } from '@/components/search'
 import { useOrganization } from '@/hooks/useOrganization'
 import { TenantSwitcher } from '@/components/common/TenantSwitcher'
+import { SidebarHeader } from './SidebarHeader'
+import { SidebarFooter } from './SidebarFooter'
 
 // Mapa de ícones dinâmicos — cobre todos os ícones usados em navigation configs
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -70,10 +67,6 @@ function getIcon(iconName?: string, FallbackIcon: LucideIcon = LayoutGrid): Luci
   if (!iconName) return FallbackIcon
   return ICON_MAP[iconName] || FallbackIcon
 }
-
-// Detect platform for shortcut display
-const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform)
-const MOD_KEY = IS_MAC ? '⌘' : 'Ctrl+'
 
 // Badge color map
 const BADGE_COLORS: Record<string, string> = {
@@ -280,15 +273,6 @@ export function AppSidebar({
     return groups
   }, [navItems])
 
-  // User initials for avatar
-  const userInitials = useMemo(() => {
-    const name = user?.name || 'U'
-    const parts = name.split(' ')
-    return parts.length > 1
-      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-      : name[0].toUpperCase()
-  }, [user?.name])
-
   return (
     <>
       {/* Mobile overlay — visível apenas quando drawer está aberto em telas pequenas */}
@@ -303,7 +287,7 @@ export function AppSidebar({
       {/* Botão FAB mobile — visível apenas em telas pequenas, controlado internamente */}
       {mobileOpenProp === undefined && (
         <button
-          className="fixed bottom-4 left-4 z-30 lg:hidden p-3 rounded-full bg-[var(--brand-primary)] text-white shadow-lg"
+          className="fixed bottom-4 start-4 z-30 lg:hidden p-3 rounded-full bg-[var(--brand-primary)] text-white shadow-lg"
           onClick={() => handleMobileToggle(!isMobileOpen)}
           aria-label={isMobileOpen ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={isMobileOpen}
@@ -317,107 +301,22 @@ export function AppSidebar({
         aria-label="Menu principal"
         className={clsx(
           'flex flex-col sidebar-island',
-          'transition-[width,transform] duration-250 ease-[cubic-bezier(0.4,0,0.2,1)]',
+          'transition-[width,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
           collapsed ? 'w-[var(--sidebar-collapsed-width,56px)]' : 'w-[var(--sidebar-width)]',
           'lg:translate-x-0',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-        {/* ── Header: Logo + Collapse Toggle ── */}
-        <div
-          className={clsx(
-            'h-[52px] flex items-center border-b border-[rgba(255,255,255,0.06)]',
-            collapsed ? 'flex-col justify-center gap-0 px-1 py-1' : 'justify-between px-3'
-          )}
-        >
-          <Link
-            href="/dashboard"
-            className={clsx(
-              'flex items-center overflow-hidden rounded-lg transition-all duration-200',
-              collapsed ? 'justify-center' : 'gap-2.5'
-            )}
-          >
-            {/* Logo: image if available, fallback to initial letter */}
-            {(collapsed ? logoCompactUrl : logoUrl) ? (
-              <Image
-                src={(collapsed ? logoCompactUrl : logoUrl)!}
-                alt={appName}
-                width={collapsed ? 28 : 32}
-                height={collapsed ? 28 : 32}
-                fetchPriority="high"
-                unoptimized
-                className={clsx(
-                  'rounded-lg object-contain shadow-[0_0_12px_rgba(0,180,216,0.15)]',
-                  collapsed ? 'w-7 h-7' : 'w-8 h-8 min-w-[32px] rounded-xl'
-                )}
-              />
-            ) : (
-              <div
-                className={clsx(
-                  'rounded-lg bg-[var(--brand-primary)] flex items-center justify-center shadow-lg shadow-[var(--brand-primary)]/20 shadow-[0_0_12px_rgba(0,180,216,0.15)]',
-                  collapsed ? 'w-7 h-7' : 'w-8 h-8 min-w-[32px] rounded-xl'
-                )}
-              >
-                <span className={clsx('text-white font-bold', collapsed ? 'text-xs' : 'text-sm')}>
-                  {appInitial}
-                </span>
-              </div>
-            )}
-            {!collapsed && (
-              <span className="text-white font-semibold text-[15px] whitespace-nowrap tracking-tight">
-                {appName}
-              </span>
-            )}
-          </Link>
-          {onToggle && !collapsed && (
-            <button
-              onClick={onToggle}
-              className="p-1 rounded-md hover:bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
-              title="Recolher menu"
-              aria-label="Recolher menu"
-            >
-              <ChevronsLeft size={16} />
-            </button>
-          )}
-          {onToggle && collapsed && (
-            <button
-              onClick={onToggle}
-              className="p-1 rounded-md hover:bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
-              title="Expandir menu"
-              aria-label="Expandir menu"
-            >
-              <ChevronsRight size={16} />
-            </button>
-          )}
-        </div>
-
-        {/* ── Quick Search Trigger ── */}
-        <div className={clsx('px-2 pt-2 pb-1', collapsed && 'px-1.5')}>
-          <button
-            onClick={() => globalSearch.open()}
-            className={clsx(
-              'group w-full flex items-center gap-2 rounded-lg transition-all duration-150 ease-out',
-              'bg-[rgba(255,255,255,0.03)] hover:bg-white/[0.06] border border-[rgba(255,255,255,0.06)]',
-              'text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text)]',
-              collapsed ? 'p-2 justify-center' : 'px-2.5 py-1.5'
-            )}
-            title={collapsed ? `Buscar (${MOD_KEY}K)` : undefined}
-            aria-label="Abrir busca global"
-          >
-            <Search
-              size={15}
-              className="flex-shrink-0 group-hover:rotate-12 transition-transform"
-            />
-            {!collapsed && (
-              <>
-                <span className="text-xs flex-1 text-left">Buscar...</span>
-                <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.08] font-mono text-[var(--sidebar-text-muted)]">
-                  {MOD_KEY}K
-                </kbd>
-              </>
-            )}
-          </button>
-        </div>
+        {/* ── Header: Logo + Collapse Toggle + Quick Search ── */}
+        <SidebarHeader
+          collapsed={collapsed}
+          onToggle={onToggle}
+          appName={appName}
+          appInitial={appInitial}
+          logoUrl={logoUrl}
+          logoCompactUrl={logoCompactUrl}
+          onOpenSearch={() => globalSearch.open()}
+        />
 
         {/* ── Tenant Switcher ── */}
         {!isOrgLoading && orgs.length > 1 && !collapsed && (
@@ -500,7 +399,7 @@ export function AppSidebar({
                             </span>
                             {!collapsed && (
                               <>
-                                <span className="text-[13px] font-medium flex-1 truncate text-left">
+                                <span className="text-[13px] font-medium flex-1 truncate text-start">
                                   {item.label}
                                 </span>
                                 {item.badge && (
@@ -525,7 +424,7 @@ export function AppSidebar({
                           </button>
                           {/* Children */}
                           {!collapsed && expandedModules.has(item.path) && (
-                            <div className="ml-4 mt-0.5 space-y-0.5 pl-2 border-l border-[rgba(0,135,168,0.15)]">
+                            <div className="ms-4 mt-0.5 space-y-0.5 ps-2 border-s border-[rgba(0,135,168,0.15)]">
                               {item.children!.map(child => {
                                 const childActive =
                                   pathname === child.path || pathname.startsWith(child.path + '/')
@@ -563,7 +462,7 @@ export function AppSidebar({
 
                       {/* Tooltip for collapsed mode */}
                       {collapsed && tooltipItem === item.path && (
-                        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 z-50 pointer-events-none">
+                        <div className="absolute start-full top-1/2 -translate-y-1/2 ms-2 z-50 pointer-events-none">
                           <div className="px-2.5 py-1.5 rounded-lg bg-gray-900 border border-white/10 shadow-xl whitespace-nowrap flex items-center gap-2">
                             <span className="text-xs font-medium text-white">{item.label}</span>
                             {item.badge && (
@@ -593,58 +492,7 @@ export function AppSidebar({
         </nav>
 
         {/* ── Footer: User compact ── */}
-        <div
-          className={clsx(
-            'border-t border-[rgba(255,255,255,0.06)]',
-            collapsed ? 'p-2' : 'px-3 py-2.5'
-          )}
-        >
-          {collapsed ? (
-            <div className="flex flex-col items-center gap-1.5">
-              <div
-                className="avatar-gradient-border w-7 h-7 rounded-full bg-[rgba(0,180,216,0.15)] flex items-center justify-center text-[var(--brand-primary)] text-[10px] font-semibold"
-                title={user?.name || 'Usuário'}
-              >
-                {userInitials}
-              </div>
-              <button
-                onClick={logout}
-                className="p-1.5 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-rose-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
-                title="Sair"
-                aria-label="Sair"
-              >
-                <LogOut size={14} />
-              </button>
-            </div>
-          ) : (
-            <div className="group flex items-center gap-2.5">
-              <div className="avatar-gradient-border w-7 h-7 rounded-full bg-[rgba(0,180,216,0.15)] flex items-center justify-center text-[var(--brand-primary)] text-[10px] font-semibold flex-shrink-0">
-                {userInitials}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-medium text-white/70 truncate leading-tight">
-                  {user?.name || 'Usuário'}
-                </p>
-              </div>
-              <Link
-                href="/admin/config"
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
-                title="Configurações"
-                aria-label="Configurações"
-              >
-                <Settings size={14} />
-              </Link>
-              <button
-                onClick={logout}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-rose-400 flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
-                title="Sair"
-                aria-label="Sair"
-              >
-                <LogOut size={14} />
-              </button>
-            </div>
-          )}
-        </div>
+        <SidebarFooter collapsed={collapsed} userName={user?.name} onLogout={logout} />
       </aside>
     </>
   )

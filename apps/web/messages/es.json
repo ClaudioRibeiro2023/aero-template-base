@@ -251,6 +251,22 @@
     "descriptionLabel": "Descripción",
     "statusLabel": "Estado",
     "priorityLabel": "Prioridad",
+    "allFilter": "Todas",
+    "loadingTasks": "Cargando tareas",
+    "loadError": "Error al cargar tareas. Inténtelo de nuevo.",
+    "emptyDescription": "Cree su primera tarea para comenzar a organizar el trabajo",
+    "selectTask": "Seleccionar tarea: {title}",
+    "editTaskAction": "Editar tarea: {title}",
+    "deleteTaskAction": "Eliminar tarea: {title}",
+    "tasksExported": "{count} tareas exportadas",
+    "tasksDeleted": "{count} tareas eliminadas",
+    "confirmBulkDelete": "¿Eliminar {count} tareas seleccionadas?",
+    "exportCsv": "Exportar CSV",
+    "nextPage": "Siguiente",
+    "titlePlaceholder": "Ej: Implementar autenticación",
+    "descriptionPlaceholder": "Detalles de la tarea (opcional)",
+    "errorSaveTask": "Error al guardar tarea",
+    "sessionExpired": "Sesión expirada. Inicie sesión de nuevo.",
     "status": {
       "todo": "Por Hacer",
       "in_progress": "En Progreso",
@@ -263,5 +279,106 @@
       "high": "Alta",
       "critical": "Crítica"
     }
+  },
+  "settings": {
+    "title": "Configuración",
+    "subtitle": "Administre sus preferencias personales",
+    "appearance": "Apariencia",
+    "theme": "Tema",
+    "themeDescription": "Elija el modo de visualización",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "themeSystem": "Sistema",
+    "language": "Idioma",
+    "languageDescription": "Idioma de la interfaz",
+    "notifications": "Notificaciones",
+    "emailNotifications": "Notificaciones por correo",
+    "emailNotificationsDesc": "Reciba actualizaciones en su correo",
+    "pushNotifications": "Notificaciones push",
+    "pushNotificationsDesc": "Reciba alertas en el navegador",
+    "privacy": "Privacidad",
+    "profileVisible": "Perfil visible",
+    "profileVisibleDesc": "Otros usuarios pueden ver su perfil",
+    "activityVisible": "Registro de actividad visible",
+    "activityVisibleDesc": "Mostrar sus actividades recientes",
+    "sessions": "Sesiones",
+    "endAllSessions": "Cerrar todas las sesiones",
+    "endAllSessionsDesc": "Desconecta de todos los dispositivos, incluido este",
+    "endSessions": "Cerrar sesiones"
+  },
+  "reports": {
+    "title": "Informes",
+    "subtitle": "Análisis e informes del sistema",
+    "empty": "Ningún informe aún",
+    "emptyDescription": "Los informes aparecerán aquí conforme se use el sistema. Comience creando su primer informe para visualizar datos.",
+    "createReport": "Crear Informe",
+    "totalGenerated": "Total Generados",
+    "thisMonth": "Este Mes",
+    "trend": "Tendencia"
+  },
+  "alerts": {
+    "title": "Alertas",
+    "subtitle": "Notificaciones y alertas del sistema",
+    "count": "{count} alertas"
+  },
+  "support": {
+    "title": "Soporte",
+    "tickets": "Tickets",
+    "newTicket": "Nuevo Ticket",
+    "ticketDetail": "Detalles del Ticket",
+    "status": {
+      "open": "Abierto",
+      "in_progress": "En Progreso",
+      "resolved": "Resuelto",
+      "closed": "Cerrado"
+    },
+    "priority": { "low": "Baja", "medium": "Media", "high": "Alta", "critical": "Crítica" },
+    "category": {
+      "bug": "Bug",
+      "feature": "Funcionalidad",
+      "question": "Pregunta",
+      "access": "Acceso",
+      "performance": "Rendimiento",
+      "other": "Otro"
+    },
+    "form": {
+      "title": "Título",
+      "description": "Descripción",
+      "category": "Categoría",
+      "priority": "Prioridad",
+      "attachments": "Adjuntos",
+      "submit": "Enviar Ticket"
+    },
+    "thread": {
+      "reply": "Responder",
+      "internalNote": "Nota Interna",
+      "placeholder": "Escriba su mensaje..."
+    },
+    "actions": {
+      "assign": "Asignar",
+      "changeStatus": "Cambiar Estado",
+      "resolve": "Resolver",
+      "close": "Cerrar",
+      "reopen": "Reabrir"
+    },
+    "rating": {
+      "title": "Evalúe el soporte",
+      "comment": "Comentario (opcional)",
+      "submit": "Enviar Evaluación"
+    },
+    "filters": {
+      "all": "Todos",
+      "myTickets": "Mis Tickets",
+      "assigned": "Asignados a Mí",
+      "unassigned": "Sin Asignar"
+    },
+    "empty": "No se encontraron tickets",
+    "created": "Ticket creado con éxito",
+    "updated": "Ticket actualizado",
+    "createdAt": "Creado el {date}",
+    "noMessages": "Ningún mensaje aún. Envíe la primera respuesta.",
+    "you": "Usted",
+    "supportAgent": "Soporte",
+    "weekOf": "Semana del {date}"
   }
 }

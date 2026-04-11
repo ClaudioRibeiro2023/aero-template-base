@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   if (!['ADMIN', 'GESTOR'].includes(user.role)) return forbidden()
 
   const db = new SupabaseDbClient()
-  const client = db.asAdmin()
+  const client = await db.asUser()
 
   const { data: profile } = await client
     .from('profiles')
@@ -79,7 +79,7 @@ export async function PUT(request: NextRequest) {
   if (!Array.isArray(navigation)) return badRequest('navigation deve ser um array')
 
   const db = new SupabaseDbClient()
-  const client = db.asAdmin()
+  const client = await db.asUser()
 
   const { data: profile } = await client
     .from('profiles')

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Filter, FileSearch } from 'lucide-react'
+import { useFormatter } from 'next-intl'
 import { useAuditLogs, type AuditLog } from '@/hooks/useAuditLogs'
 
 const ACTION_COLORS: Record<string, string> = {
@@ -19,8 +20,9 @@ const ACTION_COLORS: Record<string, string> = {
 }
 
 function AuditRow({ log }: { log: AuditLog }) {
+  const format = useFormatter()
   const actionClass = ACTION_COLORS[log.action] ?? 'text-gray-300 bg-gray-400/10'
-  const date = new Date(log.created_at).toLocaleString('pt-BR', {
+  const date = format.dateTime(new Date(log.created_at), {
     day: '2-digit',
     month: '2-digit',
     year: '2-digit',

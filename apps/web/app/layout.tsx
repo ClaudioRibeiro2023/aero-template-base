@@ -18,19 +18,18 @@ export const metadata: Metadata = {
     template: `%s | ${APP_NAME}`,
     default: APP_NAME,
   },
-  description: 'Built with Aero Studio Template v2.0',
+  description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Plataforma de gestao empresarial',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005'),
   openGraph: {
     title: APP_NAME,
-    description: 'Built with Aero Studio Template v2.0',
+    description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Plataforma de gestao empresarial',
     type: 'website',
-    locale: 'pt_BR',
     siteName: APP_NAME,
   },
   twitter: {
     card: 'summary',
     title: APP_NAME,
-    description: 'Built with Aero Studio Template v2.0',
+    description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Plataforma de gestao empresarial',
   },
 }
 

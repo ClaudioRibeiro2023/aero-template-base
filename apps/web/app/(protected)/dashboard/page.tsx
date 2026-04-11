@@ -7,12 +7,14 @@
  * - Suspense boundary com fallback skeleton para streaming incremental
  */
 import { Suspense } from 'react'
+import { getFormatter } from 'next-intl/server'
 import { DashboardClient } from './DashboardClient'
 
 // ── Server-side data (em produção: buscar do Supabase com createServerClient) ──
 async function getDashboardData() {
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Template Platform'
-  const dateLabel = new Date().toLocaleDateString('pt-BR', {
+  const format = await getFormatter()
+  const dateLabel = format.dateTime(new Date(), {
     weekday: 'long',
     day: 'numeric',
     month: 'long',

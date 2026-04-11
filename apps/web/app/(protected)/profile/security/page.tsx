@@ -3,9 +3,19 @@
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import { useState, useMemo, useCallback, type FormEvent } from 'react'
 import { Shield, Smartphone, ChevronLeft, Loader2, CheckCircle2, XCircle, Lock } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 
 type MfaStep = 'idle' | 'enrolling' | 'verifying' | 'enabled'
+
+function validatePasswordStrength(password: string): string | null {
+  if (password.length < 10) return 'Senha deve ter pelo menos 10 caracteres'
+  if (!/[A-Z]/.test(password)) return 'Senha deve conter ao menos uma letra maiúscula'
+  if (!/[a-z]/.test(password)) return 'Senha deve conter ao menos uma letra minúscula'
+  if (!/[0-9]/.test(password)) return 'Senha deve conter ao menos um número'
+  if (!/[^A-Za-z0-9]/.test(password)) return 'Senha deve conter ao menos um caractere especial'
+  return null
+}
 
 function PasswordUpdateForm({
   supabase,
@@ -29,8 +39,9 @@ function PasswordUpdateForm({
         setError('Informe a senha atual.')
         return
       }
-      if (newPassword.length < 8) {
-        setError('A nova senha deve ter pelo menos 8 caracteres.')
+      const passwordError = validatePasswordStrength(newPassword)
+      if (passwordError) {
+        setError(passwordError)
         return
       }
       if (newPassword !== confirmPassword) {
@@ -114,7 +125,7 @@ function PasswordUpdateForm({
             type="password"
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
-            placeholder="Minimo 8 caracteres"
+            placeholder="Minimo 10 caracteres, maiuscula, numero e especial"
             className={inputClass}
             autoComplete="new-password"
           />
@@ -294,7 +305,7 @@ export default function SecurityPage() {
             </p>
             {qrCode && (
               <div className="flex justify-center p-4 rounded-lg bg-white">
-                <img src={qrCode} alt="QR Code MFA" className="w-48 h-48" />
+                <Image src={qrCode} alt="QR Code MFA" width={192} height={192} unoptimized />
               </div>
             )}
             <div>

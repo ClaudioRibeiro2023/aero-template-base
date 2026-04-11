@@ -48,7 +48,7 @@ export const POST = withApiLog('users-bulk', async function POST(request: NextRe
 
   try {
     const db = new SupabaseDbClient()
-    const client = db.asAdmin()
+    const client = await db.asUser()
     let affected = 0
 
     if (action === 'deactivate') {

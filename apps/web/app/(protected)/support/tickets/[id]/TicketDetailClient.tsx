@@ -3,6 +3,7 @@
 import { use } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Loader2 } from 'lucide-react'
+import { useTranslations, useFormatter } from 'next-intl'
 import { useTicket, useUpdateTicket } from '@/hooks/useSupportTickets'
 import { useTicketMessages, useCreateMessage } from '@/hooks/useSupportMessages'
 import { TicketStatusBadge } from '@/components/support/TicketStatusBadge'
@@ -15,16 +16,9 @@ import { useRateTicket } from '@/hooks/useSupportTickets'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import { useEffect, useState, useMemo } from 'react'
 
-const CATEGORY_LABELS: Record<string, string> = {
-  bug: 'Bug',
-  feature: 'Feature',
-  question: 'Dúvida',
-  access: 'Acesso',
-  performance: 'Performance',
-  other: 'Outro',
-}
-
 export function TicketDetailClient({ params }: { params: Promise<{ id: string }> }) {
+  const t = useTranslations('support')
+  const format = useFormatter()
   const { id } = use(params)
   const { data: ticket, isLoading, isError } = useTicket(id)
   const { data: messages = [] } = useTicketMessages(id)
@@ -114,10 +108,15 @@ export function TicketDetailClient({ params }: { params: Promise<{ id: string }>
           <TicketStatusBadge status={ticket.status} />
           <TicketPriorityIndicator priority={ticket.priority} />
           <span className="text-[11px] text-[var(--text-muted)]">
-            {CATEGORY_LABELS[ticket.category] ?? ticket.category}
+            {t(`category.${ticket.category}`)}
           </span>
           <span className="text-[11px] text-[var(--text-muted)] ml-auto">
-            Criado em {new Date(ticket.created_at).toLocaleString('pt-BR')}
+            {t('createdAt', {
+              date: format.dateTime(new Date(ticket.created_at), {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              }),
+            })}
           </span>
         </div>
         <p className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap">

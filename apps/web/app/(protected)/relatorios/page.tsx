@@ -1,11 +1,16 @@
+'use client'
+
 import { BarChart3, Plus, FileText, TrendingUp } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 export default function RelatoriosPage() {
+  const t = useTranslations('reports')
+
   return (
     <main className="page-enter ambient-gradient max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       <div className="relative z-10">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Relatorios</h1>
-        <p className="text-sm text-[var(--text-secondary)]">Analises e relatorios do sistema</p>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('title')}</h1>
+        <p className="text-sm text-[var(--text-secondary)]">{t('subtitle')}</p>
       </div>
 
       {/* Empty State — Glass Premium */}
@@ -25,11 +30,10 @@ export default function RelatoriosPage() {
         </div>
 
         <h2 className="relative text-lg font-semibold text-[var(--text-primary)] mb-2">
-          Nenhum relatorio ainda
+          {t('empty')}
         </h2>
         <p className="relative text-sm text-[var(--text-muted)] mb-8 text-center max-w-md leading-relaxed">
-          Os relatorios aparecerão aqui conforme o sistema for utilizado. Comece criando seu
-          primeiro relatorio para visualizar dados.
+          {t('emptyDescription')}
         </p>
 
         <button
@@ -37,16 +41,16 @@ export default function RelatoriosPage() {
           style={{ boxShadow: '0 0 20px var(--glow-brand)' }}
         >
           <Plus className="w-4 h-4" aria-hidden="true" />
-          Criar Relatorio
+          {t('createReport')}
         </button>
       </div>
 
       {/* Quick Stats Row */}
       <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { label: 'Total Gerados', value: '0', icon: FileText },
-          { label: 'Este Mes', value: '0', icon: BarChart3 },
-          { label: 'Tendencia', value: '--', icon: TrendingUp },
+          { label: t('totalGenerated'), value: '0', icon: FileText },
+          { label: t('thisMonth'), value: '0', icon: BarChart3 },
+          { label: t('trend'), value: '--', icon: TrendingUp },
         ].map(stat => {
           const Icon = stat.icon
           return (

@@ -154,17 +154,16 @@ describe('Header', () => {
       render(<Header />)
       const themeBtn = screen.getByLabelText('Alternar tema')
       fireEvent.click(themeBtn)
-      expect(localStorageMock.getItem('theme')).toBeTruthy()
+      expect(localStorageMock.getItem('theme-mode')).toBeTruthy()
     })
 
-    it('aplica classe "dark" ou remove do documentElement ao alternar tema', () => {
+    it('alterna classList light no documentElement ao clicar no botão de tema', () => {
       render(<Header />)
       const themeBtn = screen.getByLabelText('Alternar tema')
-      const previousTheme = document.documentElement.getAttribute('data-theme')
+      const hadLight = document.documentElement.classList.contains('light')
       fireEvent.click(themeBtn)
-      const newTheme = document.documentElement.getAttribute('data-theme')
-      expect(newTheme).not.toBeNull()
-      expect(newTheme).not.toBe(previousTheme)
+      const hasLight = document.documentElement.classList.contains('light')
+      expect(hasLight).not.toBe(hadLight)
     })
   })
 

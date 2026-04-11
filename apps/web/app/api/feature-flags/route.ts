@@ -27,7 +27,7 @@ export const dynamic = 'force-dynamic'
 /** Helper: busca tenant_id do perfil do usuário */
 async function getTenantId(userId: string): Promise<string | null> {
   const db = new SupabaseDbClient()
-  const client = db.asAdmin()
+  const client = await db.asUser()
   const { data } = await client.from('profiles').select('tenant_id').eq('id', userId).single()
   return data?.tenant_id ?? null
 }

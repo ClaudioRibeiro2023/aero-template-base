@@ -33,7 +33,7 @@ export const GET = withApiLog('global-search', async function GET(request: NextR
 
   try {
     const db = new SupabaseDbClient()
-    const client = db.asAdmin()
+    const client = await db.asUser()
     const searchTerm = `%${q}%`
 
     // Busca em paralelo
@@ -100,6 +100,6 @@ export const GET = withApiLog('global-search', async function GET(request: NextR
 
     return ok({ data: results.slice(0, limit) })
   } catch (err) {
-    return serverError(err instanceof Error ? err.message : 'Erro na busca global')
+    return serverError('Erro na busca global')
   }
 })

@@ -21,7 +21,7 @@ export const GET = withApiLog('user-locale', async function GET(_request: NextRe
 
   try {
     const db = new SupabaseDbClient()
-    const client = db.asAdmin()
+    const client = await db.asUser()
     const { data } = await client.from('profiles').select('locale').eq('id', user.id).single()
 
     return ok({ locale: data?.locale || 'pt-BR' })
@@ -44,7 +44,7 @@ export const PATCH = withApiLog('user-locale', async function PATCH(request: Nex
 
   try {
     const db = new SupabaseDbClient()
-    const client = db.asAdmin()
+    const client = await db.asUser()
     const { error: updateError } = await client
       .from('profiles')
       .update({ locale: body.locale })

@@ -225,7 +225,7 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
         className={clsx(
           // Mobile: off-screen drawer
           isMobile && [
-            'fixed inset-y-0 left-0 z-[70] w-[var(--sidebar-width)]',
+            'fixed inset-y-0 start-0 z-[70] w-[var(--sidebar-width)]',
             'transition-transform duration-300 ease-out',
             isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
           ],
@@ -243,11 +243,12 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
 
       {/* ── Main content ── */}
       <div
-        className={clsx('flex-1 flex flex-col transition-all duration-300', isMobile && '!ml-0')}
-        style={{ marginLeft: isMobile ? undefined : getContentMargin() }}
+        className={clsx('flex-1 flex flex-col transition-all duration-300', isMobile && '!ms-0')}
+        style={{ marginInlineStart: isMobile ? undefined : getContentMargin() }}
       >
         <Header
           onMobileMenuToggle={() => setIsMobileMenuOpen(prev => !prev)}
+          onSearchOpen={globalSearch.open}
           isMobile={isMobile}
           className="safe-area-top"
         />

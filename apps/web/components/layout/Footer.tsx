@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { Settings, BookOpen } from 'lucide-react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
@@ -8,7 +9,7 @@ import { env } from '@/lib/env'
 
 const APP_YEAR = new Date().getFullYear()
 
-export function Footer({ className }: { className?: string }) {
+export const Footer = memo(function Footer({ className }: { className?: string }) {
   const t = useTranslations('footer')
   const appName = env.APP_NAME || 'Template Platform'
   const appVersion = env.APP_VERSION || '1.0.0'
@@ -53,4 +54,4 @@ export function Footer({ className }: { className?: string }) {
       </div>
     </footer>
   )
-}
+})

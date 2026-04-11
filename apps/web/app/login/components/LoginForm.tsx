@@ -186,7 +186,7 @@ export function LoginForm({ appName, logoUrl }: LoginFormProps) {
         {/* Divider */}
         <div className="flex items-center gap-3 my-5">
           <div className="flex-1 h-px bg-white/10" />
-          <span className="text-xs text-white/30 font-medium">ou continue com</span>
+          <span className="text-xs text-white/60 font-medium">ou continue com</span>
           <div className="flex-1 h-px bg-white/10" />
         </div>
 

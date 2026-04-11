@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { Sun, Moon, Bell, Shield, LogOut, Monitor, Loader2 } from 'lucide-react'
@@ -64,6 +65,7 @@ function SettingRow({
 }
 
 export default function SettingsPage() {
+  const t = useTranslations('settings')
   const router = useRouter()
   const supabase = createSupabaseBrowserClient()
 
@@ -96,23 +98,29 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-[var(--bg-primary)] p-6 md:p-10">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Configurações</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            Gerencie suas preferências pessoais
-          </p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t('title')}</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">{t('subtitle')}</p>
         </div>
 
         {/* Aparencia */}
-        <Section title="Aparência" icon={<Sun className="w-5 h-5 text-amber-400" />}>
-          <SettingRow label="Tema" description="Escolha o modo de exibição">
+        <Section title={t('appearance')} icon={<Sun className="w-5 h-5 text-amber-400" />}>
+          <SettingRow label={t('theme')} description={t('themeDescription')}>
             <div className="flex items-center gap-1 bg-[var(--bg-primary)]/50 border border-[var(--glass-border)] rounded-lg p-1">
               {[
-                { value: 'light' as const, icon: <Sun className="w-3.5 h-3.5" />, label: 'Claro' },
-                { value: 'dark' as const, icon: <Moon className="w-3.5 h-3.5" />, label: 'Escuro' },
+                {
+                  value: 'light' as const,
+                  icon: <Sun className="w-3.5 h-3.5" />,
+                  label: t('themeLight'),
+                },
+                {
+                  value: 'dark' as const,
+                  icon: <Moon className="w-3.5 h-3.5" />,
+                  label: t('themeDark'),
+                },
                 {
                   value: 'system' as const,
                   icon: <Monitor className="w-3.5 h-3.5" />,
-                  label: 'Sistema',
+                  label: t('themeSystem'),
                 },
               ].map(opt => (
                 <button
@@ -131,7 +139,7 @@ export default function SettingsPage() {
             </div>
           </SettingRow>
 
-          <SettingRow label="Idioma" description="Idioma da interface">
+          <SettingRow label={t('language')} description={t('languageDescription')}>
             <select
               value={language}
               onChange={e => setLanguage(e.target.value)}
@@ -145,29 +153,23 @@ export default function SettingsPage() {
         </Section>
 
         {/* Notificacoes */}
-        <Section title="Notificações" icon={<Bell className="w-5 h-5 text-blue-400" />}>
-          <SettingRow
-            label="Notificações por e-mail"
-            description="Receba atualizações no seu e-mail"
-          >
+        <Section title={t('notifications')} icon={<Bell className="w-5 h-5 text-blue-400" />}>
+          <SettingRow label={t('emailNotifications')} description={t('emailNotificationsDesc')}>
             <Toggle enabled={emailNotif} onToggle={() => setEmailNotif(!emailNotif)} />
           </SettingRow>
 
-          <SettingRow label="Notificações push" description="Receba alertas no navegador">
+          <SettingRow label={t('pushNotifications')} description={t('pushNotificationsDesc')}>
             <Toggle enabled={pushNotif} onToggle={() => setPushNotif(!pushNotif)} />
           </SettingRow>
         </Section>
 
         {/* Privacidade */}
-        <Section title="Privacidade" icon={<Shield className="w-5 h-5 text-emerald-400" />}>
-          <SettingRow label="Perfil visível" description="Outros usuários podem ver seu perfil">
+        <Section title={t('privacy')} icon={<Shield className="w-5 h-5 text-emerald-400" />}>
+          <SettingRow label={t('profileVisible')} description={t('profileVisibleDesc')}>
             <Toggle enabled={profileVisible} onToggle={() => setProfileVisible(!profileVisible)} />
           </SettingRow>
 
-          <SettingRow
-            label="Log de atividade visível"
-            description="Mostrar suas atividades recentes"
-          >
+          <SettingRow label={t('activityVisible')} description={t('activityVisibleDesc')}>
             <Toggle
               enabled={activityVisible}
               onToggle={() => setActivityVisible(!activityVisible)}
@@ -176,11 +178,8 @@ export default function SettingsPage() {
         </Section>
 
         {/* Sessoes */}
-        <Section title="Sessões" icon={<LogOut className="w-5 h-5 text-red-400" />}>
-          <SettingRow
-            label="Encerrar todas as sessões"
-            description="Desconecta de todos os dispositivos, incluindo este"
-          >
+        <Section title={t('sessions')} icon={<LogOut className="w-5 h-5 text-red-400" />}>
+          <SettingRow label={t('endAllSessions')} description={t('endAllSessionsDesc')}>
             <button
               onClick={handleSignOutAll}
               disabled={signingOut}
@@ -191,7 +190,7 @@ export default function SettingsPage() {
               ) : (
                 <LogOut className="w-4 h-4" />
               )}
-              Encerrar sessões
+              {t('endSessions')}
             </button>
           </SettingRow>
         </Section>

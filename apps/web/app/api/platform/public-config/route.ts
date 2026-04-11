@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     }
 
     const db = new SupabaseDbClient()
-    const client = db.asAdmin()
+    const client = await db.asUser()
 
     const { data, error } = await client
       .from('admin_config')

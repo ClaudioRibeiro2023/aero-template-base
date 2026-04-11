@@ -1,5 +1,5 @@
-import { NextRequest } from 'next/server'
-import { badRequest } from '@/lib/api-response'
+import { NextRequest, NextResponse } from 'next/server'
+import { badRequest, forbidden } from '@/lib/api-response'
 
 /**
  * Validates that API requests originate from the same host (CSRF-like protection).
@@ -23,4 +23,17 @@ export function requireJson(req: NextRequest) {
     return badRequest('Content-Type must be application/json')
   }
   return null
+}
+
+/**
+ * Wrapper that applies CSRF validation to mutation handlers.
+ * Use: export const POST = withCsrf(async (req) => { ... })
+ */
+export function withCsrf(handler: (req: NextRequest, ctx?: any) => Promise<NextResponse>) {
+  return async (req: NextRequest, ctx?: any) => {
+    if (!validateApiRequest(req)) {
+      return forbidden('Requisição de origem inválida')
+    }
+    return handler(req, ctx)
+  }
 }

@@ -251,6 +251,22 @@
     "descriptionLabel": "Description",
     "statusLabel": "Status",
     "priorityLabel": "Priority",
+    "allFilter": "All",
+    "loadingTasks": "Loading tasks",
+    "loadError": "Error loading tasks. Please try again.",
+    "emptyDescription": "Create your first task to start organizing work",
+    "selectTask": "Select task: {title}",
+    "editTaskAction": "Edit task: {title}",
+    "deleteTaskAction": "Delete task: {title}",
+    "tasksExported": "{count} tasks exported",
+    "tasksDeleted": "{count} tasks deleted",
+    "confirmBulkDelete": "Delete {count} selected tasks?",
+    "exportCsv": "Export CSV",
+    "nextPage": "Next",
+    "titlePlaceholder": "e.g. Implement authentication",
+    "descriptionPlaceholder": "Task details (optional)",
+    "errorSaveTask": "Error saving task",
+    "sessionExpired": "Session expired. Please log in again.",
     "status": {
       "todo": "To Do",
       "in_progress": "In Progress",
@@ -263,5 +279,106 @@
       "high": "High",
       "critical": "Critical"
     }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your personal preferences",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeDescription": "Choose display mode",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "language": "Language",
+    "languageDescription": "Interface language",
+    "notifications": "Notifications",
+    "emailNotifications": "Email notifications",
+    "emailNotificationsDesc": "Receive updates in your email",
+    "pushNotifications": "Push notifications",
+    "pushNotificationsDesc": "Receive alerts in the browser",
+    "privacy": "Privacy",
+    "profileVisible": "Visible profile",
+    "profileVisibleDesc": "Other users can see your profile",
+    "activityVisible": "Activity log visible",
+    "activityVisibleDesc": "Show your recent activities",
+    "sessions": "Sessions",
+    "endAllSessions": "End all sessions",
+    "endAllSessionsDesc": "Signs out from all devices, including this one",
+    "endSessions": "End sessions"
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "System analyses and reports",
+    "empty": "No reports yet",
+    "emptyDescription": "Reports will appear here as the system is used. Start by creating your first report to visualize data.",
+    "createReport": "Create Report",
+    "totalGenerated": "Total Generated",
+    "thisMonth": "This Month",
+    "trend": "Trend"
+  },
+  "alerts": {
+    "title": "Alerts",
+    "subtitle": "System notifications and alerts",
+    "count": "{count} alerts"
+  },
+  "support": {
+    "title": "Support",
+    "tickets": "Tickets",
+    "newTicket": "New Ticket",
+    "ticketDetail": "Ticket Details",
+    "status": {
+      "open": "Open",
+      "in_progress": "In Progress",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "priority": { "low": "Low", "medium": "Medium", "high": "High", "critical": "Critical" },
+    "category": {
+      "bug": "Bug",
+      "feature": "Feature",
+      "question": "Question",
+      "access": "Access",
+      "performance": "Performance",
+      "other": "Other"
+    },
+    "form": {
+      "title": "Title",
+      "description": "Description",
+      "category": "Category",
+      "priority": "Priority",
+      "attachments": "Attachments",
+      "submit": "Submit Ticket"
+    },
+    "thread": {
+      "reply": "Reply",
+      "internalNote": "Internal Note",
+      "placeholder": "Type your message..."
+    },
+    "actions": {
+      "assign": "Assign",
+      "changeStatus": "Change Status",
+      "resolve": "Resolve",
+      "close": "Close",
+      "reopen": "Reopen"
+    },
+    "rating": {
+      "title": "Rate the support",
+      "comment": "Comment (optional)",
+      "submit": "Submit Rating"
+    },
+    "filters": {
+      "all": "All",
+      "myTickets": "My Tickets",
+      "assigned": "Assigned to Me",
+      "unassigned": "Unassigned"
+    },
+    "empty": "No tickets found",
+    "created": "Ticket created successfully",
+    "updated": "Ticket updated",
+    "createdAt": "Created on {date}",
+    "noMessages": "No messages yet. Send the first reply.",
+    "you": "You",
+    "supportAgent": "Support",
+    "weekOf": "Week of {date}"
   }
 }

@@ -6,10 +6,11 @@
  * Separado do page.tsx (Server Component) para habilitar RSC + Suspense streaming.
  * Contém: KPI cards com count-up, mini chart com animação, quick actions.
  * Tudo que precisa de hooks de browser (useState, useEffect, useReducedMotion).
+ *
+ * Sprint 5 refactor: KPI cards e charts extraídos para sub-componentes.
  */
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
-import { useReducedMotion } from '@/hooks/useA11y'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -17,14 +18,15 @@ import {
   FileText,
   Settings,
   Activity,
-  TrendingUp,
   ArrowUpRight,
-  ArrowDownRight,
   BarChart3,
-  Zap,
   Gauge,
   GripVertical,
 } from 'lucide-react'
+import { useFormatter } from 'next-intl'
+
+import { DashboardKPICards, AnimatedValue, Sparkline, useWidgetOrder } from './DashboardKPICards'
+import { DashboardCharts } from './DashboardCharts'
 
 // ── KPI Mock Data ──
 const KPI_CARDS = [
@@ -82,15 +84,6 @@ const QUICK_ACTIONS = [
   { label: 'Configurações', path: '/admin/config', description: 'Ajustar sistema', icon: Settings },
 ]
 
-const CHART_DATA = [
-  { label: 'Jan', pct: 65 },
-  { label: 'Fev', pct: 45 },
-  { label: 'Mar', pct: 80 },
-  { label: 'Abr', pct: 55 },
-  { label: 'Mai', pct: 70 },
-  { label: 'Jun', pct: 90 },
-]
-
 // ── Platform Metrics (admin/gestor only) ──
 interface PlatformMetric {
   id: string
@@ -107,230 +100,17 @@ async function fetchMetrics(): Promise<PlatformMetric[]> {
   return json.data?.metrics ?? []
 }
 
-// ── Animated count-up hook (rAF, expo ease-out — respects reduced-motion) ──
-function useCountUp(target: number, duration = 800, skipAnimation = false) {
-  const [count, setCount] = useState(skipAnimation ? target : 0)
-
-  useEffect(() => {
-    if (skipAnimation) {
-      setCount(target)
-      return
-    }
-
-    const startTime = performance.now()
-
-    function animate(now: number) {
-      const elapsed = now - startTime
-      const progress = Math.min(elapsed / duration, 1)
-      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress)
-      setCount(Math.round(eased * target))
-      if (progress < 1) requestAnimationFrame(animate)
-    }
-
-    requestAnimationFrame(animate)
-  }, [target, duration, skipAnimation])
-
-  return count
-}
-
-function AnimatedValue({ value, suffix = '' }: { value: number; suffix?: string }) {
-  const prefersReduced = useReducedMotion()
-  const count = useCountUp(value, 800, prefersReduced)
-  return (
-    <>
-      {count}
-      {suffix}
-    </>
-  )
-}
-
-function Skeleton({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
-  return <div className={`shimmer rounded-lg ${className}`} style={style} aria-hidden="true" />
-}
-
-function KpiCard({
-  label,
-  icon: Icon,
-  value,
-  change,
-  up,
-  path,
-  loading,
-}: {
-  label: string
-  icon: React.ElementType
-  value: string
-  change: string
-  up: boolean
-  path: string
-  loading: boolean
-}) {
-  if (loading) {
-    return (
-      <div className="glass-panel p-5 space-y-3">
-        <Skeleton className="h-4 w-20" />
-        <Skeleton className="h-8 w-16" />
-        <Skeleton className="h-3 w-12" />
-      </div>
-    )
-  }
-
-  return (
-    <Link
-      href={path}
-      className="group relative block glass-panel p-5 transition-all duration-300 hover:-translate-y-[2px] hover:border-[var(--glass-border-hover)] hover:shadow-lg"
-    >
-      <div
-        className="absolute inset-0 rounded-[var(--radius-lg)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-        style={{ boxShadow: '0 0 24px var(--glow-brand)' }}
-        aria-hidden="true"
-      />
-      <div className="relative flex items-start justify-between">
-        <div className="p-2.5 rounded-xl bg-[var(--brand-primary)]/10 backdrop-blur-sm">
-          <Icon size={20} className="text-[var(--brand-primary)]" aria-hidden="true" />
-        </div>
-        <span
-          className={`flex items-center gap-0.5 text-xs font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm ${
-            up ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'
-          }`}
-        >
-          {up ? (
-            <ArrowUpRight size={12} aria-hidden="true" />
-          ) : (
-            <ArrowDownRight size={12} aria-hidden="true" />
-          )}
-          {change}
-        </span>
-      </div>
-      <p className="relative mt-4 text-2xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
-        {(() => {
-          const hasSuffix = value.endsWith('%')
-          const num = parseInt(value.replace('%', ''), 10)
-          return isNaN(num) ? value : <AnimatedValue value={num} suffix={hasSuffix ? '%' : ''} />
-        })()}
-      </p>
-      <p className="relative mt-1 text-sm text-[var(--text-muted)] group-hover:text-[var(--text-secondary)] transition-colors">
-        {label}
-      </p>
-    </Link>
-  )
-}
-
-function MiniBarChart() {
-  const prefersReduced = useReducedMotion()
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  return (
-    <div
-      className="flex items-end gap-3 h-36"
-      role="img"
-      aria-label="Gráfico de atividade mensal dos últimos 6 meses"
-    >
-      {CHART_DATA.map((d, index) => (
-        <div key={d.label} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-          <div
-            className="w-full rounded-t-md transition-all duration-700 ease-out cursor-default relative overflow-hidden"
-            style={{
-              height: mounted || prefersReduced ? `${d.pct}%` : '0%',
-              transitionDelay: prefersReduced ? '0ms' : `${index * 100}ms`,
-              background: `linear-gradient(to top, var(--brand-primary), var(--brand-secondary))`,
-            }}
-            title={`${d.label}: ${d.pct}%`}
-          >
-            <div
-              className="absolute inset-0 bg-gradient-to-t from-transparent via-white/5 to-white/10"
-              aria-hidden="true"
-            />
-          </div>
-          <span className="text-[10px] font-medium text-[var(--text-muted)]">{d.label}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function Sparkline({
-  values,
-  color = 'var(--brand-primary)',
-}: {
-  values: number[]
-  color?: string
-}) {
-  if (values.length < 2) return null
-  const max = Math.max(...values)
-  const min = Math.min(...values)
-  const range = max - min || 1
-  const w = 64,
-    h = 24,
-    pad = 2
-  const points = values
-    .map((v, i) => {
-      const x = pad + (i / (values.length - 1)) * (w - pad * 2)
-      const y = h - pad - ((v - min) / range) * (h - pad * 2)
-      return `${x},${y}`
-    })
-    .join(' ')
-  return (
-    <svg width={w} height={h} aria-hidden="true" className="opacity-70">
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
+const SECTION_STORAGE_KEY = 'dashboard-section-order'
 
 interface DashboardClientProps {
   appName: string
   dateLabel: string
 }
 
-const STORAGE_KEY = 'dashboard-widget-order'
-const SECTION_STORAGE_KEY = 'dashboard-section-order'
-
-function useWidgetOrder(defaultKeys: string[], storageKey = STORAGE_KEY) {
-  const [order, setOrder] = useState<string[]>(defaultKeys)
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(storageKey)
-      if (saved) {
-        const parsed: string[] = JSON.parse(saved)
-        if (parsed.length === defaultKeys.length && parsed.every(k => defaultKeys.includes(k))) {
-          setOrder(parsed)
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const saveOrder = useCallback(
-    (newOrder: string[]) => {
-      setOrder(newOrder)
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(newOrder))
-      } catch {
-        // ignore
-      }
-    },
-    [storageKey]
-  )
-
-  return { order, saveOrder }
-}
-
 export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
-  // Data is static (KPI_CARDS, CHART_DATA, QUICK_ACTIONS are constants) — no loading needed
   const loading = false
   const { hasRole } = useAuth()
+  const intlFormat = useFormatter()
   const isAdmin = hasRole('ADMIN') || hasRole('GESTOR')
 
   // Platform metrics — only for admin/gestor
@@ -338,18 +118,11 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
     queryKey: ['platform-metrics'],
     queryFn: fetchMetrics,
     enabled: isAdmin,
-    staleTime: 5 * 60 * 1000, // 5 min
+    staleTime: 5 * 60 * 1000,
   })
 
   const latestMetric = metrics[0]
   const previousMetric = metrics[1]
-
-  // Drag-and-drop widget ordering (KPI cards)
-  const { order, saveOrder } = useWidgetOrder(KPI_CARDS.map(c => c.key))
-  const orderedCards = order.map(key => KPI_CARDS.find(c => c.key === key)!).filter(Boolean)
-  const dragIndexRef = useRef<number | null>(null)
-  const [dragOver, setDragOver] = useState<number | null>(null)
-  const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
 
   // Drag-and-drop section ordering (bottom sections)
   const DEFAULT_SECTIONS = ['chart-actions', 'status-activity'] as const
@@ -360,35 +133,6 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
   const sectionDragRef = useRef<number | null>(null)
   const [sectionDragOver, setSectionDragOver] = useState<number | null>(null)
   const [sectionFocused, setSectionFocused] = useState<number | null>(null)
-
-  function handleDragStart(index: number) {
-    dragIndexRef.current = index
-  }
-
-  function handleDragOver(e: React.DragEvent, index: number) {
-    e.preventDefault()
-    setDragOver(index)
-  }
-
-  function handleDrop(index: number) {
-    const from = dragIndexRef.current
-    if (from === null || from === index) {
-      dragIndexRef.current = null
-      setDragOver(null)
-      return
-    }
-    const newOrder = [...order]
-    const [moved] = newOrder.splice(from, 1)
-    newOrder.splice(index, 0, moved)
-    saveOrder(newOrder)
-    dragIndexRef.current = null
-    setDragOver(null)
-  }
-
-  function handleDragEnd() {
-    dragIndexRef.current = null
-    setDragOver(null)
-  }
 
   // Section DnD handlers
   function handleSectionDragStart(index: number) {
@@ -442,33 +186,6 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
     setSectionFocused(targetIndex)
   }
 
-  function handleKeyDown(e: React.KeyboardEvent, index: number) {
-    const len = orderedCards.length
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      ;(e.currentTarget as HTMLElement).blur()
-      return
-    }
-    if (!['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'Home', 'End'].includes(e.key)) return
-    e.preventDefault()
-    const newOrder = [...order]
-    let targetIndex = index
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      targetIndex = Math.max(0, index - 1)
-    } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-      targetIndex = Math.min(len - 1, index + 1)
-    } else if (e.key === 'Home') {
-      targetIndex = 0
-    } else if (e.key === 'End') {
-      targetIndex = len - 1
-    }
-    if (targetIndex === index) return
-    const [moved] = newOrder.splice(index, 1)
-    newOrder.splice(targetIndex, 0, moved)
-    saveOrder(newOrder)
-    setFocusedIndex(targetIndex)
-  }
-
   return (
     <main className="page-enter ambient-gradient max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
@@ -480,52 +197,7 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
       </div>
 
       {/* Bento Grid — KPI Cards (draggable) */}
-      <section aria-label="Indicadores principais" className="relative z-10">
-        <div
-          role="list"
-          className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 stagger-children"
-        >
-          {orderedCards.map(({ key, ...card }, index) => (
-            <div
-              key={key}
-              role="listitem"
-              tabIndex={0}
-              draggable
-              aria-label={`${card.label}, posição ${index + 1} de ${orderedCards.length}. Use as teclas de seta para mover.`}
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={e => handleDragOver(e, index)}
-              onDrop={() => handleDrop(index)}
-              onDragEnd={handleDragEnd}
-              onFocus={() => setFocusedIndex(index)}
-              onBlur={() => setFocusedIndex(null)}
-              onKeyDown={e => handleKeyDown(e, index)}
-              className="group/drag relative"
-              style={{
-                opacity: dragIndexRef.current === index ? 0.5 : 1,
-                outline:
-                  focusedIndex === index
-                    ? '2px solid var(--brand-primary)'
-                    : dragOver === index
-                      ? '2px dashed var(--brand-primary)'
-                      : undefined,
-                borderRadius: 'var(--radius-lg)',
-              }}
-            >
-              {/* Drag handle */}
-              <div
-                className="absolute top-2 right-2 z-10 opacity-0 group-hover/drag:opacity-60 transition-opacity cursor-grab active:cursor-grabbing"
-                aria-hidden="true"
-              >
-                <GripVertical size={14} className="text-[var(--text-muted)]" />
-              </div>
-              <KpiCard {...card} loading={loading} />
-            </div>
-          ))}
-        </div>
-        <p className="mt-1.5 text-[11px] text-[var(--text-muted)] text-right">
-          Arraste para reordenar
-        </p>
-      </section>
+      <DashboardKPICards cards={KPI_CARDS} loading={loading} />
 
       {/* Platform Metrics — admin/gestor only */}
       {isAdmin && latestMetric && (
@@ -537,7 +209,7 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
                   Métricas da Semana
                 </h2>
                 <p className="text-xs text-[var(--text-muted)]">
-                  Semana de {new Date(latestMetric.week_start).toLocaleDateString('pt-BR')}
+                  {intlFormat.dateTime(new Date(latestMetric.week_start), { dateStyle: 'medium' })}
                 </p>
               </div>
               <div className="p-2 rounded-lg bg-[var(--accent-purple)]/10" aria-hidden="true">
@@ -650,80 +322,7 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
             </div>
 
             {sectionId === 'chart-actions' && (
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-                {/* Chart card — spans 3 cols */}
-                <div className="lg:col-span-3 glass-panel p-6">
-                  <div className="flex items-center justify-between mb-5">
-                    <div>
-                      <h2 className="text-sm font-semibold text-[var(--text-primary)]">
-                        Atividade Mensal
-                      </h2>
-                      <p className="text-xs text-[var(--text-muted)]">Últimos 6 meses</p>
-                    </div>
-                    <div className="p-2 rounded-lg bg-[var(--brand-primary)]/10" aria-hidden="true">
-                      <TrendingUp size={16} className="text-[var(--brand-primary)]" />
-                    </div>
-                  </div>
-                  {loading ? (
-                    <div className="h-36 flex items-end gap-3" aria-label="Carregando gráfico">
-                      {Array.from({ length: 6 }).map((_, i) => (
-                        <Skeleton
-                          key={i}
-                          className="flex-1 rounded-t-md"
-                          style={{ height: `${40 + i * 10}%` }}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <MiniBarChart />
-                  )}
-                </div>
-
-                {/* Quick Actions — spans 2 cols */}
-                <div className="lg:col-span-2 glass-panel p-6">
-                  <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">
-                      Ações Rápidas
-                    </h2>
-                    <div className="p-2 rounded-lg bg-[var(--accent-purple)]/10" aria-hidden="true">
-                      <Zap size={16} className="text-[var(--accent-purple)]" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {QUICK_ACTIONS.map(action => {
-                      const ActionIcon = action.icon
-                      return (
-                        <Link
-                          key={action.path}
-                          href={action.path}
-                          className="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 hover:bg-white/[0.03] group"
-                        >
-                          <div className="p-2 rounded-lg bg-[var(--brand-primary)]/10 flex-shrink-0 group-hover:bg-[var(--brand-primary)]/20 transition-colors">
-                            <ActionIcon
-                              size={14}
-                              className="text-[var(--brand-primary)]"
-                              aria-hidden="true"
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] transition-colors">
-                              {action.label}
-                            </p>
-                            <p className="text-xs text-[var(--text-muted)] truncate">
-                              {action.description}
-                            </p>
-                          </div>
-                          <ArrowUpRight
-                            size={14}
-                            className="flex-shrink-0 text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity"
-                            aria-hidden="true"
-                          />
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
+              <DashboardCharts loading={loading} quickActions={QUICK_ACTIONS} />
             )}
 
             {sectionId === 'status-activity' && (

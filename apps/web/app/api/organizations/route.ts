@@ -24,7 +24,7 @@ export const GET = withApiLog('organizations', async function GET(request: NextR
 
   try {
     const db = new SupabaseDbClient()
-    const client = db.asAdmin()
+    const client = await db.asUser()
 
     const { data: memberships } = await client
       .from('organization_members')

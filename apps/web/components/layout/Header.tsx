@@ -2,15 +2,17 @@
 
 import { usePathname } from 'next/navigation'
 import { Search, Moon, Sun, Menu, Globe } from 'lucide-react'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Tooltip, Breadcrumb, BreadcrumbItem } from '@template/design-system'
 import { NotificationCenter } from '@/components/common/NotificationCenter'
 import { useNotifications } from '@/hooks/useNotifications'
+import { useTheme } from '@/hooks/useTheme'
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void
+  onSearchOpen?: () => void
   isMobile?: boolean
   className?: string
 }
@@ -23,36 +25,19 @@ const LOCALE_LABELS: Record<string, string> = {
 
 const LOCALE_OPTIONS = Object.entries(LOCALE_LABELS)
 
-export function Header({ onMobileMenuToggle, isMobile = false, className }: HeaderProps) {
+export function Header({
+  onMobileMenuToggle,
+  onSearchOpen,
+  isMobile = false,
+  className,
+}: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
   const notifs = useNotifications()
   const tNav = useTranslations('nav')
   const tTheme = useTranslations('theme')
   const [showLocalePicker, setShowLocalePicker] = useState(false)
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof window === 'undefined') return true
-    const saved = localStorage.getItem('theme')
-    return saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)
-  })
-
-  // Aplicar tema ao montar e quando mudar
-  useEffect(() => {
-    const root = document.documentElement
-    if (isDark) {
-      root.classList.add('dark')
-      root.setAttribute('data-theme', 'dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      root.classList.remove('dark')
-      root.setAttribute('data-theme', 'light')
-      localStorage.setItem('theme', 'light')
-    }
-  }, [isDark])
-
-  const toggleTheme = () => {
-    setIsDark(prev => !prev)
-  }
+  const { isDark, toggle: toggleTheme } = useTheme()
 
   const switchLocale = useCallback(
     async (locale: string) => {
@@ -107,7 +92,7 @@ export function Header({ onMobileMenuToggle, isMobile = false, className }: Head
           <Tooltip content={tNav('mainMenu')}>
             <button
               onClick={onMobileMenuToggle}
-              className="p-1.5 -ml-1 rounded-lg hover:bg-white/[0.04] transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-1.5 -ms-1 rounded-lg hover:bg-white/[0.04] transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label={tNav('openMenu')}
             >
               <Menu size={20} className="text-[var(--text-secondary)]" />
@@ -146,6 +131,7 @@ export function Header({ onMobileMenuToggle, isMobile = false, className }: Head
         {/* Search — hidden on mobile (use Ctrl+K or GlobalSearch) */}
         <Tooltip content={tNav('searchShortcut')}>
           <button
+            onClick={onSearchOpen}
             className="p-1.5 rounded-lg hover:bg-white/[0.04] transition-colors hidden sm:flex min-w-[44px] min-h-[44px] items-center justify-center"
             aria-label={tNav('openSearch')}
           >
@@ -176,12 +162,12 @@ export function Header({ onMobileMenuToggle, isMobile = false, className }: Head
             </button>
           </Tooltip>
           {showLocalePicker && (
-            <div className="absolute right-0 top-full mt-1 z-50 bg-[rgba(24,24,27,0.95)] border border-[rgba(255,255,255,0.08)] rounded-lg shadow-xl py-1 min-w-[80px] backdrop-blur-lg">
+            <div className="absolute end-0 top-full mt-1 z-50 bg-[rgba(24,24,27,0.95)] border border-[rgba(255,255,255,0.08)] rounded-lg shadow-xl py-1 min-w-[80px] backdrop-blur-lg">
               {LOCALE_OPTIONS.map(([code, label]) => (
                 <button
                   key={code}
                   onClick={() => switchLocale(code)}
-                  className="w-full px-3 py-1.5 text-xs text-left text-[var(--text-secondary)] hover:bg-white/[0.04] hover:text-[var(--text-primary)] transition-colors"
+                  className="w-full px-3 py-1.5 text-xs text-start text-[var(--text-secondary)] hover:bg-white/[0.04] hover:text-[var(--text-primary)] transition-colors"
                 >
                   {label}
                 </button>

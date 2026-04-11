@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { Play, Loader2, History, Save } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useFormatter } from 'next-intl'
 import { runDiagnostic, type DiagnosticReport } from '@/lib/quality-checks'
 import { useServerChecks, useRunDiagnostic, useQualityReports } from '@/hooks/useQualityDiagnostic'
 import { QualityOverallScore } from '@/components/quality/QualityOverallScore'
@@ -13,6 +13,7 @@ import Link from 'next/link'
 
 export function QualityDashboardClient() {
   const t = useTranslations('quality')
+  const format = useFormatter()
   const [report, setReport] = useState<DiagnosticReport | null>(null)
   const [isRunning, setIsRunning] = useState(false)
   const { data: serverChecks } = useServerChecks()
@@ -146,7 +147,10 @@ export function QualityDashboardClient() {
                     {t('score')}: {h.overall_score}/100
                   </span>
                   <span className="text-xs text-[var(--text-muted)] ml-3">
-                    {new Date(h.created_at).toLocaleString('pt-BR')}
+                    {format.dateTime(new Date(h.created_at), {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    })}
                   </span>
                 </div>
                 <span

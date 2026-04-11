@@ -51,7 +51,7 @@ export const GET = withApiLog('users', async function GET(request: NextRequest) 
     if (search) {
       const { SupabaseDbClient } = await import('@template/data/supabase')
       const db = new SupabaseDbClient()
-      const client = db.asAdmin()
+      const client = await db.asUser()
 
       const safe = search
         .slice(0, 50)

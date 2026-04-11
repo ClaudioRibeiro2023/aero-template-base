@@ -4,6 +4,7 @@
  * Persists the selected tenant_id to localStorage and updates context.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 
 export interface Tenant {
   id: string
@@ -130,7 +131,13 @@ export function TenantSwitcher({
         data-testid="tenant-switcher-single"
       >
         {current?.logoUrl && (
-          <img src={current.logoUrl} alt="" className="h-5 w-5 rounded-sm object-contain" />
+          <Image
+            src={current.logoUrl}
+            alt=""
+            width={20}
+            height={20}
+            className="rounded-sm object-contain"
+          />
         )}
         <span>{current?.name}</span>
       </div>
@@ -148,7 +155,13 @@ export function TenantSwitcher({
         className="flex items-center gap-2 rounded-[var(--radius-md)] border border-white/[0.06] bg-[var(--glass-bg)] px-3 py-1.5 text-sm font-medium shadow-[var(--shadow-sm)] hover:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] backdrop-blur-xl"
       >
         {current?.logoUrl && (
-          <img src={current.logoUrl} alt="" className="h-4 w-4 rounded-sm object-contain" />
+          <Image
+            src={current.logoUrl}
+            alt=""
+            width={16}
+            height={16}
+            className="rounded-sm object-contain"
+          />
         )}
         <span className="max-w-[140px] truncate">{current?.name ?? 'Selecionar...'}</span>
         <svg
@@ -187,10 +200,12 @@ export function TenantSwitcher({
                   ].join(' ')}
                 >
                   {tenant.logoUrl && (
-                    <img
+                    <Image
                       src={tenant.logoUrl}
                       alt=""
-                      className="h-4 w-4 rounded-sm object-contain"
+                      width={16}
+                      height={16}
+                      className="rounded-sm object-contain"
                     />
                   )}
                   <span className="flex-1 truncate text-left">{tenant.name}</span>
