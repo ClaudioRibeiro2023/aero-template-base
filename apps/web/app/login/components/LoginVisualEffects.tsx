@@ -109,22 +109,32 @@ export function AnimatedGrid() {
 
 /** Status ticker bar */
 export function StatusTicker() {
-  const items = [
-    '◈ SISTEMA ONLINE',
-    'CONEXÃO SEGURA',
-    'CRIPTOGRAFIA AES-256-GCM',
-    'DRONE FLEET ACTIVE: 5 UNITS',
-    `ÚLTIMA SYNC: ${new Date().toISOString().slice(0, 19).replace('T', ' ')}UTC`,
-    `© ${new Date().getFullYear()}`,
-    'TLS 1.3 VERIFIED',
-    'UPTIME 99.97%',
-  ]
-  const text = items.join(' · ')
+  const [tickerText, setTickerText] = useState('')
+
+  useEffect(() => {
+    const items = [
+      '◈ SISTEMA ONLINE',
+      'CONEXÃO SEGURA',
+      'CRIPTOGRAFIA AES-256-GCM',
+      'DRONE FLEET ACTIVE: 5 UNITS',
+      `ÚLTIMA SYNC: ${new Date().toISOString().slice(0, 19).replace('T', ' ')}UTC`,
+      `© ${new Date().getFullYear()}`,
+      'TLS 1.3 VERIFIED',
+      'UPTIME 99.97%',
+    ]
+    setTickerText(items.join(' · '))
+  }, [])
+
+  if (!tickerText)
+    return (
+      <div className="absolute top-0 left-0 right-0 h-6 pointer-events-none z-[4] bg-black/30 backdrop-blur-sm border-b border-white/5" />
+    )
+
   return (
     <div className="absolute top-0 left-0 right-0 h-6 overflow-hidden pointer-events-none z-[4] bg-black/30 backdrop-blur-sm border-b border-white/5">
       <div className="flex items-center h-full status-bar-scroll whitespace-nowrap">
         <span className="text-[10px] tracking-[0.15em] text-emerald-400/70 font-mono uppercase px-4">
-          {text} · {text} · {text}
+          {tickerText} · {tickerText} · {tickerText}
         </span>
       </div>
     </div>
