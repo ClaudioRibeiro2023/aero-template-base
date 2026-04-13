@@ -5,7 +5,7 @@
  * breadcrumb a partir do pathname, e integração com i18n.
  */
 import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // ── Mocks ──────────────────────────────────────────────────────────────────────
@@ -102,6 +102,7 @@ Object.defineProperty(window, 'matchMedia', {
 
 // ── Import do componente (após mocks) ──────────────────────────────────────────
 import { Header } from '@/components/layout/Header'
+import { ThemeProvider } from '@/hooks/useTheme'
 
 // ── Testes ────────────────────────────────────────────────────────────────────
 
@@ -150,20 +151,38 @@ describe('Header', () => {
   })
 
   describe('alternância de tema', () => {
-    it('chama setItem no localStorage ao clicar no botão de tema', () => {
-      render(<Header />)
+    it('chama setItem no localStorage ao clicar no botão de tema', async () => {
+      render(
+        <ThemeProvider>
+          <Header />
+        </ThemeProvider>
+      )
       const themeBtn = screen.getByLabelText('Alternar tema')
-      fireEvent.click(themeBtn)
-      expect(localStorageMock.getItem('theme-mode')).toBeTruthy()
+      await act(async () => {
+        fireEvent.click(themeBtn)
+      })
+      // ThemeProvider persists via useEffect after hydration
+      await waitFor(() => {
+        expect(localStorageMock.getItem('theme-mode')).toBeTruthy()
+      })
     })
 
-    it('alterna classList light no documentElement ao clicar no botão de tema', () => {
-      render(<Header />)
+    it('alterna classList light no documentElement ao clicar no botão de tema', async () => {
+      render(
+        <ThemeProvider>
+          <Header />
+        </ThemeProvider>
+      )
       const themeBtn = screen.getByLabelText('Alternar tema')
       const hadLight = document.documentElement.classList.contains('light')
-      fireEvent.click(themeBtn)
-      const hasLight = document.documentElement.classList.contains('light')
-      expect(hasLight).not.toBe(hadLight)
+      await act(async () => {
+        fireEvent.click(themeBtn)
+      })
+      // ThemeProvider applies class via useEffect after hydration
+      await waitFor(() => {
+        const hasLight = document.documentElement.classList.contains('light')
+        expect(hasLight).not.toBe(hadLight)
+      })
     })
   })
 
