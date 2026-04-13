@@ -1,0 +1,25 @@
+import { defineManifest } from '@template/modules'
+
+export default defineManifest({
+  id: 'search',
+  name: 'Busca Global',
+  description: 'Command palette com busca cross-module (Ctrl+K)',
+  version: '1.0.0',
+  category: 'core',
+  enabled: true,
+  order: 99,
+  dependencies: ['auth'],
+  routes: [],
+  apiRoutes: ['/api/search'],
+  requiredTables: [],
+  envVars: [],
+  featureFlags: [],
+  hooks: ['useGlobalSearch'],
+  components: ['GlobalSearch', 'GlobalSearchProvider', 'CommandPalette'],
+  icon: 'Search',
+  path: '',
+  roles: [],
+  showInSidebar: false,
+  group: 'Sistema',
+  functions: [],
+})

@@ -1,0 +1,38 @@
+import { defineManifest } from '@template/modules'
+
+export default defineManifest({
+  id: 'reports',
+  name: 'Relatorios',
+  description: 'Relatorios gerenciais, operacionais e exportacoes',
+  version: '1.0.0',
+  category: 'default',
+  enabled: true,
+  order: 2,
+  dependencies: ['auth'],
+  routes: ['/relatorios'],
+  apiRoutes: [],
+  requiredTables: [],
+  envVars: [],
+  featureFlags: [],
+  hooks: [],
+  components: [],
+  icon: 'BarChart3',
+  path: '/relatorios',
+  roles: [],
+  showInSidebar: true,
+  group: 'Principal',
+  functions: [
+    {
+      id: 'relatorios-gerenciais',
+      moduleId: 'reports',
+      name: 'Gerenciais',
+      subtitle: 'Relatorios de gestao',
+      path: '/relatorios',
+      category: 'INDICADORES',
+      enabled: true,
+      order: 0,
+      roles: [],
+      tags: ['relatorios', 'gestao'],
+    },
+  ],
+})

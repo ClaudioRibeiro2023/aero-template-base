@@ -1,0 +1,25 @@
+import { defineManifest } from '@template/modules'
+
+export default defineManifest({
+  id: 'settings',
+  name: 'Configuracoes Pessoais',
+  description: 'Perfil do usuario, preferencias, seguranca e sessoes',
+  version: '1.0.0',
+  category: 'core',
+  enabled: true,
+  order: 50,
+  dependencies: ['auth'],
+  routes: ['/settings', '/profile', '/profile/security'],
+  apiRoutes: ['/api/user/preferences', '/api/user/locale', '/api/user/onboarding'],
+  requiredTables: ['profiles'],
+  envVars: [],
+  featureFlags: [],
+  hooks: ['useTheme', 'useOnboarding', 'useFormDirty'],
+  components: ['FirstRunWizard'],
+  icon: 'Settings',
+  path: '/settings',
+  roles: [],
+  showInSidebar: false,
+  group: 'Sistema',
+  functions: [],
+})

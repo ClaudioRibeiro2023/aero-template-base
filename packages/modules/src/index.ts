@@ -13,3 +13,7 @@
 export { ModuleRegistry, createRegistry } from './registry'
 export type { ModuleDefinition, ModuleRegistryOptions } from './registry'
 export { defineModule } from './defineModule'
+export { defineManifest } from './manifest'
+export type { ModuleManifest, ModuleCategory, ModuleEnvVar, ModuleFunctionDef } from './manifest'
+export { resolveModules } from './resolver'
+export type { ModuleOverride, ResolvedModuleSet } from './resolver'

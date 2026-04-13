@@ -1,0 +1,25 @@
+import { defineManifest } from '@template/modules'
+
+export default defineManifest({
+  id: 'organizations',
+  name: 'Organizacoes',
+  description: 'Multi-tenancy com troca de organizacao e isolamento de dados',
+  version: '1.0.0',
+  category: 'optional',
+  enabled: false,
+  order: 45,
+  dependencies: ['auth'],
+  routes: [],
+  apiRoutes: ['/api/organizations'],
+  requiredTables: ['tenants', 'organization_members'],
+  envVars: [],
+  featureFlags: ['module.organizations'],
+  hooks: ['useOrganization'],
+  components: ['TenantSwitcher'],
+  icon: 'Building',
+  path: '',
+  roles: [],
+  showInSidebar: false,
+  group: 'Sistema',
+  functions: [],
+})

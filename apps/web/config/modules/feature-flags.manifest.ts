@@ -1,0 +1,38 @@
+import { defineManifest } from '@template/modules'
+
+export default defineManifest({
+  id: 'feature-flags',
+  name: 'Feature Flags',
+  description: 'Gerenciamento de feature flags com rollout progressivo',
+  version: '1.0.0',
+  category: 'optional',
+  enabled: true,
+  order: 35,
+  dependencies: ['admin'],
+  routes: ['/admin/config/feature-flags'],
+  apiRoutes: ['/api/feature-flags'],
+  requiredTables: ['feature_flags'],
+  envVars: [],
+  featureFlags: [],
+  hooks: ['useFeatureFlag', 'useFeatureFlagsAdmin'],
+  components: [],
+  icon: 'Flag',
+  path: '/admin/config/feature-flags',
+  roles: ['ADMIN'],
+  showInSidebar: false,
+  group: 'Administracao',
+  functions: [
+    {
+      id: 'feature-flags-manage',
+      moduleId: 'feature-flags',
+      name: 'Feature Flags',
+      subtitle: 'Gerenciar flags de funcionalidade',
+      path: '/admin/config/feature-flags',
+      category: 'CONFIG',
+      enabled: true,
+      order: 0,
+      roles: ['ADMIN'],
+      tags: ['flags', 'features', 'rollout'],
+    },
+  ],
+})

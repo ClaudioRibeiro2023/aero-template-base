@@ -59,6 +59,21 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // ── Module gating — bloquear rotas de módulos desabilitados ──
+  // Import dinâmico lazy para não impactar cold start de rotas públicas
+  const { isRouteEnabled, isApiRouteEnabled } = await import('@/lib/module-gate')
+
+  if (pathname.startsWith('/api/')) {
+    if (!isApiRouteEnabled(pathname)) {
+      return NextResponse.json(
+        { error: 'Module not available', message: 'Este modulo nao esta habilitado' },
+        { status: 404 }
+      )
+    }
+  } else if (!isRouteEnabled(pathname)) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
   // Auto-detect locale — provider-agnostic
   const detectedLocale = detectLocale(request)
   if (detectedLocale) {

@@ -1,0 +1,25 @@
+import { defineManifest } from '@template/modules'
+
+export default defineManifest({
+  id: 'file-upload',
+  name: 'Upload de Arquivos',
+  description: 'Servico de upload via Supabase Storage com drag-and-drop',
+  version: '1.0.0',
+  category: 'utility',
+  enabled: true,
+  order: 90,
+  dependencies: ['auth'],
+  routes: [],
+  apiRoutes: [],
+  requiredTables: [],
+  envVars: [],
+  featureFlags: [],
+  hooks: ['useFileUpload'],
+  components: ['FileUpload'],
+  icon: 'Upload',
+  path: '',
+  roles: [],
+  showInSidebar: false,
+  group: 'Sistema',
+  functions: [],
+})

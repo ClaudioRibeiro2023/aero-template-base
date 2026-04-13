@@ -1,0 +1,25 @@
+import { defineManifest } from '@template/modules'
+
+export default defineManifest({
+  id: 'notifications',
+  name: 'Notificacoes',
+  description: 'Centro de notificacoes com WebSocket e badge em tempo real',
+  version: '1.0.0',
+  category: 'optional',
+  enabled: true,
+  order: 40,
+  dependencies: ['auth'],
+  routes: [],
+  apiRoutes: ['/api/notifications'],
+  requiredTables: ['notifications'],
+  envVars: [],
+  featureFlags: ['module.notifications'],
+  hooks: ['useNotifications', 'useWebSocket', 'useRealtimeSubscription'],
+  components: ['NotificationCenter'],
+  icon: 'Bell',
+  path: '',
+  roles: [],
+  showInSidebar: false,
+  group: 'Sistema',
+  functions: [],
+})

@@ -1,0 +1,38 @@
+import { defineManifest } from '@template/modules'
+
+export default defineManifest({
+  id: 'tasks',
+  name: 'Tarefas',
+  description: 'Gerenciamento de tarefas com CRUD completo, filtros e status',
+  version: '1.0.0',
+  category: 'optional',
+  enabled: true,
+  order: 3,
+  dependencies: ['auth'],
+  routes: ['/tasks'],
+  apiRoutes: ['/api/tasks'],
+  requiredTables: ['tasks'],
+  envVars: [],
+  featureFlags: ['module.tasks'],
+  hooks: ['useTasks'],
+  components: [],
+  icon: 'CheckCircle',
+  path: '/tasks',
+  roles: [],
+  showInSidebar: true,
+  group: 'Principal',
+  functions: [
+    {
+      id: 'tasks-list',
+      moduleId: 'tasks',
+      name: 'Todas as Tarefas',
+      subtitle: 'Listar, criar e gerenciar',
+      path: '/tasks',
+      category: 'OPERACIONAL',
+      enabled: true,
+      order: 0,
+      roles: [],
+      tags: ['tasks', 'crud'],
+    },
+  ],
+})
