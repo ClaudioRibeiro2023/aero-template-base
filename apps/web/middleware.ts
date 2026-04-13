@@ -48,7 +48,10 @@ export async function middleware(request: NextRequest) {
         )
       }
     } else if (!isRouteEnabled(pathname)) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+      const moduleName = pathname.split('/').filter(Boolean)[0] || 'modulo'
+      return NextResponse.redirect(
+        new URL(`/dashboard?disabled=${encodeURIComponent(moduleName)}`, request.url)
+      )
     }
     // Auto-detect locale in demo mode too
     const detectedLocale = detectLocale(request)
@@ -93,7 +96,10 @@ export async function middleware(request: NextRequest) {
       )
     }
   } else if (!isRouteEnabled(pathname)) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    const moduleName = pathname.split('/').filter(Boolean)[0] || 'modulo'
+    return NextResponse.redirect(
+      new URL(`/dashboard?disabled=${encodeURIComponent(moduleName)}`, request.url)
+    )
   }
 
   // Auto-detect locale — provider-agnostic

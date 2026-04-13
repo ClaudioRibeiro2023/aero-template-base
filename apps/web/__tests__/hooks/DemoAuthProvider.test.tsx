@@ -56,7 +56,7 @@ describe('DemoAuthProvider', () => {
     // Mock window.location para evitar redirect real
     Object.defineProperty(window, 'location', {
       writable: true,
-      value: { href: '/' },
+      value: { href: '/', replace: vi.fn() },
     })
   })
 
@@ -92,7 +92,6 @@ describe('DemoAuthProvider', () => {
   })
 
   it('logout torna isAuthenticated false e user null', async () => {
-    vi.useFakeTimers()
     render(
       <DemoAuthProvider>
         <TestAuthConsumer />
@@ -105,12 +104,9 @@ describe('DemoAuthProvider', () => {
 
     expect(screen.getByTestId('isAuth')).toHaveTextContent('false')
     expect(screen.getByTestId('userId')).toHaveTextContent('null')
-
-    vi.useRealTimers()
   })
 
   it('login restaura user apos logout', async () => {
-    vi.useFakeTimers()
     render(
       <DemoAuthProvider>
         <TestAuthConsumer />
@@ -127,8 +123,6 @@ describe('DemoAuthProvider', () => {
     })
     expect(screen.getByTestId('isAuth')).toHaveTextContent('true')
     expect(screen.getByTestId('userId')).toHaveTextContent('demo-user-001')
-
-    vi.useRealTimers()
   })
 
   it('hasRole retorna true case-insensitive para ADMIN', () => {

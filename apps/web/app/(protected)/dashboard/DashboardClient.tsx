@@ -9,8 +9,9 @@
  *
  * Sprint 5 refactor: KPI cards e charts extraídos para sub-componentes.
  */
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -120,6 +121,20 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
   const { hasRole } = useAuth()
   const intlFormat = useFormatter()
   const isAdmin = hasRole('ADMIN') || hasRole('GESTOR')
+  const searchParams = useSearchParams()
+  const [disabledNotice, setDisabledNotice] = useState<string | null>(null)
+
+  // Show notice when redirected from a disabled module
+  useEffect(() => {
+    const disabled = searchParams.get('disabled')
+    if (disabled) {
+      setDisabledNotice(disabled)
+      // Clean up URL without reload
+      const url = new URL(window.location.href)
+      url.searchParams.delete('disabled')
+      window.history.replaceState({}, '', url.pathname)
+    }
+  }, [searchParams])
 
   // Dashboard stats (real data)
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
@@ -222,9 +237,33 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
 
   return (
     <main className="page-enter ambient-gradient max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+      {/* Disabled module notice */}
+      {disabledNotice && (
+        <div className="relative z-10 flex items-center gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm">
+          <span>
+            O módulo <strong className="font-semibold">{disabledNotice}</strong> não está habilitado
+            nesta instalação.
+          </span>
+          <button
+            onClick={() => setDisabledNotice(null)}
+            className="ml-auto text-amber-400 hover:text-amber-200 transition-colors"
+            aria-label="Fechar aviso"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="relative z-10">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">{appName}</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">{appName}</h1>
+          {health?.demo && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20">
+              Demo Mode
+            </span>
+          )}
+        </div>
         <p className="text-sm text-[var(--text-secondary)] mt-0.5">
           Visão geral do sistema — {dateLabel}
         </p>

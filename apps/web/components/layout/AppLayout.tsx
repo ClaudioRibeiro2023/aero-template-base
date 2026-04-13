@@ -47,7 +47,12 @@ const WIZARD_DISMISSED_KEY = 'wizard-dismissed'
 type ScreenMode = 'mobile' | 'tablet' | 'desktop'
 
 function useScreenMode(): ScreenMode {
-  const [mode, setMode] = useState<ScreenMode>('desktop')
+  // SSR-safe: start with 'desktop' but immediately detect on mount
+  const [mode, setMode] = useState<ScreenMode>(() => {
+    if (typeof window === 'undefined') return 'desktop'
+    const w = window.innerWidth
+    return w < 768 ? 'mobile' : w < 1024 ? 'tablet' : 'desktop'
+  })
 
   useEffect(() => {
     const update = () => {

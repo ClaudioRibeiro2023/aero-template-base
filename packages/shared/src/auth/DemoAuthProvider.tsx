@@ -25,10 +25,14 @@ export function DemoAuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     setUser(null)
-    // Small delay to let state propagate before redirect
-    setTimeout(() => {
-      window.location.href = '/login'
-    }, 100)
+    // Clear any cached auth state
+    try {
+      sessionStorage.clear()
+    } catch {
+      // ignore
+    }
+    // Redirect to login — use replace to remove dashboard from history
+    window.location.replace('/login')
   }, [])
 
   const hasRole = useCallback(

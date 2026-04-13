@@ -7,6 +7,8 @@ import { useTranslations } from 'next-intl'
 import { Tooltip } from '@template/design-system'
 import { env } from '@/lib/env'
 
+// Year computed at module load — same value for SSR and client hydration.
+// suppressHydrationWarning is added to the element that renders this value.
 const APP_YEAR = new Date().getFullYear()
 
 export const Footer = memo(function Footer({ className }: { className?: string }) {
@@ -21,7 +23,7 @@ export const Footer = memo(function Footer({ className }: { className?: string }
       <div className="px-5 py-2.5">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <p className="text-[11px] text-[var(--text-muted)] truncate">
+            <p className="text-[11px] text-[var(--text-muted)] truncate" suppressHydrationWarning>
               © {APP_YEAR}{' '}
               <span className="text-[var(--text-secondary)] font-medium">{appName}</span>
             </p>

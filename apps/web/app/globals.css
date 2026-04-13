@@ -645,6 +645,18 @@ textarea:focus-visible {
 }
 
 /* ============================================
+   Mobile — sidebar hidden by default (CSS fallback for JS hydration delay)
+   ============================================ */
+
+@media (max-width: 767px) {
+  .sidebar-island {
+    transform: translateX(-100%);
+    position: fixed;
+    z-index: 70;
+  }
+}
+
+/* ============================================
    Landscape mode — adjust sidebar and content
    ============================================ */
 
