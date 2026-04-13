@@ -58,7 +58,7 @@ export interface UseWebSocketReturn {
   leaveRoom: (roomId: string) => void
 }
 
-const WS_BASE_URL = env.WS_URL || 'ws://localhost:8000'
+const WS_BASE_URL = env.WS_URL || ''
 
 export function useWebSocket(
   userId: string | null,
@@ -91,7 +91,7 @@ export function useWebSocket(
   }, [userId, rooms])
 
   const connect = useCallback(() => {
-    if (!userId) return
+    if (!userId || !WS_BASE_URL) return
     if (wsRef.current?.readyState === WebSocket.OPEN) return
 
     const url = buildUrl()
