@@ -27,7 +27,8 @@ export const GET = withApiLog('platform-metrics', async function GET(_request: N
       .eq('id', user.id)
       .single()
 
-    if (!profile || !['ADMIN', 'GESTOR'].includes(profile.role)) {
+    const normalizedRole = (profile?.role || '').toLowerCase()
+    if (!profile || !['admin', 'member', 'owner'].includes(normalizedRole)) {
       return forbidden('Acesso restrito a administradores')
     }
 

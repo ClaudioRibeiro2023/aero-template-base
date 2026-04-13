@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { SkipLink } from '@/components/common/SkipLink'
-import { CommandPalette } from '@/components/common/CommandPalette'
 import { FirstRunWizard, type WizardData } from '@/components/common/FirstRunWizard'
 import { useOnboarding } from '@/hooks/useOnboarding'
 import { ToastProvider } from '@template/design-system'
@@ -14,10 +13,7 @@ const PREFETCH_ROUTES = ['/dashboard', '/admin/config', '/admin/usuarios', '/pro
 
 export function ProtectedLayoutClient({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const { shouldShowWizard, advanceStep, completeOnboarding, skipOnboarding } = useOnboarding()
-
-  const closePalette = useCallback(() => setIsPaletteOpen(false), [])
 
   const handleWizardComplete = useCallback(
     async (_data: WizardData) => {
@@ -38,23 +34,13 @@ export function ProtectedLayoutClient({ children }: { children: React.ReactNode 
     return () => clearTimeout(timer)
   }, [router])
 
-  // Atalho global Cmd+K / Ctrl+K para abrir a Command Palette
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setIsPaletteOpen(prev => !prev)
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  // Ctrl+K / Cmd+K agora é gerenciado pelo GlobalSearchProvider (providers.tsx)
+  // Removido listener duplicado — fonte única de verdade no contexto global
 
   return (
     <ToastProvider>
       <SkipLink />
       <AppLayout>{children}</AppLayout>
-      <CommandPalette isOpen={isPaletteOpen} onClose={closePalette} />
       {shouldShowWizard && (
         <FirstRunWizard
           onComplete={handleWizardComplete}
