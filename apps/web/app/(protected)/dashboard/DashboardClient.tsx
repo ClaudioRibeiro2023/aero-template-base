@@ -28,45 +28,54 @@ import { useFormatter } from 'next-intl'
 import { DashboardKPICards, AnimatedValue, Sparkline, useWidgetOrder } from './DashboardKPICards'
 import { DashboardCharts } from './DashboardCharts'
 
-// ── KPI Mock Data ──
-const KPI_CARDS = [
-  {
-    key: 'usuarios',
-    label: 'Usuários Ativos',
-    icon: Users,
-    value: '48',
-    change: '+12%',
-    up: true,
-    path: '/admin/usuarios',
-  },
-  {
-    key: 'relatorios',
-    label: 'Relatórios Gerados',
-    icon: FileText,
-    value: '134',
-    change: '+5%',
-    up: true,
-    path: '/relatorios',
-  },
-  {
-    key: 'atividade',
-    label: 'Taxa de Atividade',
-    icon: Activity,
-    value: '92%',
-    change: '-2%',
-    up: false,
-    path: '/dashboard/analytics',
-  },
-  {
-    key: 'config',
-    label: 'Config Items',
-    icon: Settings,
-    value: '17',
-    change: '0%',
-    up: true,
-    path: '/admin/config',
-  },
-]
+// ── KPI Data (real via API) ──
+interface DashboardStats {
+  users: number
+  tasks: number
+  tickets: number
+  configItems: number
+}
+
+function buildKpiCards(stats: DashboardStats | null) {
+  return [
+    {
+      key: 'usuarios',
+      label: 'Usuários Ativos',
+      icon: Users,
+      value: stats ? String(stats.users) : '--',
+      change: '',
+      up: true,
+      path: '/admin/usuarios',
+    },
+    {
+      key: 'tasks',
+      label: 'Tasks',
+      icon: FileText,
+      value: stats ? String(stats.tasks) : '--',
+      change: '',
+      up: true,
+      path: '/tasks',
+    },
+    {
+      key: 'tickets',
+      label: 'Tickets',
+      icon: Activity,
+      value: stats ? String(stats.tickets) : '--',
+      change: '',
+      up: true,
+      path: '/support/tickets',
+    },
+    {
+      key: 'config',
+      label: 'Feature Flags',
+      icon: Settings,
+      value: stats ? String(stats.configItems) : '--',
+      change: '',
+      up: true,
+      path: '/admin/config/feature-flags',
+    },
+  ]
+}
 
 const QUICK_ACTIONS = [
   {
@@ -108,10 +117,35 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
-  const loading = false
   const { hasRole } = useAuth()
   const intlFormat = useFormatter()
   const isAdmin = hasRole('ADMIN') || hasRole('GESTOR')
+
+  // Dashboard stats (real data)
+  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
+    queryKey: ['dashboard-stats'],
+    queryFn: async () => {
+      const res = await fetch('/api/dashboard/stats')
+      if (!res.ok) return null
+      const json = await res.json()
+      return json.data
+    },
+    staleTime: 60_000,
+  })
+
+  const loading = statsLoading
+  const KPI_CARDS = buildKpiCards(stats ?? null)
+
+  // Health check (real status)
+  const { data: health } = useQuery({
+    queryKey: ['health-status'],
+    queryFn: async () => {
+      const res = await fetch('/api/health')
+      if (!res.ok) return { status: 'error', supabase: 'error' }
+      return res.json()
+    },
+    staleTime: 30_000,
+  })
 
   // Platform metrics — only for admin/gestor
   const { data: metrics = [] } = useQuery({
@@ -334,16 +368,20 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
                   </h3>
                   <div className="space-y-3">
                     {[
-                      { label: 'API', status: 'Operacional', color: 'bg-emerald-400' },
+                      {
+                        label: 'API',
+                        status: health?.status === 'healthy' ? 'Operacional' : 'Indisponível',
+                        color: health?.status === 'healthy' ? 'bg-emerald-400' : 'bg-rose-400',
+                      },
                       {
                         label: 'Banco de Dados',
-                        status: 'Operacional',
-                        color: 'bg-emerald-400',
+                        status: health?.supabase === 'connected' ? 'Operacional' : 'Indisponível',
+                        color: health?.supabase === 'connected' ? 'bg-emerald-400' : 'bg-rose-400',
                       },
                       {
                         label: 'Autenticação',
-                        status: 'Operacional',
-                        color: 'bg-emerald-400',
+                        status: health?.status === 'healthy' ? 'Operacional' : 'Indisponível',
+                        color: health?.status === 'healthy' ? 'bg-emerald-400' : 'bg-rose-400',
                       },
                     ].map(item => (
                       <div key={item.label} className="flex items-center justify-between">
@@ -374,31 +412,23 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
                     </Link>
                   </div>
                   <div className="space-y-3">
-                    {[
-                      { action: 'Novo usuário cadastrado', time: 'Há 5 min', icon: Users },
-                      { action: 'Relatório exportado', time: 'Há 12 min', icon: FileText },
-                      { action: 'Configuração atualizada', time: 'Há 1h', icon: Settings },
-                      { action: 'Login do administrador', time: 'Há 2h', icon: Activity },
-                    ].map((item, i) => {
-                      const ItemIcon = item.icon
-                      return (
-                        <div key={i} className="flex items-center gap-3 py-1">
-                          <div className="p-1.5 rounded-lg bg-white/[0.03]">
-                            <ItemIcon
-                              size={14}
-                              className="text-[var(--text-muted)]"
-                              aria-hidden="true"
-                            />
-                          </div>
-                          <p className="flex-1 text-sm text-[var(--text-secondary)]">
-                            {item.action}
-                          </p>
-                          <span className="text-xs text-[var(--text-muted)] flex-shrink-0">
-                            {item.time}
-                          </span>
-                        </div>
-                      )
-                    })}
+                    {stats ? (
+                      <div className="text-center py-4">
+                        <p className="text-xs text-[var(--text-muted)]">
+                          {stats.users} usuários · {stats.tasks} tasks · {stats.tickets} tickets
+                        </p>
+                        <Link
+                          href="/dashboard/analytics"
+                          className="text-xs text-[var(--brand-primary)] hover:underline mt-2 inline-block"
+                        >
+                          Ver analytics completo
+                        </Link>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-[var(--text-muted)] text-center py-4">
+                        Carregando atividade...
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

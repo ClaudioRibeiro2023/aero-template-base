@@ -28,9 +28,14 @@ export async function GET(request: NextRequest) {
         },
       }
     )
-    // Simple connectivity check — anon select on a public-safe query
+    // Connectivity check with fallback
     const { error } = await supabase.from('tenants').select('id').limit(1)
-    supabaseStatus = error ? 'error' : 'connected'
+    if (error) {
+      const { error: fallback } = await supabase.from('profiles').select('id').limit(1)
+      supabaseStatus = fallback ? 'error' : 'connected'
+    } else {
+      supabaseStatus = 'connected'
+    }
   } catch {
     supabaseStatus = 'error'
   }
