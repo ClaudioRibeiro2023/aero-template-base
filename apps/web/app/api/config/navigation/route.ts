@@ -18,10 +18,17 @@ import { moduleRegistry } from '@/lib/module-registry'
 
 export const dynamic = 'force-dynamic'
 
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+
 export async function GET(request: NextRequest) {
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (!success) return tooManyRequests()
+
+  // Demo mode — return navigation config from module registry (no DB)
+  if (isDemoMode) {
+    return ok({ navigation: moduleRegistry.toNavigationConfig() })
+  }
 
   const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()

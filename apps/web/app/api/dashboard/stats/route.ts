@@ -11,6 +11,8 @@ import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+
 async function safeCount(
   client: Awaited<ReturnType<SupabaseDbClient['asUser']>>,
   table: string
@@ -24,6 +26,16 @@ async function safeCount(
 }
 
 export const GET = withApiLog('dashboard-stats', async function GET(_request: NextRequest) {
+  // Demo mode — return sample data without Supabase
+  if (isDemoMode) {
+    return ok({
+      users: 12,
+      tasks: 47,
+      tickets: 8,
+      configItems: 5,
+    })
+  }
+
   const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 

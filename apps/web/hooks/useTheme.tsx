@@ -25,26 +25,40 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | null>(null)
 
-function getInitialTheme(): ThemeMode {
-  if (typeof window === 'undefined') return 'dark'
-
+/**
+ * Reads the saved theme from localStorage.
+ * Returns null during SSR or if no preference is saved.
+ */
+function getSavedTheme(): ThemeMode | null {
+  if (typeof window === 'undefined') return null
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved === 'light' || saved === 'dark') return saved
   } catch {
-    // ignore
+    // ignore — private browsing, etc.
   }
-
-  // Fallback to system preference
-  if (window.matchMedia?.('(prefers-color-scheme: light)').matches) return 'light'
-  return 'dark'
+  return null
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setMode] = useState<ThemeMode>(getInitialTheme)
+  // Start with 'dark' for SSR consistency — real preference applied in useEffect
+  const [mode, setMode] = useState<ThemeMode>('dark')
+  const [hydrated, setHydrated] = useState(false)
+
+  // After hydration, read actual preference from localStorage / system
+  useEffect(() => {
+    const saved = getSavedTheme()
+    if (saved) {
+      setMode(saved)
+    } else if (window.matchMedia?.('(prefers-color-scheme: light)').matches) {
+      setMode('light')
+    }
+    setHydrated(true)
+  }, [])
 
   // Apply theme class to <html>
   useEffect(() => {
+    if (!hydrated) return
     const html = document.documentElement
 
     // Add transition class for smooth switch
@@ -69,7 +83,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
 
     return () => clearTimeout(timer)
-  }, [mode])
+  }, [mode, hydrated])
 
   const toggle = useCallback(() => {
     setMode((prev: ThemeMode) => (prev === 'dark' ? 'light' : 'dark'))

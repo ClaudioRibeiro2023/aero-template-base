@@ -36,9 +36,31 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Demo mode: bypass auth em desenvolvimento
-  if (process.env.DEMO_MODE === 'true' && process.env.NODE_ENV !== 'production') {
-    return NextResponse.next()
+  // Demo mode: bypass auth (Supabase não necessário)
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
+    // Module gating still applies in demo mode
+    const { isRouteEnabled, isApiRouteEnabled } = await import('@/lib/module-gate')
+    if (pathname.startsWith('/api/')) {
+      if (!isApiRouteEnabled(pathname)) {
+        return NextResponse.json(
+          { error: 'Module not available', message: 'Este modulo nao esta habilitado' },
+          { status: 404 }
+        )
+      }
+    } else if (!isRouteEnabled(pathname)) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    // Auto-detect locale in demo mode too
+    const detectedLocale = detectLocale(request)
+    const resp = NextResponse.next()
+    if (detectedLocale) {
+      resp.cookies.set('locale', detectedLocale, {
+        path: '/',
+        maxAge: 31536000,
+        sameSite: 'lax',
+      })
+    }
+    return resp
   }
 
   // Supabase não configurado — falha segura

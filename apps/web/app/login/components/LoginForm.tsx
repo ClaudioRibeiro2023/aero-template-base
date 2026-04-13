@@ -67,8 +67,10 @@ const enabledProviders = (process.env.NEXT_PUBLIC_AUTH_PROVIDERS || '')
   .map(p => p.trim())
   .filter(Boolean)
 
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+
 export function LoginForm({ appName, logoUrl }: LoginFormProps) {
-  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
+  const supabase = useMemo(() => (isDemoMode ? null : createSupabaseBrowserClient()), [])
   const [socialLoading, setSocialLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
   const [mode, setMode] = useState<AuthMode>('password')
@@ -95,6 +97,15 @@ export function LoginForm({ appName, logoUrl }: LoginFormProps) {
 
   const onPasswordLogin = async (data: LoginFormData) => {
     setMessage(null)
+    // Demo mode — any credentials work
+    if (isDemoMode) {
+      setMessage({ text: 'Login demo realizado!', type: 'success' })
+      setTimeout(() => {
+        window.location.href = '/dashboard'
+      }, 500)
+      return
+    }
+    if (!supabase) return
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
@@ -114,6 +125,11 @@ export function LoginForm({ appName, logoUrl }: LoginFormProps) {
 
   const onMagicLink = async (data: MagicLinkFormData) => {
     setMessage(null)
+    if (isDemoMode) {
+      setMessage({ text: 'Demo mode — use login com senha.', type: 'error' })
+      return
+    }
+    if (!supabase) return
     const { error } = await supabase.auth.signInWithOtp({
       email: data.email,
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
@@ -128,6 +144,12 @@ export function LoginForm({ appName, logoUrl }: LoginFormProps) {
   async function handleOAuthLogin(provider: 'google' | 'github') {
     setSocialLoading(true)
     setMessage(null)
+    if (isDemoMode) {
+      setMessage({ text: 'Demo mode — use login com senha.', type: 'error' })
+      setSocialLoading(false)
+      return
+    }
+    if (!supabase) return
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: `${window.location.origin}/auth/callback` },

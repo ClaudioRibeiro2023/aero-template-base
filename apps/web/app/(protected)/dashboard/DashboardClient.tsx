@@ -370,18 +370,47 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
                     {[
                       {
                         label: 'API',
-                        status: health?.status === 'healthy' ? 'Operacional' : 'Indisponível',
-                        color: health?.status === 'healthy' ? 'bg-emerald-400' : 'bg-rose-400',
+                        status: health?.status === 'healthy' ? 'Operacional' : 'Verificando...',
+                        color:
+                          health?.status === 'healthy'
+                            ? 'bg-emerald-400'
+                            : health
+                              ? 'bg-rose-400'
+                              : 'bg-amber-400',
                       },
                       {
                         label: 'Banco de Dados',
-                        status: health?.supabase === 'connected' ? 'Operacional' : 'Indisponível',
-                        color: health?.supabase === 'connected' ? 'bg-emerald-400' : 'bg-rose-400',
+                        status:
+                          health?.supabase === 'connected'
+                            ? 'Operacional'
+                            : health?.demo
+                              ? 'Demo Mode'
+                              : health
+                                ? 'Indisponível'
+                                : 'Verificando...',
+                        color:
+                          health?.supabase === 'connected'
+                            ? 'bg-emerald-400'
+                            : health?.demo
+                              ? 'bg-sky-400'
+                              : health
+                                ? 'bg-rose-400'
+                                : 'bg-amber-400',
                       },
                       {
                         label: 'Autenticação',
-                        status: health?.status === 'healthy' ? 'Operacional' : 'Indisponível',
-                        color: health?.status === 'healthy' ? 'bg-emerald-400' : 'bg-rose-400',
+                        status: health?.demo
+                          ? 'Demo Mode'
+                          : health?.status === 'healthy'
+                            ? 'Operacional'
+                            : 'Verificando...',
+                        color: health?.demo
+                          ? 'bg-sky-400'
+                          : health?.status === 'healthy'
+                            ? 'bg-emerald-400'
+                            : health
+                              ? 'bg-rose-400'
+                              : 'bg-amber-400',
                       },
                     ].map(item => (
                       <div key={item.label} className="flex items-center justify-between">
@@ -412,7 +441,11 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
                     </Link>
                   </div>
                   <div className="space-y-3">
-                    {stats ? (
+                    {statsLoading ? (
+                      <div className="text-center py-4">
+                        <div className="shimmer h-4 w-48 mx-auto rounded-lg" aria-hidden="true" />
+                      </div>
+                    ) : stats ? (
                       <div className="text-center py-4">
                         <p className="text-xs text-[var(--text-muted)]">
                           {stats.users} usuários · {stats.tasks} tasks · {stats.tickets} tickets
@@ -425,9 +458,11 @@ export function DashboardClient({ appName, dateLabel }: DashboardClientProps) {
                         </Link>
                       </div>
                     ) : (
-                      <p className="text-xs text-[var(--text-muted)] text-center py-4">
-                        Carregando atividade...
-                      </p>
+                      <div className="text-center py-4">
+                        <p className="text-xs text-[var(--text-muted)]">
+                          Nenhuma atividade disponível
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>

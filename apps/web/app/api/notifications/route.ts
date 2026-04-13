@@ -10,7 +10,33 @@ import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+
 export const GET = withApiLog('notifications-list', async function GET() {
+  // Demo mode — return sample notifications
+  if (isDemoMode) {
+    return ok({
+      data: [
+        {
+          id: 'demo-1',
+          title: 'Bem-vindo ao Demo',
+          message: 'Explore as funcionalidades da plataforma.',
+          type: 'info',
+          read: false,
+          created_at: new Date().toISOString(),
+        },
+        {
+          id: 'demo-2',
+          title: 'Sistema atualizado',
+          message: 'Nova versão disponível com melhorias.',
+          type: 'success',
+          read: true,
+          created_at: new Date(Date.now() - 86400000).toISOString(),
+        },
+      ],
+    })
+  }
+
   const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 

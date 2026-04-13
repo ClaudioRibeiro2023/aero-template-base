@@ -12,7 +12,47 @@ import { withApiLog } from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
+const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+
 export const GET = withApiLog('platform-metrics', async function GET(_request: NextRequest) {
+  // Demo mode — return sample metrics
+  if (isDemoMode) {
+    const now = new Date()
+    const weekMs = 7 * 86400000
+    return ok({
+      metrics: [
+        {
+          id: 'demo-1',
+          week_start: new Date(now.getTime() - 0 * weekMs).toISOString(),
+          active_users: 12,
+          tickets_created: 5,
+          tasks_completed: 18,
+        },
+        {
+          id: 'demo-2',
+          week_start: new Date(now.getTime() - 1 * weekMs).toISOString(),
+          active_users: 10,
+          tickets_created: 3,
+          tasks_completed: 14,
+        },
+        {
+          id: 'demo-3',
+          week_start: new Date(now.getTime() - 2 * weekMs).toISOString(),
+          active_users: 8,
+          tickets_created: 7,
+          tasks_completed: 11,
+        },
+        {
+          id: 'demo-4',
+          week_start: new Date(now.getTime() - 3 * weekMs).toISOString(),
+          active_users: 9,
+          tickets_created: 4,
+          tasks_completed: 16,
+        },
+      ],
+    })
+  }
+
   const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 

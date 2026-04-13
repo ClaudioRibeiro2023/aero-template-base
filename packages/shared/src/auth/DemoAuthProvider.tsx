@@ -16,14 +16,19 @@ const DEMO_USER: AuthUser = {
 }
 
 export function DemoAuthProvider({ children }: { children: ReactNode }) {
-  const [user] = useState<AuthUser | null>(DEMO_USER)
+  const [user, setUser] = useState<AuthUser | null>(DEMO_USER)
 
   const login = useCallback(async () => {
+    setUser(DEMO_USER)
     console.log('[DemoAuth] Login simulado')
   }, [])
 
   const logout = useCallback(async () => {
-    window.location.href = '/login'
+    setUser(null)
+    // Small delay to let state propagate before redirect
+    setTimeout(() => {
+      window.location.href = '/login'
+    }, 100)
   }, [])
 
   const hasRole = useCallback(
@@ -55,7 +60,7 @@ export function DemoAuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: true,
+    isAuthenticated: !!user,
     isLoading: false,
     login,
     logout,
