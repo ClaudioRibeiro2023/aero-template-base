@@ -151,7 +151,7 @@ export default function ForgotPasswordPage() {
           className="text-center text-white/15 text-xs mt-6 animate-fade-in-up"
           style={{ animationDelay: '0.3s' }}
         >
-          {appName} &copy; {new Date().getFullYear()}
+          {appName} &copy; 2026
         </p>
       </div>
 

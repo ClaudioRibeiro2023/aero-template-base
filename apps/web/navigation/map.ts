@@ -40,7 +40,7 @@ export const NAVIGATION: NavigationMap = {
           id: 'dashboard-alerts',
           name: 'Alertas',
           subtitle: 'Notificações e watchlist',
-          path: '/dashboard/alerts',
+          path: '/dashboard/alertas',
           category: 'CONTROLE',
           icon: 'Bell',
         },

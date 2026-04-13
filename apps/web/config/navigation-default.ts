@@ -123,7 +123,7 @@ export const DEFAULT_MODULES: ModuleConfig[] = [
         moduleId: 'dashboard',
         name: 'Alertas',
         subtitle: 'Notificações e watchlist',
-        path: '/dashboard/alerts',
+        path: '/dashboard/alertas',
         category: 'CONTROLE',
         enabled: true,
         order: 2,

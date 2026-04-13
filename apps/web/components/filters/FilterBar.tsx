@@ -204,12 +204,13 @@ function ActiveFilterBadges({ filters, activeFilters, onRemove }: ActiveFilterBa
       if (value.length === 0) return ''
       if (value[0] instanceof Date) {
         const dates = value as [Date, Date]
-        return `${dates[0].toLocaleDateString()} - ${dates[1].toLocaleDateString()}`
+        // Use explicit locale to avoid SSR/client mismatch from toLocaleDateString()
+        return `${dates[0].toLocaleDateString('pt-BR')} - ${dates[1].toLocaleDateString('pt-BR')}`
       }
       return value.join(', ')
     }
     if (value instanceof Date) {
-      return value.toLocaleDateString()
+      return value.toLocaleDateString('pt-BR')
     }
     if (typeof value === 'boolean') {
       return value ? 'Sim' : 'Não'

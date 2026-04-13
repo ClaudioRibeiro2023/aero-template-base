@@ -285,7 +285,7 @@ export function RegisterForm({ appName, logoUrl }: RegisterFormProps) {
       </div>
 
       <div className="text-center mt-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-        <p className="text-white/20 text-xs">
+        <p className="text-white/20 text-xs" suppressHydrationWarning>
           {appName} &copy; {new Date().getFullYear()}
         </p>
       </div>

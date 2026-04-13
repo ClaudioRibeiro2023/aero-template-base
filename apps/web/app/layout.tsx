@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   },
   description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Plataforma de gestao empresarial',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005'),
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+  },
   openGraph: {
     title: APP_NAME,
     description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Plataforma de gestao empresarial',
