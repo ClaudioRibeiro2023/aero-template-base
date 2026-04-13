@@ -5,6 +5,8 @@ import { createQueryClient } from '@template/shared'
 import { SupabaseAuthProvider } from '@template/shared/auth/SupabaseAuthProvider'
 import { DemoAuthProvider } from '@template/shared/auth/DemoAuthProvider'
 import { AnnouncerProvider } from '@/components/common/LiveRegion'
+import { ThemeProvider } from '@/hooks/useTheme'
+import { GlobalSearchProvider } from '@/components/search'
 import { useState, type ReactNode } from 'react'
 
 const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
@@ -17,7 +19,11 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AnnouncerProvider>{children}</AnnouncerProvider>
+        <ThemeProvider>
+          <GlobalSearchProvider>
+            <AnnouncerProvider>{children}</AnnouncerProvider>
+          </GlobalSearchProvider>
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   )

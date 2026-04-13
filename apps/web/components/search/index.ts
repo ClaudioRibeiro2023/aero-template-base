@@ -1,1 +1,1 @@
-export { GlobalSearch, useGlobalSearch } from './GlobalSearch'
+export { GlobalSearch, GlobalSearchProvider, useGlobalSearch } from './GlobalSearch'

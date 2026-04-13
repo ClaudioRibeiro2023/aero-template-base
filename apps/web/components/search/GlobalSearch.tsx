@@ -8,7 +8,16 @@
  * Inclui comandos estaticos como fallback para navegacao rapida.
  */
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+  type ReactNode,
+} from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Search,
@@ -422,8 +431,19 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   )
 }
 
-// Hook para usar o GlobalSearch
-export function useGlobalSearch() {
+// ── Context para estado compartilhado da busca global ──
+
+interface GlobalSearchContextType {
+  isOpen: boolean
+  open: () => void
+  close: () => void
+  toggle: () => void
+}
+
+const GlobalSearchContext = createContext<GlobalSearchContextType | null>(null)
+
+/** Provider — montar UMA VEZ no topo da app (providers.tsx ou AppLayout) */
+export function GlobalSearchProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
@@ -439,12 +459,25 @@ export function useGlobalSearch() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  return {
-    isOpen,
-    open: () => setIsOpen(true),
-    close: () => setIsOpen(false),
-    toggle: () => setIsOpen(prev => !prev),
+  const open = useCallback(() => setIsOpen(true), [])
+  const close = useCallback(() => setIsOpen(false), [])
+  const toggle = useCallback(() => setIsOpen(prev => !prev), [])
+
+  return (
+    <GlobalSearchContext.Provider value={{ isOpen, open, close, toggle }}>
+      {children}
+    </GlobalSearchContext.Provider>
+  )
+}
+
+/** Hook — consome o contexto compartilhado */
+export function useGlobalSearch(): GlobalSearchContextType {
+  const ctx = useContext(GlobalSearchContext)
+  if (!ctx) {
+    // Fallback para fora do provider (testes, SSR)
+    return { isOpen: false, open: () => {}, close: () => {}, toggle: () => {} }
   }
+  return ctx
 }
 
 export default GlobalSearch

@@ -17,7 +17,14 @@ import { auditLog } from '@/lib/audit-log'
 export const dynamic = 'force-dynamic'
 
 const VALID_ACTIONS = ['deactivate', 'change_role'] as const
+// Aceita uppercase (vindo do frontend) — converte para lowercase antes de gravar no enum
 const VALID_ROLES = ['ADMIN', 'GESTOR', 'OPERADOR', 'VIEWER'] as const
+const ROLE_MAP: Record<string, string> = {
+  ADMIN: 'admin',
+  GESTOR: 'member',
+  OPERADOR: 'employee',
+  VIEWER: 'viewer',
+}
 type BulkAction = (typeof VALID_ACTIONS)[number]
 
 export const POST = withApiLog('users-bulk', async function POST(request: NextRequest) {
@@ -67,9 +74,10 @@ export const POST = withApiLog('users-bulk', async function POST(request: NextRe
         return badRequest(`Role inválido. Válidos: ${VALID_ROLES.join(', ')}`)
       }
 
+      const dbRole = ROLE_MAP[role.toUpperCase()] || role.toLowerCase()
       const { count, error: updateError } = await client
         .from('profiles')
-        .update({ role, updated_at: new Date().toISOString() })
+        .update({ role: dbRole, updated_at: new Date().toISOString() })
         .in('id', ids)
 
       if (updateError) throw updateError

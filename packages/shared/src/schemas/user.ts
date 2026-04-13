@@ -39,6 +39,7 @@ export const userUpdateSchema = z.object({
   is_active: z.boolean().optional(),
   phone: z.string().max(30).optional().or(z.literal('')),
   department: z.string().max(100).optional().or(z.literal('')),
+  bio: z.string().max(500, 'Bio deve ter no maximo 500 caracteres').optional().or(z.literal('')),
 })
 
 export type UserCreateFormValues = z.infer<typeof userCreateSchema>

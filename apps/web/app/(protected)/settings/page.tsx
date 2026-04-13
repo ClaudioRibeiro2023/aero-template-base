@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import { useRouter } from 'next/navigation'
 import { Sun, Moon, Bell, Shield, LogOut, Monitor, Loader2 } from 'lucide-react'
+import { useTheme } from '@/hooks/useTheme'
 
 function Toggle({ enabled, onToggle }: { enabled: boolean; onToggle: () => void }) {
   return (
@@ -69,11 +70,24 @@ export default function SettingsPage() {
   const router = useRouter()
   const supabase = createSupabaseBrowserClient()
 
-  // Aparencia
-  const [theme, setTheme] = useState<'dark' | 'light' | 'system'>('dark')
+  // Aparencia — conectado ao ThemeProvider global
+  const { mode: themeMode, setTheme: applyTheme } = useTheme()
+  const [theme, setTheme] = useState<'dark' | 'light' | 'system'>(themeMode)
   const [language, setLanguage] = useState('pt-BR')
 
-  // Notificacoes
+  // Sync Settings theme selection → global ThemeProvider
+  useEffect(() => {
+    if (theme === 'system') {
+      const systemPref = window.matchMedia('(prefers-color-scheme: light)').matches
+        ? 'light'
+        : 'dark'
+      applyTheme(systemPref)
+    } else {
+      applyTheme(theme)
+    }
+  }, [theme, applyTheme])
+
+  // Notificacoes — persistidos via preferences JSONB
   const [emailNotif, setEmailNotif] = useState(true)
   const [pushNotif, setPushNotif] = useState(false)
 
@@ -83,6 +97,88 @@ export default function SettingsPage() {
 
   // Sessoes
   const [signingOut, setSigningOut] = useState(false)
+
+  // Carregar preferencias reais do banco no mount
+  useEffect(() => {
+    async function loadPreferences() {
+      try {
+        const localeRes = await fetch('/api/user/locale')
+        if (localeRes.ok) {
+          const json = await localeRes.json()
+          const loc = json.data?.locale || json.locale
+          if (loc) setLanguage(loc)
+        }
+      } catch {
+        // fallback — manter default
+      }
+      try {
+        const prefsRes = await fetch('/api/user/preferences')
+        if (prefsRes.ok) {
+          const json = await prefsRes.json()
+          const prefs = json.data || json
+          if (prefs.email_notifications !== undefined) setEmailNotif(prefs.email_notifications)
+          if (prefs.push_notifications !== undefined) setPushNotif(prefs.push_notifications)
+          if (prefs.profile_visible !== undefined) setProfileVisible(prefs.profile_visible)
+          if (prefs.activity_visible !== undefined) setActivityVisible(prefs.activity_visible)
+        }
+      } catch {
+        // fallback — manter defaults
+      }
+    }
+    loadPreferences()
+  }, [])
+
+  // Persistir preferencias quando mudam
+  async function savePreference(key: string, value: boolean) {
+    try {
+      await fetch('/api/user/preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      })
+    } catch {
+      // silencioso — toggle visual já aplicou
+    }
+  }
+
+  function toggleEmailNotif() {
+    const next = !emailNotif
+    setEmailNotif(next)
+    savePreference('email_notifications', next)
+  }
+
+  function togglePushNotif() {
+    const next = !pushNotif
+    setPushNotif(next)
+    savePreference('push_notifications', next)
+  }
+
+  function toggleProfileVisible() {
+    const next = !profileVisible
+    setProfileVisible(next)
+    savePreference('profile_visible', next)
+  }
+
+  function toggleActivityVisible() {
+    const next = !activityVisible
+    setActivityVisible(next)
+    savePreference('activity_visible', next)
+  }
+
+  // Persistir idioma
+  async function handleLanguageChange(locale: string) {
+    setLanguage(locale)
+    try {
+      await fetch('/api/user/locale', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale }),
+      })
+      document.cookie = `locale=${locale}; path=/; max-age=31536000; SameSite=Lax`
+    } catch {
+      // silencioso
+    }
+  }
 
   async function handleSignOutAll() {
     setSigningOut(true)
@@ -142,7 +238,7 @@ export default function SettingsPage() {
           <SettingRow label={t('language')} description={t('languageDescription')}>
             <select
               value={language}
-              onChange={e => setLanguage(e.target.value)}
+              onChange={e => handleLanguageChange(e.target.value)}
               className="bg-[var(--bg-primary)]/50 border border-[var(--glass-border)] rounded-lg px-3 py-1.5 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/40"
             >
               <option value="pt-BR">Português (BR)</option>
@@ -155,25 +251,22 @@ export default function SettingsPage() {
         {/* Notificacoes */}
         <Section title={t('notifications')} icon={<Bell className="w-5 h-5 text-blue-400" />}>
           <SettingRow label={t('emailNotifications')} description={t('emailNotificationsDesc')}>
-            <Toggle enabled={emailNotif} onToggle={() => setEmailNotif(!emailNotif)} />
+            <Toggle enabled={emailNotif} onToggle={toggleEmailNotif} />
           </SettingRow>
 
           <SettingRow label={t('pushNotifications')} description={t('pushNotificationsDesc')}>
-            <Toggle enabled={pushNotif} onToggle={() => setPushNotif(!pushNotif)} />
+            <Toggle enabled={pushNotif} onToggle={togglePushNotif} />
           </SettingRow>
         </Section>
 
         {/* Privacidade */}
         <Section title={t('privacy')} icon={<Shield className="w-5 h-5 text-emerald-400" />}>
           <SettingRow label={t('profileVisible')} description={t('profileVisibleDesc')}>
-            <Toggle enabled={profileVisible} onToggle={() => setProfileVisible(!profileVisible)} />
+            <Toggle enabled={profileVisible} onToggle={toggleProfileVisible} />
           </SettingRow>
 
           <SettingRow label={t('activityVisible')} description={t('activityVisibleDesc')}>
-            <Toggle
-              enabled={activityVisible}
-              onToggle={() => setActivityVisible(!activityVisible)}
-            />
+            <Toggle enabled={activityVisible} onToggle={toggleActivityVisible} />
           </SettingRow>
         </Section>
 
