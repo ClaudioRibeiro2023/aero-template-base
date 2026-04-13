@@ -99,12 +99,56 @@ export const WIZARD_STEPS: WizardStep[] = [
   { id: 'summary', title: 'Resumo', description: 'Confirmar e iniciar' },
 ]
 
-export const AVAILABLE_MODULES = [
-  { id: 'dashboard', label: 'Dashboard', description: 'Visão geral e métricas' },
-  { id: 'reports', label: 'Relatórios', description: 'Análises e exportações' },
-  { id: 'users', label: 'Gestão de Usuários', description: 'Administrar usuários' },
-  { id: 'config', label: 'Configurações', description: 'Parâmetros do sistema' },
-]
+// Módulos disponíveis derivados dos manifests do sistema modular.
+// Core modules não aparecem (são always-on). Utility modules também não.
+// Exibe: default + optional, com categoria visual.
+export const AVAILABLE_MODULES = (() => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { allManifests } = require('@/config/modules')
+    return (
+      allManifests as Array<{ id: string; name: string; description: string; category: string }>
+    )
+      .filter(m => m.category === 'default' || m.category === 'optional')
+      .map(m => ({
+        id: m.id,
+        label: m.name,
+        description: m.description,
+        isDefault: m.category === 'default',
+      }))
+  } catch {
+    // Fallback estático caso manifests não carreguem
+    return [
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        description: 'Painel com KPIs e metricas',
+        isDefault: true,
+      },
+      { id: 'reports', label: 'Relatorios', description: 'Relatorios gerenciais', isDefault: true },
+      { id: 'tasks', label: 'Tarefas', description: 'Gerenciamento de tarefas', isDefault: false },
+      { id: 'support', label: 'Suporte', description: 'Tickets de suporte', isDefault: false },
+      {
+        id: 'notifications',
+        label: 'Notificacoes',
+        description: 'Centro de notificacoes',
+        isDefault: false,
+      },
+      {
+        id: 'feature-flags',
+        label: 'Feature Flags',
+        description: 'Rollout progressivo',
+        isDefault: false,
+      },
+      {
+        id: 'organizations',
+        label: 'Organizacoes',
+        description: 'Multi-tenancy',
+        isDefault: false,
+      },
+    ]
+  }
+})()
 
 const DEFAULT_WIZARD_DATA: WizardData = {
   appName: 'Template Platform',
@@ -113,7 +157,7 @@ const DEFAULT_WIZARD_DATA: WizardData = {
   secondaryColor: '#a78bfa',
   adminEmail: '',
   adminName: '',
-  enabledModules: ['dashboard', 'users'],
+  enabledModules: AVAILABLE_MODULES.filter(m => m.isDefault).map(m => m.id),
 }
 
 // ============================================================================

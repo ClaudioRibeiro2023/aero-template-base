@@ -10,6 +10,8 @@
 
 | Objetivo                  | Documento                                                      |
 | ------------------------- | -------------------------------------------------------------- |
+| **Criar nova app**        | [BOOTSTRAP.md](./BOOTSTRAP.md)                                 |
+| **Sistema modular**       | [MODULES.md](./MODULES.md)                                     |
 | **Configurar ambiente**   | [operacao/setup-local.md](./operacao/setup-local.md)           |
 | **Entender arquitetura**  | [arquitetura/c4-container.md](./arquitetura/c4-container.md)   |
 | **Integrar autenticação** | [contratos-integracao/auth.md](./contratos-integracao/auth.md) |
@@ -72,6 +74,13 @@ Architecture Decision Records - decisões arquiteturais documentadas.
 | [003](./adr_v2/003-autenticacao-jwt-rbac.md) | Autenticação JWT + RBAC        | Aceito |
 
 Ver [adr_v2/README.md](./adr_v2/README.md) para template e como contribuir.
+
+### 🧩 Sistema Modular
+
+| Documento                      | Descrição                                                   |
+| ------------------------------ | ----------------------------------------------------------- |
+| [BOOTSTRAP.md](./BOOTSTRAP.md) | Guia passo a passo para criar nova app a partir do template |
+| [MODULES.md](./MODULES.md)     | Arquitetura modular, manifests, gating, feature flags       |
 
 ### 📚 Referência
 

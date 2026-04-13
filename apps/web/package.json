@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "docs:modules": "node ../../scripts/generate-module-docs.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

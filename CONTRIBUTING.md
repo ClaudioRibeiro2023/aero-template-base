@@ -84,53 +84,95 @@ pnpm dev
 
 ---
 
-## Como Criar um Módulo
+## Como Criar um Modulo
 
-Use o gerador automático para criar a estrutura completa de um novo módulo:
+O Template.Base usa um **sistema modular declarativo**. Cada modulo e definido por um manifest que declara rotas, dependencias, tabelas, hooks e componentes.
+
+### Opcao A — Scaffold automatico (recomendado)
 
 ```bash
 pnpm create-module
+# ou com flags:
+node scripts/scaffold-module.mjs meu-modulo --functions listagem,detalhes
 ```
 
-Ou crie manualmente em `apps/web/app/(protected)/`:
+### Opcao B — Criacao manual
 
-### Estrutura de um Módulo
+#### 1. Crie o manifest
+
+Crie `apps/web/config/modules/meu-modulo.manifest.ts`:
+
+```ts
+import { defineManifest } from '@template/modules'
+
+export default defineManifest({
+  id: 'meu-modulo',
+  name: 'Meu Modulo',
+  description: 'Descricao do modulo',
+  version: '1.0.0',
+  category: 'optional',
+  enabled: true,
+  order: 10,
+  dependencies: ['auth'],
+  routes: ['/meu-modulo'],
+  apiRoutes: ['/api/meu-modulo'],
+  requiredTables: [],
+  envVars: [],
+  featureFlags: ['module.meu-modulo'],
+  hooks: [],
+  components: [],
+  icon: 'Box',
+  path: '/meu-modulo',
+  roles: [],
+  showInSidebar: true,
+  group: 'Principal',
+  functions: [],
+})
+```
+
+#### 2. Registre no index
+
+Edite `apps/web/config/modules/index.ts` — adicione o import e inclua no array `ALL_MANIFESTS`.
+
+#### 3. Adicione ao modules.config.ts
+
+```ts
+'meu-modulo': { enabled: true },
+```
+
+#### 4. Crie as paginas
 
 ```
-app/(protected)/
-└── meu-modulo/
-    ├── page.tsx              # Server Component (rota /meu-modulo)
-    ├── loading.tsx           # Skeleton de carregamento
-    ├── error.tsx             # Error boundary da rota
-    └── components/           # Client Components do módulo
-        └── MeuModuloClient.tsx
+apps/web/app/(protected)/meu-modulo/
+├── page.tsx              # Server Component (rota /meu-modulo)
+├── loading.tsx           # Skeleton de carregamento
+├── error.tsx             # Error boundary da rota
+└── components/
+    └── MeuModuloClient.tsx  # Client Component com logica interativa
 ```
 
-### Passo a Passo
+Proteja a rota em `page.tsx`:
 
-1. **Crie a pasta da rota:**
+```tsx
+import { requireAuth } from '@/lib/auth-guard'
 
-   ```bash
-   mkdir -p apps/web/app/\(protected\)/meu-modulo/components
-   ```
+export default async function MeuModuloPage() {
+  const user = await requireAuth()
+  // ...
+}
+```
 
-2. **Crie os arquivos base:**
-   - `page.tsx` — Server Component com `requireAuth()` no topo
-   - `loading.tsx` — Skeleton de carregamento
-   - `components/MeuModuloClient.tsx` — Lógica interativa com `'use client'`
+#### 5. Proteja as API routes
 
-3. **Proteja a rota em `page.tsx`:**
+```ts
+import { withModuleGuard } from '@/lib/api-module-guard'
 
-   ```tsx
-   import { requireAuth } from '@/lib/auth-guard'
+export const GET = withModuleGuard('meu-modulo', async function GET(req) {
+  return NextResponse.json({ data: [] })
+})
+```
 
-   export default async function MeuModuloPage() {
-     const user = await requireAuth()
-     // ...
-   }
-   ```
-
-4. **Adicione ao menu (se necessário)** em `config/navigation.ts`
+> **Documentacao completa do sistema modular:** [docs/MODULES.md](./docs/MODULES.md)
 
 ---
 

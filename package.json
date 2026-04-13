@@ -25,7 +25,9 @@
     "db:reset": "npx supabase db reset",
     "db:types": "npx supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > packages/shared/src/supabase/types.ts",
     "clean": "rimraf node_modules packages/*/node_modules apps/*/node_modules packages/*/dist apps/*/dist apps/web/.next",
+    "validate:modules": "node scripts/validate/module-boundaries.mjs",
     "create-module": "node scripts/new-module.js",
+    "docs:modules": "node scripts/generate-module-docs.mjs",
     "setup": "node scripts/setup.mjs",
     "prepare": "husky"
   },

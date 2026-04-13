@@ -106,8 +106,43 @@ Veja `scripts/setup.example.json` para o formato esperado.
 └── scripts/                # Setup wizard e utilitários
 ```
 
-## Próximos Passos
+## Sistema Modular
 
-- [Arquitetura](./ARCHITECTURE.md) — Entenda a stack e padrões do template
-- [Deploy](./DEPLOY.md) — Configure deploy em produção
-- [Customização](./CUSTOMIZATION.md) — Adapte branding, temas e módulos
+O Template.Base usa um sistema modular que permite habilitar e desabilitar funcionalidades de forma declarativa. O arquivo `apps/web/modules.config.ts` e o ponto central de configuracao:
+
+```ts
+import type { ModuleOverride } from '@template/modules'
+
+export const moduleOverrides: Record<string, ModuleOverride> = {
+  dashboard: { enabled: true },
+  reports: { enabled: true },
+  tasks: { enabled: true },
+  support: { enabled: false },
+  notifications: { enabled: true },
+}
+```
+
+**Categorias de modulos:**
+
+- **Core** (auth, admin, settings, search) — sempre ativos, nao podem ser desabilitados
+- **Default** (dashboard, reports) — ativos por padrao, podem ser desabilitados
+- **Optional** (tasks, support, notifications) — inativos por padrao, devem ser habilitados
+- **Utility** (file-upload) — servicos internos consumidos por outros modulos
+
+Para criar um novo modulo, use o scaffold automatico:
+
+```bash
+pnpm create-module
+```
+
+> Para o guia completo do sistema modular, consulte [MODULES.md](./MODULES.md).
+
+---
+
+## Proximos Passos
+
+- [Bootstrap](./BOOTSTRAP.md) — Guia completo para criar uma nova app a partir do template
+- [Modulos](./MODULES.md) — Guia completo do sistema modular
+- [Arquitetura](./ARCHITECTURE.md) — Entenda a stack e padroes do template
+- [Deploy](./DEPLOY.md) — Configure deploy em producao
+- [Customizacao](./CUSTOMIZATION.md) — Adapte branding, temas e modulos
