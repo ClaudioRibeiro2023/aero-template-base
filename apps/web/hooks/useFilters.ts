@@ -119,24 +119,13 @@ export function useFilters(availableFilters?: FilterConfig[]): UseFiltersReturn 
   const router = useRouter()
   const currentPath = usePathname()
 
-  // Inicializar valores dos filtros
+  // Inicializar valores dos filtros — sem localStorage no initializer
+  // (leitura de localStorage no useState() causa hydration mismatch #418
+  // pois SSR retorna {} mas hydration lê valores persistidos)
   const [values, setValues] = useState<Record<string, FilterValue>>(() => {
     const initial: Record<string, FilterValue> = {}
 
-    // Carregar do localStorage
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        const parsed = JSON.parse(stored)
-        Object.entries(parsed).forEach(([key, val]) => {
-          initial[key] = deserializeFilterValue(val as string)
-        })
-      }
-    } catch {
-      // Ignorar erro de parse
-    }
-
-    // Sobrescrever com query params (prioridade)
+    // Sobrescrever com query params (disponível no SSR via searchParams)
     searchParams?.forEach((value: string, key: string) => {
       if (key.startsWith(URL_PARAM_PREFIX)) {
         const filterId = key.slice(URL_PARAM_PREFIX.length)
@@ -153,6 +142,28 @@ export function useFilters(availableFilters?: FilterConfig[]): UseFiltersReturn 
 
     return initial
   })
+
+  // Restaurar localStorage após hydration (client-only)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (!stored) return
+      const parsed = JSON.parse(stored)
+      setValues(prev => {
+        const merged: Record<string, FilterValue> = { ...prev }
+        Object.entries(parsed).forEach(([key, val]) => {
+          // URL params e defaults já aplicados — localStorage não sobrescreve
+          if (!(key in prev)) {
+            merged[key] = deserializeFilterValue(val as string)
+          }
+        })
+        return merged
+      })
+    } catch {
+      // ignore — private browsing, parse error, etc.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Sincronizar com URL quando valores mudam
   useEffect(() => {

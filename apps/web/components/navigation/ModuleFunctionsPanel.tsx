@@ -165,24 +165,27 @@ export function ModuleFunctionsPanel({
   // Estados
   const [searchTerm, setSearchTerm] = useState('')
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return []
+  // Always start empty for SSR consistency — reading localStorage in the
+  // useState initializer caused React hydration mismatch (#418) because
+  // SSR returned [] but hydration found persisted values in localStorage.
+  const [favorites, setFavorites] = useState<string[]>([])
+  const [recents, setRecents] = useState<string[]>([])
+
+  // Restore from localStorage after hydration
+  useEffect(() => {
     try {
-      const stored = localStorage.getItem(FAVORITES_KEY)
-      return stored ? JSON.parse(stored) : []
+      const storedFavs = localStorage.getItem(FAVORITES_KEY)
+      if (storedFavs) setFavorites(JSON.parse(storedFavs))
     } catch {
-      return []
+      // ignore — private browsing, etc.
     }
-  })
-  const [recents, setRecents] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return []
     try {
-      const stored = localStorage.getItem(RECENTS_KEY)
-      return stored ? JSON.parse(stored) : []
+      const storedRecents = localStorage.getItem(RECENTS_KEY)
+      if (storedRecents) setRecents(JSON.parse(storedRecents))
     } catch {
-      return []
+      // ignore
     }
-  })
+  }, [])
   const [expandedCategories, setExpandedCategories] = useState<FunctionCategory[]>(CATEGORY_ORDER)
   const [showShortcuts, setShowShortcuts] = useState(false)
 

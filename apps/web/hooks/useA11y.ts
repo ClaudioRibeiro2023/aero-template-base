@@ -256,14 +256,12 @@ export function useAriaDescribedBy() {
 // ============================================================================
 
 export function useReducedMotion(): boolean {
-  const [prefersReduced, setPrefersReduced] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  })
+  // Always false on SSR — updated via useEffect to avoid hydration mismatch
+  const [prefersReduced, setPrefersReduced] = useState(false)
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReduced(mq.matches)
     const handler = (e: MediaQueryListEvent) => setPrefersReduced(e.matches)
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
@@ -277,14 +275,12 @@ export function useReducedMotion(): boolean {
 // ============================================================================
 
 export function useHighContrast(): boolean {
-  const [isHighContrast, setIsHighContrast] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return window.matchMedia('(forced-colors: active)').matches
-  })
+  // Always false on SSR — updated via useEffect to avoid hydration mismatch
+  const [isHighContrast, setIsHighContrast] = useState(false)
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
     const mq = window.matchMedia('(forced-colors: active)')
+    setIsHighContrast(mq.matches)
     const handler = (e: MediaQueryListEvent) => setIsHighContrast(e.matches)
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)

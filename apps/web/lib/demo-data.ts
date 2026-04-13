@@ -11,9 +11,11 @@
 export const isDemoMode =
   process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || process.env.DEMO_MODE === 'true'
 
-const now = new Date().toISOString()
-const yesterday = new Date(Date.now() - 86_400_000).toISOString()
-const twoDaysAgo = new Date(Date.now() - 2 * 86_400_000).toISOString()
+// Fixed ISO timestamps — avoids SSR↔client divergence that could
+// surface as hydration mismatch if these values ever reached the DOM.
+const now = '2026-04-13T21:11:30.814Z'
+const yesterday = '2026-04-12T21:11:30.814Z'
+const twoDaysAgo = '2026-04-11T21:11:30.814Z'
 
 // ── Tasks ──
 

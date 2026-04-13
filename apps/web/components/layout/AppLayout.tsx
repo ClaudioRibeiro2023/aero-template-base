@@ -47,12 +47,11 @@ const WIZARD_DISMISSED_KEY = 'wizard-dismissed'
 type ScreenMode = 'mobile' | 'tablet' | 'desktop'
 
 function useScreenMode(): ScreenMode {
-  // SSR-safe: start with 'desktop' but immediately detect on mount
-  const [mode, setMode] = useState<ScreenMode>(() => {
-    if (typeof window === 'undefined') return 'desktop'
-    const w = window.innerWidth
-    return w < 768 ? 'mobile' : w < 1024 ? 'tablet' : 'desktop'
-  })
+  // Always start with 'desktop' for SSR consistency.
+  // The lazy initializer reading window.innerWidth caused React hydration
+  // mismatch (#418) because SSR returned 'desktop' but the browser's
+  // hydration pass returned the actual viewport size.
+  const [mode, setMode] = useState<ScreenMode>('desktop')
 
   useEffect(() => {
     const update = () => {
