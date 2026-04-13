@@ -20,10 +20,15 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthGateway } from '@/lib/data'
 import { auditLog } from '@/lib/audit-log'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode, DEMO_ROLES } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 export const GET = withApiLog('admin-roles', async function GET(request: NextRequest) {
+  if (isDemoMode) {
+    return ok({ items: DEMO_ROLES, total: DEMO_ROLES.length })
+  }
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
@@ -61,6 +66,16 @@ export const GET = withApiLog('admin-roles', async function GET(request: NextReq
 })
 
 export const POST = withApiLog('admin-roles', async function POST(request: NextRequest) {
+  if (isDemoMode) {
+    const body = await request.json().catch(() => ({}))
+    return created({
+      id: `demo-role-${Date.now()}`,
+      ...body,
+      is_system: false,
+      tenant_id: 'demo-tenant',
+    })
+  }
+
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 

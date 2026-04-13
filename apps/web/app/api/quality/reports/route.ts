@@ -17,11 +17,21 @@ import {
 } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getRepository, getAuthGateway } from '@/lib/data'
+import { isDemoMode, DEMO_QUALITY_REPORTS } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 // ── GET /api/quality/reports ──
 export async function GET(request: NextRequest) {
+  if (isDemoMode) {
+    return ok(DEMO_QUALITY_REPORTS, {
+      page: 1,
+      page_size: 10,
+      total: DEMO_QUALITY_REPORTS.length,
+      pages: 1,
+    })
+  }
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (!success) return tooManyRequests()
@@ -57,6 +67,16 @@ export async function GET(request: NextRequest) {
 
 // ── POST /api/quality/reports ──
 export async function POST(request: NextRequest) {
+  if (isDemoMode) {
+    const body = await request.json().catch(() => ({}))
+    return created({
+      id: `demo-report-${Date.now()}`,
+      ...body,
+      created_by: 'demo-user-001',
+      created_at: new Date().toISOString(),
+    })
+  }
+
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 

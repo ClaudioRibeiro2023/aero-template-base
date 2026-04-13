@@ -9,10 +9,13 @@ import { ok, unauthorized, serverError } from '@/lib/api-response'
 import { getAuthGateway } from '@/lib/data'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode, DEMO_ORGANIZATIONS } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 export const GET = withApiLog('organizations', async function GET(request: NextRequest) {
+  if (isDemoMode) return ok(DEMO_ORGANIZATIONS)
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (success === false) {

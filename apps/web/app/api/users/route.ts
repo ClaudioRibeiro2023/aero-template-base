@@ -19,11 +19,21 @@ import {
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode, DEMO_USERS } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 // ── GET /api/users ──
 export const GET = withApiLog('users', async function GET(request: NextRequest) {
+  if (isDemoMode) {
+    // usersService.list uses fetchJson which unwraps json.data,
+    // then accesses res.data and res.meta — so we nest accordingly
+    return ok({
+      data: DEMO_USERS,
+      meta: { page: 1, page_size: 20, total: DEMO_USERS.length, pages: 1 },
+    })
+  }
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (!success) return tooManyRequests()
@@ -113,6 +123,18 @@ export const GET = withApiLog('users', async function GET(request: NextRequest) 
 
 // ── POST /api/users ──
 export const POST = withApiLog('users', async function POST(request: NextRequest) {
+  if (isDemoMode) {
+    const body = await request.json().catch(() => ({}))
+    return created({
+      id: `demo-user-${Date.now()}`,
+      ...body,
+      is_active: true,
+      tenant_id: 'demo-tenant',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+  }
+
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 

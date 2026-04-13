@@ -19,11 +19,22 @@ import {
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode, DEMO_TASKS } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 // ── GET /api/tasks ──
 export const GET = withApiLog('tasks', async function GET(request: NextRequest) {
+  if (isDemoMode) {
+    const url = new URL(request.url)
+    const status = url.searchParams.get('status')
+    const priority = url.searchParams.get('priority')
+    let items = DEMO_TASKS
+    if (status) items = items.filter(t => t.status === status)
+    if (priority) items = items.filter(t => t.priority === priority)
+    return ok(items, { page: 1, page_size: 20, total: items.length, pages: 1 })
+  }
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
@@ -65,6 +76,17 @@ export const GET = withApiLog('tasks', async function GET(request: NextRequest) 
 
 // ── POST /api/tasks ──
 export const POST = withApiLog('tasks', async function POST(request: NextRequest) {
+  if (isDemoMode) {
+    const body = await request.json().catch(() => ({}))
+    return created({
+      id: `demo-task-${Date.now()}`,
+      ...body,
+      created_by: 'demo-user-001',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+  }
+
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 

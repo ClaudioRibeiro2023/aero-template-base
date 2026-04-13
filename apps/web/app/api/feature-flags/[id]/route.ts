@@ -18,12 +18,20 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getRepository, getAuthGateway } from '@/lib/data'
 import { auditLog } from '@/lib/audit-log'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode, DEMO_FEATURE_FLAGS } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 export const PATCH = withApiLog(
   'feature-flags-detail',
   async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    if (isDemoMode) {
+      const { id } = await params
+      const body = await request.json().catch(() => ({}))
+      const flag = DEMO_FEATURE_FLAGS.find(f => f.id === id) ?? DEMO_FEATURE_FLAGS[0]
+      return ok({ ...flag, ...body, id })
+    }
+
     const { id } = await params
     const ip = getClientIp(request.headers)
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
@@ -74,6 +82,8 @@ export const PATCH = withApiLog(
 export const DELETE = withApiLog(
   'feature-flags-detail',
   async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    if (isDemoMode) return ok({ deleted: true })
+
     const { id } = await params
     const ip = getClientIp(request.headers)
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })

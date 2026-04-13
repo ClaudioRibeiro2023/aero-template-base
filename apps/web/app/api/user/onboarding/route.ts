@@ -10,10 +10,13 @@ import { ok, badRequest, unauthorized } from '@/lib/api-response'
 import { getAuthGateway } from '@/lib/data'
 import { SupabaseDbClient } from '@template/data/supabase'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 export const GET = withApiLog('user-onboarding', async function GET(_request: NextRequest) {
+  if (isDemoMode) return ok({ step: 5, completedAt: new Date().toISOString() })
+
   const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 
@@ -33,6 +36,11 @@ export const GET = withApiLog('user-onboarding', async function GET(_request: Ne
 })
 
 export const PATCH = withApiLog('user-onboarding', async function PATCH(request: NextRequest) {
+  if (isDemoMode) {
+    const body = await request.json().catch(() => ({ step: 5 }))
+    return ok({ step: body?.step ?? 5 })
+  }
+
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 

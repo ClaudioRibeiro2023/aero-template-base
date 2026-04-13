@@ -17,12 +17,20 @@ import {
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode, DEMO_TICKETS } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 export const PUT = withApiLog(
   'support-tickets-assign',
   async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    if (isDemoMode) {
+      const { id } = await params
+      const body = await request.json().catch(() => ({}))
+      const ticket = DEMO_TICKETS.find(t => t.id === id) ?? DEMO_TICKETS[0]
+      return ok({ ...ticket, id, assignee_id: body?.assignee_id, status: 'in_progress' })
+    }
+
     const jsonError = requireJson(request)
     if (jsonError) return jsonError
 

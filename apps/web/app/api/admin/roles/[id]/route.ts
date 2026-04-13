@@ -20,12 +20,19 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthGateway } from '@/lib/data'
 import { auditLog } from '@/lib/audit-log'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode, DEMO_ROLES } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 export const GET = withApiLog(
   'admin-roles-detail',
   async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    if (isDemoMode) {
+      const { id } = await params
+      const role = DEMO_ROLES.find(r => r.id === id) ?? { ...DEMO_ROLES[0], id }
+      return ok({ ...role, user_count: 2 })
+    }
+
     const { id } = await params
     const ip = getClientIp(request.headers)
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
@@ -59,6 +66,13 @@ export const GET = withApiLog(
 export const PUT = withApiLog(
   'admin-roles-detail',
   async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    if (isDemoMode) {
+      const { id } = await params
+      const body = await request.json().catch(() => ({}))
+      const role = DEMO_ROLES.find(r => r.id === id) ?? DEMO_ROLES[0]
+      return ok({ ...role, ...body, id })
+    }
+
     const jsonError = requireJson(request)
     if (jsonError) return jsonError
 
@@ -126,6 +140,8 @@ export const PUT = withApiLog(
 export const DELETE = withApiLog(
   'admin-roles-detail',
   async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    if (isDemoMode) return ok({ deleted: true })
+
     const { id } = await params
     const ip = getClientIp(request.headers)
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })

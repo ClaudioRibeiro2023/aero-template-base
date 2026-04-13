@@ -12,10 +12,27 @@ import type { NextRequest } from 'next/server'
 import { ok, unauthorized, tooManyRequests } from '@/lib/api-response'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthGateway } from '@/lib/data'
+import { isDemoMode } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
+  if (isDemoMode) {
+    return ok({
+      env: {
+        supabase_url: true,
+        supabase_anon_key: true,
+        app_url: true,
+        app_name: true,
+        demo_mode: true,
+      },
+      runtime: {
+        node_version: process.version,
+        environment: process.env.NODE_ENV,
+      },
+    })
+  }
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 10 })
   if (!success) return tooManyRequests()

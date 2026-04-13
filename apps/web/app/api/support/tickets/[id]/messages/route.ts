@@ -20,6 +20,7 @@ import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getAuthGateway } from '@/lib/data'
 import { SupabaseDbClient } from '@template/data/supabase'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,6 +30,21 @@ const MSG_COLUMNS = 'id, ticket_id, content, message_type, is_internal, created_
 export const GET = withApiLog(
   'support-tickets-messages',
   async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    if (isDemoMode) {
+      const { id } = await params
+      return ok([
+        {
+          id: 'demo-msg-1',
+          ticket_id: id,
+          content: 'Mensagem de exemplo do ticket.',
+          message_type: 'reply',
+          is_internal: false,
+          created_by: 'demo-user-001',
+          created_at: new Date().toISOString(),
+        },
+      ])
+    }
+
     const ip = getClientIp(request.headers)
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
     if (!success) return tooManyRequests()
@@ -59,6 +75,18 @@ export const GET = withApiLog(
 export const POST = withApiLog(
   'support-tickets-messages',
   async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    if (isDemoMode) {
+      const { id } = await params
+      const body = await request.json().catch(() => ({}))
+      return created({
+        id: `demo-msg-${Date.now()}`,
+        ticket_id: id,
+        ...body,
+        created_by: 'demo-user-001',
+        created_at: new Date().toISOString(),
+      })
+    }
+
     const jsonError = requireJson(request)
     if (jsonError) return jsonError
 

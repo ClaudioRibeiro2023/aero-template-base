@@ -8,6 +8,7 @@ import { ok, badRequest, unauthorized, serverError } from '@/lib/api-response'
 import { getAuthGateway } from '@/lib/data'
 import { SupabaseDbClient } from '@template/data/supabase'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +20,15 @@ const VALID_KEYS = [
 ] as const
 
 export const GET = withApiLog('user-preferences', async function GET(_request: NextRequest) {
+  if (isDemoMode) {
+    return ok({
+      email_notifications: true,
+      push_notifications: false,
+      profile_visible: true,
+      activity_visible: false,
+    })
+  }
+
   const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 
@@ -41,6 +51,11 @@ export const GET = withApiLog('user-preferences', async function GET(_request: N
 })
 
 export const PATCH = withApiLog('user-preferences', async function PATCH(request: NextRequest) {
+  if (isDemoMode) {
+    const body = await request.json().catch(() => ({}))
+    return ok(body)
+  }
+
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 

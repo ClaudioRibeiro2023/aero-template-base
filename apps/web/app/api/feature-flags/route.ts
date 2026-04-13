@@ -21,6 +21,7 @@ import { getRepository, getAuthGateway } from '@/lib/data'
 import { auditLog } from '@/lib/audit-log'
 import { withApiLog } from '@/lib/logger'
 import { SupabaseDbClient } from '@template/data/supabase'
+import { isDemoMode, DEMO_FEATURE_FLAGS } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +34,10 @@ async function getTenantId(userId: string): Promise<string | null> {
 }
 
 export const GET = withApiLog('feature-flags', async function GET(request: NextRequest) {
+  if (isDemoMode) {
+    return ok({ items: DEMO_FEATURE_FLAGS, total: DEMO_FEATURE_FLAGS.length })
+  }
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
@@ -64,6 +69,11 @@ export const GET = withApiLog('feature-flags', async function GET(request: NextR
 })
 
 export const POST = withApiLog('feature-flags', async function POST(request: NextRequest) {
+  if (isDemoMode) {
+    const body = await request.json().catch(() => ({}))
+    return created({ id: `demo-flag-${Date.now()}`, ...body, tenant_id: 'demo-tenant' })
+  }
+
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 

@@ -20,6 +20,7 @@ import {
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode, DEMO_USERS } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,6 +28,12 @@ export const dynamic = 'force-dynamic'
 export const GET = withApiLog(
   'users-detail',
   async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    if (isDemoMode) {
+      const { id } = await params
+      const user = DEMO_USERS.find(u => u.id === id) ?? { ...DEMO_USERS[0], id }
+      return ok(user)
+    }
+
     const ip = getClientIp(request.headers)
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
     if (!success) return tooManyRequests()
@@ -51,6 +58,13 @@ export const GET = withApiLog(
 export const PUT = withApiLog(
   'users-detail',
   async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    if (isDemoMode) {
+      const { id } = await params
+      const body = await request.json().catch(() => ({}))
+      const user = DEMO_USERS.find(u => u.id === id) ?? DEMO_USERS[0]
+      return ok({ ...user, ...body, id, updated_at: new Date().toISOString() })
+    }
+
     const jsonError = requireJson(request)
     if (jsonError) return jsonError
 
@@ -123,6 +137,12 @@ export const PUT = withApiLog(
 export const DELETE = withApiLog(
   'users-detail',
   async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    if (isDemoMode) {
+      const { id } = await params
+      const user = DEMO_USERS.find(u => u.id === id) ?? DEMO_USERS[0]
+      return ok({ ...user, id, is_active: false })
+    }
+
     const ip = getClientIp(request.headers)
     const { success } = rateLimit(ip, { windowMs: 60_000, max: 15 })
     if (!success) return tooManyRequests()

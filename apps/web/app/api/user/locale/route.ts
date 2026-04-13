@@ -10,12 +10,15 @@ import { ok, badRequest, unauthorized, serverError } from '@/lib/api-response'
 import { getAuthGateway } from '@/lib/data'
 import { SupabaseDbClient } from '@template/data/supabase'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 const SUPPORTED_LOCALES = ['pt-BR', 'en-US', 'es']
 
 export const GET = withApiLog('user-locale', async function GET(_request: NextRequest) {
+  if (isDemoMode) return ok({ locale: 'pt-BR' })
+
   const { user, error } = await getAuthGateway().getUser()
   if (error || !user) return unauthorized()
 
@@ -31,6 +34,11 @@ export const GET = withApiLog('user-locale', async function GET(_request: NextRe
 })
 
 export const PATCH = withApiLog('user-locale', async function PATCH(request: NextRequest) {
+  if (isDemoMode) {
+    const body = await request.json().catch(() => ({ locale: 'pt-BR' }))
+    return ok({ locale: body?.locale ?? 'pt-BR' })
+  }
+
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 

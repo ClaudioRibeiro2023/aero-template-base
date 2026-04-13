@@ -18,11 +18,21 @@ import {
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode, DEMO_TICKETS } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 // ── GET /api/support/tickets ──
 export const GET = withApiLog('support-tickets', async function GET(request: NextRequest) {
+  if (isDemoMode) {
+    return ok(DEMO_TICKETS, {
+      page: 1,
+      page_size: 20,
+      total: DEMO_TICKETS.length,
+      pages: 1,
+    })
+  }
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
@@ -66,6 +76,18 @@ export const GET = withApiLog('support-tickets', async function GET(request: Nex
 
 // ── POST /api/support/tickets ──
 export const POST = withApiLog('support-tickets', async function POST(request: NextRequest) {
+  if (isDemoMode) {
+    const body = await request.json().catch(() => ({}))
+    return created({
+      id: `demo-ticket-${Date.now()}`,
+      ...body,
+      status: 'open',
+      created_by: 'demo-user-001',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+  }
+
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 

@@ -13,6 +13,7 @@ import { getAuthGateway } from '@/lib/data'
 import { SupabaseDbClient } from '@template/data/supabase'
 import { withApiLog } from '@/lib/logger'
 import { auditLog } from '@/lib/audit-log'
+import { isDemoMode } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +29,15 @@ const ROLE_MAP: Record<string, string> = {
 type BulkAction = (typeof VALID_ACTIONS)[number]
 
 export const POST = withApiLog('users-bulk', async function POST(request: NextRequest) {
+  if (isDemoMode) {
+    const body = await request.json().catch(() => ({}))
+    return ok({
+      action: body?.action ?? 'deactivate',
+      affected: body?.ids?.length ?? 0,
+      ids: body?.ids ?? [],
+    })
+  }
+
   const jsonError = requireJson(request)
   if (jsonError) return jsonError
 

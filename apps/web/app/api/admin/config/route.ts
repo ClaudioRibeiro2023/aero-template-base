@@ -19,6 +19,7 @@ import {
 } from '@/lib/api-response'
 import { getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode, DEMO_ADMIN_CONFIG } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -63,6 +64,8 @@ const AdminConfigSchema = z.object({
 })
 
 export const GET = withApiLog('admin-config', async function GET(request: NextRequest) {
+  if (isDemoMode) return ok(DEMO_ADMIN_CONFIG)
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()
@@ -103,6 +106,11 @@ export const GET = withApiLog('admin-config', async function GET(request: NextRe
 })
 
 export const PATCH = withApiLog('admin-config', async function PATCH(request: NextRequest) {
+  if (isDemoMode) {
+    const body = await request.json().catch(() => ({}))
+    return ok({ ...DEMO_ADMIN_CONFIG, ...body, updated_at: new Date().toISOString() })
+  }
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()

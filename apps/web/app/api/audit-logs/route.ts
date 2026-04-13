@@ -9,10 +9,21 @@ import { ok, unauthorized, forbidden, tooManyRequests } from '@/lib/api-response
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { getRepository, getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
+import { isDemoMode, DEMO_AUDIT_LOGS } from '@/lib/demo-data'
 
 export const dynamic = 'force-dynamic'
 
 export const GET = withApiLog('audit-logs', async function GET(request: NextRequest) {
+  if (isDemoMode) {
+    return ok({
+      items: DEMO_AUDIT_LOGS,
+      total: DEMO_AUDIT_LOGS.length,
+      page: 1,
+      page_size: 50,
+      total_pages: 1,
+    })
+  }
+
   const ip = getClientIp(request.headers)
   const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (!success) return tooManyRequests()
