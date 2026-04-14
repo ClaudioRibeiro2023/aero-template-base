@@ -26,10 +26,7 @@ export function SidebarFooter({ collapsed, userName, onLogout }: SidebarFooterPr
 
   return (
     <div
-      className={clsx(
-        'border-t border-[rgba(255,255,255,0.06)]',
-        collapsed ? 'p-2' : 'px-3 py-2.5'
-      )}
+      className={clsx('border-t border-[var(--sidebar-border)]', collapsed ? 'p-2' : 'px-3 py-2.5')}
     >
       {collapsed ? (
         <div className="flex flex-col items-center gap-1.5">
@@ -41,7 +38,7 @@ export function SidebarFooter({ collapsed, userName, onLogout }: SidebarFooterPr
           </div>
           <button
             onClick={onLogout}
-            className="p-1.5 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-rose-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-1.5 rounded-md hover:bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text-muted)] hover:text-rose-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="Sair"
             aria-label="Sair"
           >
@@ -54,13 +51,13 @@ export function SidebarFooter({ collapsed, userName, onLogout }: SidebarFooterPr
             {userInitials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-medium text-white/70 truncate leading-tight">
+            <p className="text-[12px] font-medium text-[var(--sidebar-user-text)] truncate leading-tight">
               {userName || 'Usuário'}
             </p>
           </div>
           <Link
             href="/admin/config"
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text-hover)] flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="Configurações"
             aria-label="Configurações"
           >
@@ -68,7 +65,7 @@ export function SidebarFooter({ collapsed, userName, onLogout }: SidebarFooterPr
           </Link>
           <button
             onClick={onLogout}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-white/[0.04] text-[var(--sidebar-text-muted)] hover:text-rose-400 flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-[var(--sidebar-item-hover)] text-[var(--sidebar-text-muted)] hover:text-rose-400 flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
             title="Sair"
             aria-label="Sair"
           >

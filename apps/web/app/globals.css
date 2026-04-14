@@ -68,42 +68,88 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+
+  /* Sidebar — theme-aware tokens */
+  --sidebar-text: rgba(255, 255, 255, 0.7);
+  --sidebar-text-hover: rgba(255, 255, 255, 0.95);
+  --sidebar-text-muted: rgba(255, 255, 255, 0.4);
+  --sidebar-item-hover: rgba(255, 255, 255, 0.04);
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-search-bg: rgba(255, 255, 255, 0.03);
+  --sidebar-search-border: rgba(255, 255, 255, 0.06);
+  --sidebar-kbd-bg: rgba(255, 255, 255, 0.05);
+  --sidebar-kbd-border: rgba(255, 255, 255, 0.08);
+  --sidebar-badge-bg: rgba(255, 255, 255, 0.1);
+  --sidebar-badge-text: rgba(255, 255, 255, 0.5);
+  --sidebar-user-text: rgba(255, 255, 255, 0.7);
+  --sidebar-chevron: rgba(255, 255, 255, 0.3);
+  --sidebar-notif-ring: rgba(9, 9, 11, 0.85);
 }
 
-/* Light theme override (se necessário) */
+/* ============================================
+   Light Theme — Complete Override
+   ============================================ */
+
 .light {
-  --bg-root: #fafafa;
+  /* Backgrounds — clean white scale */
+  --bg-root: #f5f5f7;
   --bg-surface: #ffffff;
-  --bg-elevated: #f4f4f5;
-  --bg-muted: #e4e4e7;
-  --bg-subtle: #d4d4d8;
+  --bg-elevated: #f0f0f2;
+  --bg-muted: #e5e5e7;
+  --bg-subtle: #d1d1d6;
 
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(0, 0, 0, 0.06);
-  --glass-border-hover: rgba(0, 0, 0, 0.1);
+  /* Glass — white with subtle opacity */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-hover: rgba(0, 0, 0, 0.14);
 
-  --text-primary: #18181b;
-  --text-secondary: #52525b;
-  --text-muted: #71717a;
-  --text-disabled: #a1a1aa;
+  /* Text — high contrast on white */
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-muted: #6b6b6b;
+  --text-disabled: #9e9e9e;
 
-  --border-default: #e4e4e7;
-  --border-muted: #f4f4f5;
-  --border-strong: #d4d4d8;
+  /* Borders — visible but subtle */
+  --border-default: #d8d8dc;
+  --border-muted: #e8e8ec;
+  --border-strong: #c0c0c6;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  /* Brand — slightly darker for contrast on white */
+  --brand-primary: #0087a8;
+  --brand-secondary: #005f73;
 
-  /* Glows — softer for light mode */
-  --glow-brand: rgba(0, 135, 168, 0.12);
-  --glow-brand-strong: rgba(0, 135, 168, 0.2);
-  --glow-purple: rgba(99, 102, 241, 0.12);
-  --glow-error: rgba(239, 68, 68, 0.12);
-  --shadow-glow: 0 0 20px var(--glow-brand);
+  /* Shadows — light, clean elevation */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06);
 
-  /* Ambient gradient — reduced opacity for light */
-  --ambient-opacity: 0.04;
+  /* Glows — subtle tinted shadows */
+  --glow-brand: rgba(0, 135, 168, 0.1);
+  --glow-brand-strong: rgba(0, 135, 168, 0.18);
+  --glow-purple: rgba(99, 102, 241, 0.1);
+  --glow-error: rgba(239, 68, 68, 0.1);
+  --shadow-glow: 0 0 24px var(--glow-brand);
+
+  /* Ambient gradient — muted for light */
+  --ambient-color-1: rgba(0, 135, 168, 0.03);
+  --ambient-color-2: rgba(99, 102, 241, 0.02);
+  --ambient-color-3: rgba(52, 211, 153, 0.02);
+
+  /* Sidebar — light tokens */
+  --sidebar-text: #4a4a4a;
+  --sidebar-text-hover: #1a1a1a;
+  --sidebar-text-muted: #8a8a8a;
+  --sidebar-item-hover: rgba(0, 0, 0, 0.05);
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-search-bg: rgba(0, 0, 0, 0.03);
+  --sidebar-search-border: rgba(0, 0, 0, 0.08);
+  --sidebar-kbd-bg: rgba(0, 0, 0, 0.05);
+  --sidebar-kbd-border: rgba(0, 0, 0, 0.1);
+  --sidebar-badge-bg: rgba(0, 0, 0, 0.06);
+  --sidebar-badge-text: #6b6b6b;
+  --sidebar-user-text: #4a4a4a;
+  --sidebar-chevron: rgba(0, 0, 0, 0.25);
+  --sidebar-notif-ring: #ffffff;
 }
 
 /* ============================================
@@ -575,6 +621,75 @@ html {
   .sidebar-island-offset-collapsed {
     margin-left: 0;
   }
+}
+
+/* ============================================
+   Light Theme — Sidebar & Glass Panel Overrides
+   ============================================ */
+
+.light .sidebar-island {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.97) 0%,
+    rgba(248, 248, 250, 0.98) 50%,
+    rgba(255, 255, 255, 0.97) 100%
+  );
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.light .sidebar-island::before {
+  background: conic-gradient(
+    from var(--aurora-angle, 0deg),
+    transparent 0%,
+    rgba(0, 135, 168, 0.06) 15%,
+    transparent 30%,
+    rgba(0, 180, 216, 0.04) 50%,
+    transparent 65%,
+    rgba(0, 135, 168, 0.05) 80%,
+    transparent 100%
+  );
+}
+
+.light .sidebar-island::after {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.99) 0%,
+    rgba(248, 248, 250, 1) 50%,
+    rgba(255, 255, 255, 0.99) 100%
+  );
+}
+
+.light .glass-panel-elevated {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.02);
+}
+
+.light .glass-panel-elevated:hover {
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.1),
+    0 0 16px var(--glow-brand);
+}
+
+.light .sidebar-divider {
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent);
+}
+
+.light .sidebar-nav-item-active::before {
+  background: radial-gradient(ellipse at left center, rgba(0, 135, 168, 0.08), transparent 70%);
+}
+
+.light .sidebar-active-bar {
+  box-shadow: 0 0 8px rgba(0, 135, 168, 0.2);
+}
+
+.light .avatar-gradient-border::before {
+  opacity: 0.7;
 }
 
 /* ============================================

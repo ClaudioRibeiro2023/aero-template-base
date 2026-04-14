@@ -83,7 +83,7 @@ export function Header({
 
   return (
     <header
-      className={`h-[52px] bg-transparent border-b border-[rgba(255,255,255,0.06)] px-3 md:px-5 flex items-center justify-between gap-2${className ? ` ${className}` : ''}`}
+      className={`h-[52px] bg-transparent border-b border-[var(--glass-border)] px-3 md:px-5 flex items-center justify-between gap-2${className ? ` ${className}` : ''}`}
     >
       {/* Left section */}
       <div className="flex items-center gap-2 md:gap-3 min-w-0">
@@ -92,7 +92,7 @@ export function Header({
           <Tooltip content={tNav('mainMenu')}>
             <button
               onClick={onMobileMenuToggle}
-              className="p-1.5 -ms-1 rounded-lg hover:bg-white/[0.04] transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-1.5 -ms-1 rounded-lg hover:bg-[var(--sidebar-item-hover)] transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label={tNav('openMenu')}
             >
               <Menu size={20} className="text-[var(--text-secondary)]" />
@@ -132,7 +132,7 @@ export function Header({
         <Tooltip content={tNav('searchShortcut')}>
           <button
             onClick={onSearchOpen}
-            className="p-1.5 rounded-lg hover:bg-white/[0.04] transition-colors hidden sm:flex min-w-[44px] min-h-[44px] items-center justify-center"
+            className="p-1.5 rounded-lg hover:bg-[var(--sidebar-item-hover)] transition-colors hidden sm:flex min-w-[44px] min-h-[44px] items-center justify-center"
             aria-label={tNav('openSearch')}
           >
             <Search size={18} className="text-[var(--text-secondary)]" />
@@ -154,7 +154,7 @@ export function Header({
           <Tooltip content="Idioma">
             <button
               onClick={() => setShowLocalePicker(prev => !prev)}
-              className="p-1.5 rounded-lg hover:bg-white/[0.04] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-1.5 rounded-lg hover:bg-[var(--sidebar-item-hover)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label="Trocar idioma"
               aria-expanded={showLocalePicker}
             >
@@ -162,12 +162,12 @@ export function Header({
             </button>
           </Tooltip>
           {showLocalePicker && (
-            <div className="absolute end-0 top-full mt-1 z-50 bg-[rgba(24,24,27,0.95)] border border-[rgba(255,255,255,0.08)] rounded-lg shadow-xl py-1 min-w-[80px] backdrop-blur-lg">
+            <div className="absolute end-0 top-full mt-1 z-50 bg-[var(--bg-surface)]/95 border border-[var(--glass-border)] rounded-lg shadow-xl py-1 min-w-[80px] backdrop-blur-lg">
               {LOCALE_OPTIONS.map(([code, label]) => (
                 <button
                   key={code}
                   onClick={() => switchLocale(code)}
-                  className="w-full px-3 py-1.5 text-xs text-start text-[var(--text-secondary)] hover:bg-white/[0.04] hover:text-[var(--text-primary)] transition-colors"
+                  className="w-full px-3 py-1.5 text-xs text-start text-[var(--text-secondary)] hover:bg-[var(--sidebar-item-hover)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   {label}
                 </button>
@@ -180,7 +180,7 @@ export function Header({
         <Tooltip content={isDark ? tTheme('light') : tTheme('dark')}>
           <button
             onClick={toggleTheme}
-            className="p-1.5 rounded-lg hover:bg-white/[0.04] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-1.5 rounded-lg hover:bg-[var(--sidebar-item-hover)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label={tNav('toggleTheme')}
           >
             {isDark ? (

@@ -124,7 +124,7 @@ function SidebarLink({
         className={clsx(
           'sidebar-nav-item flex items-center gap-2.5 rounded-lg transition-all duration-150 ease-out relative',
           'text-[var(--sidebar-text)] hover:text-[var(--sidebar-text-hover)]',
-          'hover:bg-white/[0.04]',
+          'hover:bg-[var(--sidebar-item-hover)]',
           collapsed ? 'p-2 justify-center min-w-[44px] min-h-[44px]' : 'px-2.5 py-1.5',
           isActive && 'sidebar-nav-item-active bg-[rgba(0,180,216,0.12)] text-[#00b4d8]'
         )}
@@ -136,7 +136,7 @@ function SidebarLink({
           {icon}
           {notificationCount != null && notificationCount > 0 && (
             <span
-              className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-full bg-rose-500 text-white text-[9px] font-bold px-0.5 ring-2 ring-[rgba(9,9,11,0.85)]"
+              className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] flex items-center justify-center rounded-full bg-rose-500 text-white text-[9px] font-bold px-0.5 ring-2 ring-[var(--sidebar-notif-ring)]"
               aria-label={`${notificationCount} notificacoes`}
             >
               {notificationCount > 99 ? '99+' : notificationCount}
@@ -150,7 +150,8 @@ function SidebarLink({
               <span
                 className={clsx(
                   'text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full tracking-wide',
-                  BADGE_COLORS[badge] || 'bg-white/10 text-white/50'
+                  BADGE_COLORS[badge] ||
+                    'bg-[var(--sidebar-badge-bg)] text-[var(--sidebar-badge-text)]'
                 )}
               >
                 {badge}
@@ -158,7 +159,7 @@ function SidebarLink({
             )}
             <ChevronRight
               size={14}
-              className="opacity-0 group-hover:opacity-40 transition-opacity flex-shrink-0 text-white/30"
+              className="opacity-0 group-hover:opacity-40 transition-opacity flex-shrink-0 text-[var(--sidebar-chevron)]"
             />
           </>
         )}
@@ -387,7 +388,7 @@ export function AppSidebar({
                             className={clsx(
                               'sidebar-nav-item w-full flex items-center gap-2.5 rounded-lg transition-all duration-150 ease-out',
                               'text-[var(--sidebar-text)] hover:text-[var(--sidebar-text-hover)]',
-                              'hover:bg-white/[0.04]',
+                              'hover:bg-[var(--sidebar-item-hover)]',
                               collapsed
                                 ? 'p-2 justify-center min-w-[44px] min-h-[44px]'
                                 : 'px-2.5 py-1.5',

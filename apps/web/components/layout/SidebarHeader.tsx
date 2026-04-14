@@ -37,7 +37,7 @@ export function SidebarHeader({
       {/* ── Header: Logo + Collapse Toggle ── */}
       <div
         className={clsx(
-          'h-[52px] flex items-center border-b border-[rgba(255,255,255,0.06)]',
+          'h-[52px] flex items-center border-b border-[var(--sidebar-border)]',
           collapsed ? 'flex-col justify-center gap-0 px-1 py-1' : 'justify-between px-3'
         )}
       >
@@ -75,7 +75,7 @@ export function SidebarHeader({
             </div>
           )}
           {!collapsed && (
-            <span className="text-white font-semibold text-[15px] whitespace-nowrap tracking-tight">
+            <span className="text-[var(--text-primary)] font-semibold text-[15px] whitespace-nowrap tracking-tight">
               {appName}
             </span>
           )}
@@ -108,7 +108,7 @@ export function SidebarHeader({
           onClick={onOpenSearch}
           className={clsx(
             'group w-full flex items-center gap-2 rounded-lg transition-all duration-150 ease-out',
-            'bg-[rgba(255,255,255,0.03)] hover:bg-white/[0.06] border border-[rgba(255,255,255,0.06)]',
+            'bg-[var(--sidebar-search-bg)] hover:bg-[var(--sidebar-item-hover)] border border-[var(--sidebar-search-border)]',
             'text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text)]',
             collapsed ? 'p-2 justify-center' : 'px-2.5 py-1.5'
           )}
@@ -119,7 +119,7 @@ export function SidebarHeader({
           {!collapsed && (
             <>
               <span className="text-xs flex-1 text-left">Buscar...</span>
-              <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.05] border border-white/[0.08] font-mono text-[var(--sidebar-text-muted)]">
+              <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--sidebar-kbd-bg)] border border-[var(--sidebar-kbd-border)] font-mono text-[var(--sidebar-text-muted)]">
                 {MOD_KEY}K
               </kbd>
             </>
