@@ -46,7 +46,7 @@ export const GET = withApiLog(
     }
 
     const ip = getClientIp(request.headers)
-    const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
+    const { success } = await rateLimit(ip, { windowMs: 60_000, max: 120 })
     if (!success) return tooManyRequests()
 
     const { user, error } = await getAuthGateway().getUser()
@@ -91,7 +91,7 @@ export const POST = withApiLog(
     if (jsonError) return jsonError
 
     const ip = getClientIp(request.headers)
-    const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
+    const { success } = await rateLimit(ip, { windowMs: 60_000, max: 30 })
     if (!success) return tooManyRequests()
 
     const { user, error } = await getAuthGateway().getUser()

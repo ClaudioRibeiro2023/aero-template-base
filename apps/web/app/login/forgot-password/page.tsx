@@ -1,5 +1,6 @@
 'use client'
 
+import '@/styles/auth-animations.css'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
@@ -154,54 +155,6 @@ export default function ForgotPasswordPage() {
           {appName} &copy; 2026
         </p>
       </div>
-
-      <style jsx>{`
-        .animated-mesh {
-          background: linear-gradient(-45deg, #0c2340, #163b5c, #0e8c6b, #0c2340, #1a4a73);
-          background-size: 400% 400%;
-          animation: meshShift 15s ease infinite;
-        }
-        @keyframes meshShift {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-        .animate-fade-in-up {
-          animation: fadeInUp 0.6s ease-out forwards;
-          opacity: 0;
-        }
-        @keyframes fadeInUp {
-          0% {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .luminous-border {
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          transition:
-            border-color 0.3s,
-            box-shadow 0.3s;
-          box-shadow:
-            0 8px 40px rgba(0, 0, 0, 0.3),
-            0 0 40px rgba(41, 128, 185, 0.1);
-        }
-        .luminous-border:hover {
-          border-color: rgba(41, 128, 185, 0.4);
-          box-shadow:
-            0 8px 40px rgba(0, 0, 0, 0.3),
-            0 0 20px rgba(41, 128, 185, 0.15);
-        }
-      `}</style>
     </main>
   )
 }

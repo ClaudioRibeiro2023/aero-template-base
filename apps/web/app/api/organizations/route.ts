@@ -17,7 +17,7 @@ export const GET = withApiLog('organizations', async function GET(request: NextR
   if (isDemoMode) return ok(DEMO_ORGANIZATIONS)
 
   const ip = getClientIp(request.headers)
-  const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
+  const { success } = await rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (success === false) {
     return new Response('Too many requests', { status: 429 })
   }

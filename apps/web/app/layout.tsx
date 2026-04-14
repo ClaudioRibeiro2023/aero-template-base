@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   },
   description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'Plataforma de gestao empresarial',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3005'),
+  manifest: '/manifest.json',
   icons: {
     icon: '/icon.svg',
     shortcut: '/icon.svg',

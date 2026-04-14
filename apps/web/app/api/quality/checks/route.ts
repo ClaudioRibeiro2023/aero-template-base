@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   }
 
   const ip = getClientIp(request.headers)
-  const { success } = rateLimit(ip, { windowMs: 60_000, max: 10 })
+  const { success } = await rateLimit(ip, { windowMs: 60_000, max: 10 })
   if (!success) return tooManyRequests()
 
   const { user, error } = await getAuthGateway().getUser()

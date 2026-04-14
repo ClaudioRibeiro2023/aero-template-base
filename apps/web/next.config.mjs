@@ -28,8 +28,20 @@ const nextConfig = {
             value: 'max-age=31536000; includeSubDomains',
           },
           {
+            // CSP: 'unsafe-inline' kept in style-src (required for styled-jsx/Tailwind).
+            // script-src: 'strict-dynamic' delegates trust to scripts loaded by Next.js bootstrap.
+            // 'unsafe-inline' is ignored when 'strict-dynamic' is present (spec behavior).
+            // For full nonce-based CSP, see: https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://*.supabase.co; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'strict-dynamic' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "img-src 'self' data: https://*.supabase.co",
+              "font-src 'self' data: https://fonts.gstatic.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+              "frame-ancestors 'none'",
+            ].join('; '),
           },
         ],
       },

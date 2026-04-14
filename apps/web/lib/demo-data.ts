@@ -8,8 +8,11 @@
  * Used by: all API routes under app/api/ that access repositories or SupabaseDbClient.
  */
 
+// Guard: DEMO_MODE is NEVER active in production builds.
+// This prevents accidental exposure of the app without auth in production.
 export const isDemoMode =
-  process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || process.env.DEMO_MODE === 'true'
+  process.env.NODE_ENV !== 'production' &&
+  (process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || process.env.DEMO_MODE === 'true')
 
 // Fixed ISO timestamps — avoids SSR↔client divergence that could
 // surface as hydration mismatch if these values ever reached the DOM.

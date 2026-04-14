@@ -34,7 +34,7 @@ export const PATCH = withApiLog(
 
     const { id } = await params
     const ip = getClientIp(request.headers)
-    const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
+    const { success } = await rateLimit(ip, { windowMs: 60_000, max: 60 })
     if (!success) return tooManyRequests()
 
     const { user, error } = await getAuthGateway().getUser()
@@ -86,7 +86,7 @@ export const DELETE = withApiLog(
 
     const { id } = await params
     const ip = getClientIp(request.headers)
-    const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
+    const { success } = await rateLimit(ip, { windowMs: 60_000, max: 30 })
     if (!success) return tooManyRequests()
 
     const { user, error } = await getAuthGateway().getUser()

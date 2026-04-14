@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   if (jsonError) return jsonError
 
   const ip = getClientIp(request.headers)
-  const { success } = rateLimit(ip, { windowMs: 60_000, max: 5 })
+  const { success } = await rateLimit(ip, { windowMs: 60_000, max: 5 })
   if (!success) return tooManyRequests()
 
   const { data, error: parseError } = await parseBody(request, SignupSchema)

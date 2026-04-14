@@ -1,0 +1,17 @@
+{
+  "name": "Template Platform",
+  "short_name": "Template",
+  "description": "Plataforma de gestao empresarial",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0c1929",
+  "theme_color": "#0087A8",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

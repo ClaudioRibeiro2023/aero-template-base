@@ -13,6 +13,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { AuthenticatedUser } from '@template/data'
+import type { UserRole } from '@template/types'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Interface
@@ -86,9 +87,9 @@ export class SupabaseServerAuth implements IServerAuthProvider {
     const authenticatedUser: AuthenticatedUser = {
       id: user.id,
       email: user.email ?? '',
-      // Role não está disponível aqui sem uma query extra — middleware usa apenas id/email
-      // O role real é buscado por getAuthGateway().getUser() nas API routes
-      role: 'VIEWER',
+      // Role extraído de app_metadata (imutável pelo client — seguro para RBAC).
+      // Supabase getUser() já retorna app_metadata sem query extra.
+      role: ((user.app_metadata?.role as string) || 'VIEWER').toUpperCase() as UserRole,
     }
 
     return { user: authenticatedUser, response: supabaseResponse }

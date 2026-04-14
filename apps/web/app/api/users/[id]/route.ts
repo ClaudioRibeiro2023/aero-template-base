@@ -35,7 +35,7 @@ export const GET = withApiLog(
     }
 
     const ip = getClientIp(request.headers)
-    const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
+    const { success } = await rateLimit(ip, { windowMs: 60_000, max: 60 })
     if (!success) return tooManyRequests()
 
     const { user, error: authError } = await getAuthGateway().getUser()
@@ -69,7 +69,7 @@ export const PUT = withApiLog(
     if (jsonError) return jsonError
 
     const ip = getClientIp(request.headers)
-    const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
+    const { success } = await rateLimit(ip, { windowMs: 60_000, max: 30 })
     if (!success) return tooManyRequests()
 
     const { user, error: authError } = await getAuthGateway().getUser()
@@ -144,7 +144,7 @@ export const DELETE = withApiLog(
     }
 
     const ip = getClientIp(request.headers)
-    const { success } = rateLimit(ip, { windowMs: 60_000, max: 15 })
+    const { success } = await rateLimit(ip, { windowMs: 60_000, max: 15 })
     if (!success) return tooManyRequests()
 
     const { user, error: authError } = await getAuthGateway().getUser()

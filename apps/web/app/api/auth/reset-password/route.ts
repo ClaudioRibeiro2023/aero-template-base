@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request.headers)
-  const { success } = rateLimit(ip, { windowMs: 300_000, max: 3 })
+  const { success } = await rateLimit(ip, { windowMs: 300_000, max: 3 })
   if (!success) return tooManyRequests()
 
   const { data, error: parseError } = await parseBody(request, ResetPasswordSchema)
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   } catch {
     // Invalid URL — fall back to empty string (relative redirect)
   }
-  const redirectTo = `${validatedBase}/auth/callback?next=/login/update-password`
+  const redirectTo = `${validatedBase}/auth/callback?next=/login/reset-password`
   const { error } = await supabase.auth.resetPasswordForEmail(data.email, { redirectTo })
   if (error) console.error('[auth/reset-password]', error)
 

@@ -1,2 +1,9 @@
 pnpm exec lint-staged
 pnpm --filter @template/web run typecheck
+
+# Secrets scanner — block commits with potential secrets
+SECRETS_PATTERN='(SUPABASE_SERVICE_ROLE_KEY|RESEND_API_KEY|UPSTASH_REDIS_REST_TOKEN|SENTRY_DSN|sk_live_|sk_test_|ghp_|gho_|xoxb-|xoxp-)=.{8,}'
+if git diff --cached --diff-filter=ACMR -z -- '*.ts' '*.tsx' '*.js' '*.json' '*.env*' | xargs -0 grep -lE "$SECRETS_PATTERN" 2>/dev/null; then
+  echo "ERROR: Potential secrets detected in staged files. Review before committing."
+  exit 1
+fi

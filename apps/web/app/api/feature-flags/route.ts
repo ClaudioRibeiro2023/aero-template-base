@@ -39,7 +39,7 @@ export const GET = withApiLog('feature-flags', async function GET(request: NextR
   }
 
   const ip = getClientIp(request.headers)
-  const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
+  const { success } = await rateLimit(ip, { windowMs: 60_000, max: 120 })
   if (!success) return tooManyRequests()
 
   const { user, error } = await getAuthGateway().getUser()
@@ -78,7 +78,7 @@ export const POST = withApiLog('feature-flags', async function POST(request: Nex
   if (jsonError) return jsonError
 
   const ip = getClientIp(request.headers)
-  const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
+  const { success } = await rateLimit(ip, { windowMs: 60_000, max: 30 })
   if (!success) return tooManyRequests()
 
   const { user, error } = await getAuthGateway().getUser()

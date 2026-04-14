@@ -16,7 +16,9 @@ import { useState, type ReactNode } from 'react'
 // Este array alimenta o ModuleProvider para conditional rendering client-side.
 const ENABLED_MODULES: string[] = Array.from(enabledModuleIds)
 
-const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+// Guard: DEMO_MODE never active in production (see also lib/demo-data.ts)
+const isDemoMode =
+  process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => createQueryClient())

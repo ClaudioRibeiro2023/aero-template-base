@@ -2,6 +2,30 @@ import { NextRequest, NextResponse } from 'next/server'
 import { badRequest, forbidden } from '@/lib/api-response'
 
 /**
+ * CSRF Strategy
+ * =============
+ * This template uses a layered CSRF defense:
+ *
+ * 1. **SameSite=Lax cookies** (Supabase default) — browser refuses to send auth
+ *    cookies on cross-origin POST/PUT/DELETE requests.
+ *
+ * 2. **Origin validation** (`validateApiRequest`) — checks that the Origin header
+ *    matches the Host header. Applied via `withCsrf()` wrapper.
+ *
+ * 3. **Content-Type enforcement** (`requireJson`) — rejects non-JSON payloads,
+ *    preventing simple form-based CSRF attacks.
+ *
+ * For apps that need stricter protection (e.g., financial transactions), wrap
+ * mutation handlers with `withCsrf()`:
+ *
+ *   export const POST = withCsrf(async (req) => { ... })
+ *
+ * The combination of SameSite cookies + server-side auth middleware provides
+ * adequate CSRF protection for most use cases without the `withCsrf` wrapper.
+ * See: https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
+ */
+
+/**
  * Validates that API requests originate from the same host (CSRF-like protection).
  * Returns true if the request is valid (same-origin or server-side call without origin).
  */

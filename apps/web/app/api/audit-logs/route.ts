@@ -25,7 +25,7 @@ export const GET = withApiLog('audit-logs', async function GET(request: NextRequ
   }
 
   const ip = getClientIp(request.headers)
-  const { success } = rateLimit(ip, { windowMs: 60_000, max: 60 })
+  const { success } = await rateLimit(ip, { windowMs: 60_000, max: 60 })
   if (!success) return tooManyRequests()
 
   const { user, error } = await getAuthGateway().getUser()
