@@ -29,7 +29,9 @@
       "@template/auth": ["./packages/auth/src/index.ts"],
       "@template/utils": ["./packages/utils/src/index.ts"],
       "@template/cache": ["./packages/cache/src/index.ts"],
-      "@template/modules": ["./packages/modules/src/index.ts"]
+      "@template/modules": ["./packages/modules/src/index.ts"],
+      "@template/agent": ["./packages/agent/src/index.ts"],
+      "@template/agent/*": ["./packages/agent/src/*/index.ts"]
     }
   }
 }

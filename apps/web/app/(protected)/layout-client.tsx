@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { SkipLink } from '@/components/common/SkipLink'
 import { FirstRunWizard, type WizardData } from '@/components/common/FirstRunWizard'
+import { AgentChat } from '@/components/chat/AgentChat'
 import { useOnboarding } from '@/hooks/useOnboarding'
 import { ToastProvider } from '@template/design-system'
 
@@ -49,6 +50,8 @@ export function ProtectedLayoutClient({ children }: { children: React.ReactNode 
           initialStep={0}
         />
       )}
+      {/* Conversation OS — agente flutuante disponível em todas as páginas protegidas */}
+      <AgentChat appId="web" />
     </ToastProvider>
   )
 }

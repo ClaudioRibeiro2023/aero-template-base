@@ -15,7 +15,9 @@
       "@template/types": ["../../packages/types/src"],
       "@template/types/*": ["../../packages/types/src/*"],
       "@template/data": ["../../packages/data/src"],
-      "@template/data/*": ["../../packages/data/src/providers/*"]
+      "@template/data/*": ["../../packages/data/src/providers/*"],
+      "@template/agent": ["../../packages/agent/src"],
+      "@template/agent/*": ["../../packages/agent/src/*"]
     },
     "module": "esnext",
     "moduleResolution": "bundler",

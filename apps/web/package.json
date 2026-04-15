@@ -21,6 +21,7 @@
     "@template/design-system": "workspace:*",
     "@template/modules": "workspace:*",
     "@template/shared": "workspace:*",
+    "@template/agent": "workspace:*",
     "@template/types": "workspace:*",
     "clsx": "^2.0.0",
     "lucide-react": "^0.294.0",

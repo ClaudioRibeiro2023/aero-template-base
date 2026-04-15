@@ -1,0 +1,34 @@
+{
+  "name": "@template/agent",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./gateway": "./src/gateway/index.ts",
+    "./orchestrator": "./src/orchestrator/index.ts",
+    "./memory": "./src/memory/index.ts",
+    "./tools": "./src/tools/index.ts",
+    "./policy": "./src/policy/index.ts",
+    "./observability": "./src/observability/index.ts",
+    "./domain-packs": "./src/domain-packs/index.ts",
+    "./domain-packs/core": "./src/domain-packs/core/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@template/types": "workspace:*",
+    "@template/data": "workspace:*",
+    "openai": "^4.78.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
