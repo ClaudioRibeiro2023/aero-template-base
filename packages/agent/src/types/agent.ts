@@ -4,6 +4,7 @@
 import type { AIMessage, AIModel } from './gateway'
 import type { MemoryContext } from './memory'
 import type { DomainPack } from './domain-pack'
+import type { PendingAction } from './tool'
 
 // ─── Sessão ───────────────────────────────────────────────────────────────────
 
@@ -104,6 +105,8 @@ export interface AgentResponse {
   degraded?: boolean
   /** Razões de degradação (ex: falha de persistência, embedding indisponível) */
   degradationReasons?: string[]
+  /** Ações pendentes de confirmação do usuário */
+  pendingActions?: PendingAction[]
 }
 
 // ─── Fonte de informação ──────────────────────────────────────────────────────

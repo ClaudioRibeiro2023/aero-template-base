@@ -27,6 +27,8 @@ import { getAuthGateway } from '@/lib/data'
 import { SupabaseAgentSessionStore, isValidTenantId } from '@/lib/agent-session-store'
 import { SupabaseMemoryStore } from '@/lib/agent-memory-store'
 import { ToolLogPersister } from '@/lib/agent-tool-log-persister'
+import { PendingActionStore } from '@/lib/agent-pending-action-store'
+import { getAgentRateLimiter } from '@/lib/agent-rate-limiter'
 import { badRequest, unauthorized, serverError } from '@/lib/api-response'
 
 // ─── Schema de entrada ────────────────────────────────────────────────────────
@@ -70,6 +72,16 @@ export async function POST(req: NextRequest) {
   const { user } = await getAuthGateway().getUser()
   if (!user) return unauthorized()
 
+  // Rate limiting
+  const rateTenantId = isValidTenantId(user.tenantId) ? user.tenantId : 'default'
+  const rateCheck = getAgentRateLimiter().check(rateTenantId, user.id, 'chat')
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { ok: false, error: { message: 'Rate limit excedido. Aguarde antes de tentar novamente.' } },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil(rateCheck.retryAfterMs / 1000)) } }
+    )
+  }
+
   // 2. Parse do body
   let body: unknown
   try {
@@ -111,6 +123,7 @@ export async function POST(req: NextRequest) {
     tracer: _tracer,
     sessionStore,
     memoryStore: hasPersistence ? new SupabaseMemoryStore() : undefined,
+    pendingActionStore: hasPersistence ? new PendingActionStore() : undefined,
   })
 
   // 7. Executar orquestrador
@@ -136,6 +149,7 @@ export async function POST(req: NextRequest) {
         tokensUsed: response.tokensUsed,
         latencyMs: response.latencyMs,
         traceId: response.traceId,
+        pendingActions: response.pendingActions ?? [],
         persisted: hasPersistence,
         degraded: response.degraded ?? false,
       },

@@ -30,6 +30,8 @@ import { getAuthGateway } from '@/lib/data'
 import { SupabaseAgentSessionStore, isValidTenantId } from '@/lib/agent-session-store'
 import { SupabaseMemoryStore } from '@/lib/agent-memory-store'
 import { ToolLogPersister } from '@/lib/agent-tool-log-persister'
+import { PendingActionStore } from '@/lib/agent-pending-action-store'
+import { getAgentRateLimiter } from '@/lib/agent-rate-limiter'
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
 
@@ -108,8 +110,19 @@ export async function POST(req: NextRequest) {
   // 4. Tenant
   const tenantId = isValidTenantId(user.tenantId) ? user.tenantId : 'default'
   const hasPersistence = isValidTenantId(user.tenantId)
+  // Rate limiting
+  const rateTenantId = isValidTenantId(user.tenantId) ? user.tenantId : 'default'
+  const rateCheck = getAgentRateLimiter().check(rateTenantId, user.id, 'chat/stream')
+  if (!rateCheck.allowed) {
+    return new Response(JSON.stringify({ ok: false, error: 'Rate limit excedido' }), {
+      status: 429,
+      headers: { 'Retry-After': String(Math.ceil(rateCheck.retryAfterMs / 1000)) },
+    })
+  }
+
   const sessionStore = hasPersistence ? new SupabaseAgentSessionStore() : undefined
   const memoryStore = hasPersistence ? new SupabaseMemoryStore() : undefined
+  const pendingActionStore = hasPersistence ? new PendingActionStore() : undefined
   const memory = memoryStore ? new MemoryManager(_gateway, memoryStore) : _memory
 
   // 5. Stream response
@@ -124,6 +137,13 @@ export async function POST(req: NextRequest) {
       const start = Date.now()
       const traceId = randomUUID()
       const degradationReasons: string[] = []
+      const pendingActionsForDone: Array<{
+        id: string
+        toolName: string
+        description: string
+        impact: string
+        proposedInput: unknown
+      }> = []
 
       try {
         // ─── Resolve domain pack ────────────────────────────────────
@@ -304,6 +324,42 @@ export async function POST(req: NextRequest) {
                   tool_call_id: chunk.toolCall.id,
                 })
                 send({ type: 'tool_end', name: toolName, success: result.success })
+
+                // Check for write tool requiring confirmation (Sprint 6)
+                const toolDef = _tools.getDefinition(toolName)
+                if (
+                  toolDef?.authorization?.requiresConfirmation &&
+                  result.success &&
+                  (result.data as Record<string, unknown>)?.preview &&
+                  pendingActionStore
+                ) {
+                  const preview = (result.data as Record<string, unknown>).preview as {
+                    description: string
+                    impact: string
+                  }
+                  const pending = await pendingActionStore
+                    .create({
+                      sessionId: session.id,
+                      tenantId,
+                      userId: user.id,
+                      appId,
+                      toolName,
+                      proposedInput: inputParsed,
+                      description: preview.description,
+                      impact: preview.impact,
+                      traceId,
+                    })
+                    .catch(() => null)
+                  if (pending) {
+                    pendingActionsForDone.push({
+                      id: pending.id,
+                      toolName: pending.toolName,
+                      description: pending.description,
+                      impact: pending.impact,
+                      proposedInput: pending.proposedInput,
+                    })
+                  }
+                }
               } else if (chunk.type === 'done') {
                 totalTokens += Math.ceil(roundContent.length / 4)
               }
@@ -354,6 +410,42 @@ export async function POST(req: NextRequest) {
                   tool_call_id: toolCall.id,
                 })
                 send({ type: 'tool_end', name: toolName, success: result.success })
+
+                // Check for write tool requiring confirmation (Sprint 6)
+                const toolDef = _tools.getDefinition(toolName)
+                if (
+                  toolDef?.authorization?.requiresConfirmation &&
+                  result.success &&
+                  (result.data as Record<string, unknown>)?.preview &&
+                  pendingActionStore
+                ) {
+                  const preview = (result.data as Record<string, unknown>).preview as {
+                    description: string
+                    impact: string
+                  }
+                  const pending = await pendingActionStore
+                    .create({
+                      sessionId: session.id,
+                      tenantId,
+                      userId: user.id,
+                      appId,
+                      toolName,
+                      proposedInput: inputParsed,
+                      description: preview.description,
+                      impact: preview.impact,
+                      traceId,
+                    })
+                    .catch(() => null)
+                  if (pending) {
+                    pendingActionsForDone.push({
+                      id: pending.id,
+                      toolName: pending.toolName,
+                      description: pending.description,
+                      impact: pending.impact,
+                      proposedInput: pending.proposedInput,
+                    })
+                  }
+                }
               }
               gotToolCalls = true
             }
@@ -458,6 +550,7 @@ export async function POST(req: NextRequest) {
           traceId,
           latencyMs: totalLatencyMs,
           persisted: hasPersistence,
+          pendingActions: pendingActionsForDone.length > 0 ? pendingActionsForDone : undefined,
         })
       } catch (err) {
         send({

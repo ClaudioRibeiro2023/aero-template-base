@@ -30,6 +30,8 @@ export interface ToolAuthorization {
   allowedApps?: string[]
   /** Se requer que o tenant tenha feature flag ativa */
   requiredFeatureFlag?: string
+  /** Se true, a tool requer confirmação explícita antes de executar (tools de escrita) */
+  requiresConfirmation?: boolean
 }
 
 // ─── Contexto de execução ─────────────────────────────────────────────────────
@@ -41,6 +43,8 @@ export interface ToolExecutionContext {
   appId: string
   sessionId: string
   traceId: string
+  /** Modo de execução: preview (valida e retorna proposta) | execute (efetua a escrita) */
+  mode?: 'preview' | 'execute'
 }
 
 // ─── Resultado ────────────────────────────────────────────────────────────────
@@ -73,4 +77,31 @@ export interface ToolExecutionLog {
   durationMs: number
   source?: ToolDataSource
   executedAt: string
+}
+
+// ─── Ação pendente de confirmação ────────────────────────────────────────────
+
+export interface PendingAction {
+  id: string
+  sessionId: string
+  tenantId: string
+  userId: string
+  appId: string
+  toolName: string
+  proposedInput: unknown
+  description: string
+  impact: string
+  status: 'pending' | 'confirmed' | 'cancelled' | 'expired' | 'executed'
+  expiresAt: string
+  createdAt: string
+  confirmedAt?: string
+  executedAt?: string
+  result?: unknown
+  error?: string
+}
+
+export interface WriteToolPreview {
+  description: string
+  impact: string
+  details: Record<string, unknown>
 }

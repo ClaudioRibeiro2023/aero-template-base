@@ -3,11 +3,12 @@
 /**
  * useChat — estado completo do agente conversacional.
  *
- * Sprint 5: suporte a streaming SSE + fallback JSON.
- * sessionId persistido em localStorage por appId.
+ * Sprint 5: streaming SSE + fallback JSON
+ * Sprint 6: pending actions, confirmAction, cancelAction
  */
 import { useState, useCallback, useRef, useEffect } from 'react'
 import type { ChatMessageData } from '@/components/chat'
+import type { ActionCardData } from '@/components/chat/ActionCard'
 
 const uuid = () => crypto.randomUUID()
 
@@ -51,6 +52,13 @@ interface SSEEvent {
   degraded?: boolean
   traceId?: string
   latencyMs?: number
+  pendingActions?: Array<{
+    id: string
+    toolName: string
+    description: string
+    impact: string
+    proposedInput?: Record<string, unknown>
+  }>
 }
 
 function parseSSELine(line: string): SSEEvent | null {
@@ -74,6 +82,8 @@ export interface UseChat {
   toggle: () => void
   sendMessage: (content: string) => void
   clearSession: () => void
+  confirmAction: (actionId: string) => void
+  cancelAction: (actionId: string) => void
 }
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
@@ -100,6 +110,95 @@ export function useChat(appId = 'web'): UseChat {
     clearStoredSessionId(appId)
   }, [appId])
 
+  // ─── Helper: update action status in messages ──────────────────
+  const updateActionStatus = useCallback(
+    (actionId: string, newStatus: ActionCardData['status']) => {
+      setMessages(prev =>
+        prev.map(msg => {
+          if (!msg.pendingActions) return msg
+          return {
+            ...msg,
+            pendingActions: msg.pendingActions.map(a =>
+              a.id === actionId ? { ...a, status: newStatus } : a
+            ),
+          }
+        })
+      )
+    },
+    []
+  )
+
+  // ─── Confirm action ────────────────────────────────────────────
+  const confirmAction = useCallback(
+    async (actionId: string) => {
+      updateActionStatus(actionId, 'confirming')
+
+      try {
+        const res = await fetch('/api/agent/actions/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ actionId }),
+        })
+
+        const json = await res.json()
+
+        if (json.ok) {
+          updateActionStatus(actionId, 'executed')
+          // Add confirmation message
+          setMessages(prev => [
+            ...prev,
+            {
+              id: uuid(),
+              role: 'assistant',
+              content: `Ação executada com sucesso: ${json.data?.toolName ?? 'tool'}`,
+              createdAt: new Date(),
+            },
+          ])
+        } else {
+          updateActionStatus(actionId, 'failed')
+          setMessages(prev => [
+            ...prev,
+            {
+              id: uuid(),
+              role: 'assistant',
+              content: `Erro ao executar ação: ${json.error?.message ?? 'Erro desconhecido'}`,
+              createdAt: new Date(),
+            },
+          ])
+        }
+      } catch {
+        updateActionStatus(actionId, 'failed')
+      }
+    },
+    [updateActionStatus]
+  )
+
+  // ─── Cancel action ─────────────────────────────────────────────
+  const cancelAction = useCallback(
+    async (actionId: string) => {
+      updateActionStatus(actionId, 'cancelled')
+
+      try {
+        await fetch('/api/agent/actions/cancel', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ actionId }),
+        })
+      } catch {
+        // Already marked as cancelled in UI
+      }
+    },
+    [updateActionStatus]
+  )
+
+  // ─── Bind action callbacks to messages ─────────────────────────
+  // This ensures actions in messages have the current callbacks
+  const messagesWithCallbacks = messages.map(msg => ({
+    ...msg,
+    onConfirmAction: msg.pendingActions ? confirmAction : undefined,
+    onCancelAction: msg.pendingActions ? cancelAction : undefined,
+  }))
+
   const sendMessage = useCallback(
     async (content: string) => {
       const trimmed = content.trim()
@@ -114,11 +213,10 @@ export function useChat(appId = 'web'): UseChat {
       setMessages(prev => [...prev, userMessage])
       setIsLoading(true)
 
-      // ID para a mensagem do assistant (atualizada incrementalmente)
       const assistantId = uuid()
 
       try {
-        // ─── Tentar streaming primeiro ────────────────────────────
+        // ─── Streaming ───────────────────────────────────────
         const res = await fetch('/api/agent/chat/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -129,11 +227,8 @@ export function useChat(appId = 'web'): UseChat {
           }),
         })
 
-        if (!res.ok || !res.body) {
-          throw new Error('Stream indisponível')
-        }
+        if (!res.ok || !res.body) throw new Error('Stream indisponível')
 
-        // Adiciona placeholder de mensagem vazio
         setMessages(prev => [
           ...prev,
           { id: assistantId, role: 'assistant', content: '', createdAt: new Date() },
@@ -163,13 +258,21 @@ export function useChat(appId = 'web'): UseChat {
                 prev.map(m => (m.id === assistantId ? { ...m, content: currentContent } : m))
               )
             } else if (event.type === 'done') {
-              // Finaliza com metadados completos
               if (event.session?.id) {
                 sessionIdRef.current = event.session.id
                 writeStoredSessionId(appId, event.session.id)
               }
 
               const finalContent = event.content ?? accumulatedContent
+              const pendingActions: ActionCardData[] = (event.pendingActions ?? []).map(a => ({
+                id: a.id,
+                toolName: a.toolName,
+                description: a.description,
+                impact: a.impact,
+                details: a.proposedInput,
+                status: 'pending' as const,
+              }))
+
               setMessages(prev =>
                 prev.map(m =>
                   m.id === assistantId
@@ -178,6 +281,7 @@ export function useChat(appId = 'web'): UseChat {
                         content: finalContent || '—',
                         toolsUsed: event.toolsUsed,
                         latencyMs: event.latencyMs,
+                        pendingActions: pendingActions.length > 0 ? pendingActions : undefined,
                       }
                     : m
                 )
@@ -191,11 +295,10 @@ export function useChat(appId = 'web'): UseChat {
                 )
               )
             }
-            // tool_start/tool_end are handled silently for now (content keeps streaming)
           }
         }
       } catch {
-        // ─── Fallback para JSON ──────────────────────────────────
+        // ─── Fallback JSON ────────────────────────────────────
         try {
           const res = await fetch('/api/agent/chat', {
             method: 'POST',
@@ -221,6 +324,13 @@ export function useChat(appId = 'web'): UseChat {
               toolsUsed?: string[]
               latencyMs?: number
               session?: { id: string }
+              pendingActions?: Array<{
+                id: string
+                toolName: string
+                description: string
+                impact: string
+                proposedInput?: Record<string, unknown>
+              }>
             }
           }
 
@@ -231,8 +341,16 @@ export function useChat(appId = 'web'): UseChat {
             writeStoredSessionId(appId, json.data.session.id)
           }
 
+          const pendingActions: ActionCardData[] = (json.data.pendingActions ?? []).map(a => ({
+            id: a.id,
+            toolName: a.toolName,
+            description: a.description,
+            impact: a.impact,
+            details: a.proposedInput,
+            status: 'pending' as const,
+          }))
+
           setMessages(prev => {
-            // Remove placeholder if exists, then add final
             const cleaned = prev.filter(m => m.id !== assistantId)
             return [
               ...cleaned,
@@ -242,6 +360,7 @@ export function useChat(appId = 'web'): UseChat {
                 content: json.data.content || '—',
                 toolsUsed: json.data.toolsUsed,
                 latencyMs: json.data.latencyMs,
+                pendingActions: pendingActions.length > 0 ? pendingActions : undefined,
                 createdAt: new Date(),
               },
             ]
@@ -272,7 +391,7 @@ export function useChat(appId = 'web'): UseChat {
 
   return {
     isOpen,
-    messages,
+    messages: messagesWithCallbacks,
     isLoading,
     sessionId: sessionIdRef.current,
     open,
@@ -280,5 +399,7 @@ export function useChat(appId = 'web'): UseChat {
     toggle,
     sendMessage,
     clearSession,
+    confirmAction,
+    cancelAction,
   }
 }

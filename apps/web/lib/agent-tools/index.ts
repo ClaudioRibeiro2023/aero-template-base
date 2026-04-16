@@ -1,29 +1,37 @@
 /**
  * Agent Domain Tools — registro centralizado de tools reais de domínio.
  *
- * Sprint 4: primeira camada de tools que consultam dados vivos.
- * Todas respeitam RLS (tenant isolation), RBAC e são auditáveis.
- *
- * Para adicionar uma tool:
- * 1. Criar o arquivo em agent-tools/
- * 2. Importar e adicionar ao array domainTools
- * 3. Adicionar o nome em coreDomainPack.authorizedSources.internalTools
+ * Sprint 4: tools de leitura (consultas operacionais)
+ * Sprint 6: tools de escrita (com confirmação transacional)
  */
 import type { ToolDefinition } from '@template/agent'
 
+// ─── Read tools (Sprint 4) ──────────────────────────────────────────────────
 import { getOpenTasksTool } from './get-open-tasks'
 import { getTicketStatusTool } from './get-ticket-status'
 import { getPendingItemsTool } from './get-pending-items'
 import { getRecentActivityTool } from './get-recent-activity'
 import { getOperationalSnapshotTool } from './get-operational-snapshot'
 
+// ─── Write tools (Sprint 6) ─────────────────────────────────────────────────
+import { createTaskTool } from './create-task'
+import { updateTaskStatusTool } from './update-task-status'
+import { updateTaskPriorityTool } from './update-task-priority'
+import { assignTaskTool } from './assign-task'
+
 /** Todas as domain tools disponíveis */
 export const domainTools: ToolDefinition[] = [
+  // Leitura
   getOpenTasksTool,
   getTicketStatusTool,
   getPendingItemsTool,
   getRecentActivityTool,
   getOperationalSnapshotTool,
+  // Escrita (requer confirmação)
+  createTaskTool,
+  updateTaskStatusTool,
+  updateTaskPriorityTool,
+  assignTaskTool,
 ]
 
 /** Nomes das domain tools (para injeção no DomainPack.authorizedSources) */

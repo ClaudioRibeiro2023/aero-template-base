@@ -7,6 +7,7 @@
  * Exibe ferramentas usadas e latência quando disponível (role=assistant).
  */
 import { Bot, User, Wrench, Clock } from 'lucide-react'
+import { ActionCard, type ActionCardData } from './ActionCard'
 
 export interface ChatMessageData {
   id: string
@@ -14,6 +15,9 @@ export interface ChatMessageData {
   content: string
   toolsUsed?: string[]
   latencyMs?: number
+  pendingActions?: ActionCardData[]
+  onConfirmAction?: (actionId: string) => void
+  onCancelAction?: (actionId: string) => void
   createdAt: Date
 }
 
@@ -70,6 +74,20 @@ export function ChatMessage({ message }: { message: ChatMessageData }) {
                 {message.latencyMs}ms
               </span>
             )}
+          </div>
+        )}
+
+        {/* Pending actions (Sprint 6) */}
+        {!isUser && message.pendingActions && message.pendingActions.length > 0 && (
+          <div className="space-y-2 w-full max-w-[80%]">
+            {message.pendingActions.map(action => (
+              <ActionCard
+                key={action.id}
+                action={action}
+                onConfirm={message.onConfirmAction ?? (() => {})}
+                onCancel={message.onCancelAction ?? (() => {})}
+              />
+            ))}
           </div>
         )}
       </div>

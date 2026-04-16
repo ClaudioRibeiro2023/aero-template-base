@@ -20,7 +20,7 @@ import { randomUUID } from 'crypto'
 import type { IAIGateway, AIMessage } from '../types/gateway'
 import type { AgentRequest, AgentResponse, AgentContext, AgentSession } from '../types/agent'
 import type { IMemoryManager, IExternalMemoryStore, MemoryScope } from '../types/memory'
-import type { ToolExecutionContext } from '../types/tool'
+import type { ToolExecutionContext, PendingAction } from '../types/tool'
 import type { IAgentSessionStore } from '../types/session-store'
 import { PolicyEngine } from '../policy/PolicyEngine'
 import { DomainPackRegistry } from '../domain-packs/DomainPackRegistry'
@@ -53,6 +53,20 @@ export interface OrchestratorConfig {
    * Opcional — se não injetado, apenas session memory disponível.
    */
   memoryStore?: IExternalMemoryStore
+  /** Store de ações pendentes (confirmação transacional). */
+  pendingActionStore?: {
+    create(params: {
+      sessionId: string
+      tenantId: string
+      userId: string
+      appId: string
+      toolName: string
+      proposedInput: unknown
+      description: string
+      impact: string
+      traceId?: string
+    }): Promise<PendingAction>
+  }
 }
 
 export class AgentOrchestrator {
@@ -62,8 +76,18 @@ export class AgentOrchestrator {
     const start = Date.now()
     const traceId = randomUUID()
     const degradationReasons: string[] = []
+    const pendingActions: PendingAction[] = []
 
-    const { gateway, tools, policy, packRegistry, tracer, sessionStore, memoryStore } = this.config
+    const {
+      gateway,
+      tools,
+      policy,
+      packRegistry,
+      tracer,
+      sessionStore,
+      memoryStore,
+      pendingActionStore,
+    } = this.config
 
     // Cria MemoryManager com o externalStore injetado (se disponível)
     const memory: IMemoryManager = memoryStore
@@ -210,6 +234,40 @@ export class AgentOrchestrator {
           sourcesUsed.push(result.source)
         }
 
+        // Sprint 6: se tool requer confirmação e retornou preview, criar pending action
+        const toolDef = tools.getDefinition(toolName)
+        if (
+          toolDef?.authorization.requiresConfirmation &&
+          result.success &&
+          (result.data as Record<string, unknown>)?.preview &&
+          pendingActionStore
+        ) {
+          const preview = (result.data as Record<string, unknown>).preview as {
+            description: string
+            impact: string
+          }
+          const pendingAction = await pendingActionStore
+            .create({
+              sessionId: session.id,
+              tenantId: request.tenantId,
+              userId: request.userId,
+              appId: request.appId,
+              toolName,
+              proposedInput: inputParsed,
+              description: preview.description,
+              impact: preview.impact,
+              traceId,
+            })
+            .catch(err => {
+              console.error('[AgentOrchestrator] Erro ao criar pending action:', err)
+              return null
+            })
+
+          if (pendingAction) {
+            pendingActions.push(pendingAction)
+          }
+        }
+
         conversationMessages.push({
           role: 'tool',
           content: JSON.stringify(result.success ? result.data : { error: result.error }),
@@ -320,6 +378,7 @@ export class AgentOrchestrator {
       traceId,
       degraded: degraded || undefined,
       degradationReasons: degraded ? degradationReasons : undefined,
+      pendingActions: pendingActions.length > 0 ? pendingActions : undefined,
     }
   }
 

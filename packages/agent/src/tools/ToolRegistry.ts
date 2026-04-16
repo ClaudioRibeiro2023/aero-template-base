@@ -36,6 +36,11 @@ export class ToolRegistry {
     for (const tool of tools) this.register(tool)
   }
 
+  /** Retorna a definição de uma tool pelo nome */
+  getDefinition(toolName: string): ToolDefinition | undefined {
+    return this.tools.get(toolName)
+  }
+
   /** Configura callback invocado após cada writeLog (para persistência externa) */
   onLogWritten(callback: (log: ToolExecutionLog) => void): void {
     this._onLogWritten = callback

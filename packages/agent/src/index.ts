@@ -11,6 +11,7 @@
 
 // ─── Tipos centrais ───────────────────────────────────────────────────────────
 export * from './types/index'
+export type { PendingAction, WriteToolPreview } from './types/index'
 
 // ─── Gateway ──────────────────────────────────────────────────────────────────
 export { OpenAIGateway, getAIGateway } from './gateway/index'
