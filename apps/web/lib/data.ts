@@ -65,6 +65,7 @@ class DemoAuthGateway implements IAuthGateway {
     id: 'demo-user-id',
     email: 'admin@demo.com',
     role: 'ADMIN' as const,
+    tenantId: null,
   }
 
   async getUser(): Promise<AuthGatewayResult> {

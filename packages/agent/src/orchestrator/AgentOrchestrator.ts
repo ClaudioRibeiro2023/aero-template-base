@@ -2,28 +2,37 @@
  * Agent Orchestrator — pipeline de decisão do agente.
  *
  * Fluxo por turno:
- * 1. Verificar policy (RBAC + escopo)
- * 2. Resolver Domain Pack
- * 3. Recuperar contexto de memória
- * 4. Montar prompt com contexto enxuto
- * 5. Chamar AI Gateway
- * 6. Executar tool calls (se houver) — loop até stop
- * 7. Gravar fatos na memória de sessão
- * 8. Registrar trace
- * 9. Retornar resposta consolidada
+ * 1. Resolver Domain Pack
+ * 2. Verificar policy (RBAC + escopo)
+ * 3. Criar/recuperar sessão (via IAgentSessionStore ou in-memory)
+ * 4. Carregar histórico (via IAgentSessionStore ou vazio)
+ * 5. Recuperar contexto de memória
+ * 6. Montar mensagens (system + history + user)
+ * 7. Obter tools disponíveis
+ * 8. Loop de inferência + tool calls (max 5 rounds)
+ * 9. Persistir par de mensagens (user + assistant)
+ * 10. Atualizar sessão (turn_count, last_active_at)
+ * 11. Gravar fatos de metadados na memória de sessão
+ * 12. Registrar trace
+ * 13. Retornar resposta consolidada
  */
 import { randomUUID } from 'crypto'
 import type { IAIGateway, AIMessage } from '../types/gateway'
 import type { AgentRequest, AgentResponse, AgentContext, AgentSession } from '../types/agent'
 import type { IMemoryManager, MemoryScope } from '../types/memory'
 import type { ToolExecutionContext } from '../types/tool'
+import type { IAgentSessionStore } from '../types/session-store'
 import { PolicyEngine } from '../policy/PolicyEngine'
 import { DomainPackRegistry } from '../domain-packs/DomainPackRegistry'
 import { ToolRegistry } from '../tools/ToolRegistry'
 import { AgentTracer } from '../observability/AgentTracer'
 import { DEFAULT_MODEL } from '../types/gateway'
 
-const MAX_TOOL_ROUNDS = 5 // máximo de rounds de tool calls por turno
+/** Máximo de rounds de tool calls por turno (previne loops infinitos) */
+const MAX_TOOL_ROUNDS = 5
+
+/** Janela de histórico injetada no prompt (mensagens anteriores) */
+const HISTORY_WINDOW = 30
 
 export interface OrchestratorConfig {
   gateway: IAIGateway
@@ -32,6 +41,12 @@ export interface OrchestratorConfig {
   policy: PolicyEngine
   packRegistry: DomainPackRegistry
   tracer: AgentTracer
+  /**
+   * Store de persistência de sessões/mensagens.
+   * Opcional — se não injetado, a sessão é volátil (in-memory por request).
+   * Sprint 2: injeta SupabaseAgentSessionStore.
+   */
+  sessionStore?: IAgentSessionStore
 }
 
 export class AgentOrchestrator {
@@ -41,7 +56,7 @@ export class AgentOrchestrator {
     const start = Date.now()
     const traceId = randomUUID()
 
-    const { gateway, memory, tools, policy, packRegistry, tracer } = this.config
+    const { gateway, memory, tools, policy, packRegistry, tracer, sessionStore } = this.config
 
     // ─── 1. Resolver domain pack ──────────────────────────────────────────────
 
@@ -59,7 +74,10 @@ export class AgentOrchestrator {
 
     // ─── 3. Criar/recuperar sessão ────────────────────────────────────────────
 
-    const session = await this.resolveSession(request)
+    const session = sessionStore
+      ? await sessionStore.resolveSession(request)
+      : this.resolveSessionInMemory(request)
+
     const scope: MemoryScope = {
       tenantId: request.tenantId,
       appId: request.appId,
@@ -67,21 +85,26 @@ export class AgentOrchestrator {
       sessionId: session.id,
     }
 
-    // ─── 4. Recuperar contexto de memória ─────────────────────────────────────
+    // ─── 4. Carregar histórico ────────────────────────────────────────────────
+
+    const history = sessionStore
+      ? await sessionStore.loadHistory(session.id, request.tenantId, HISTORY_WINDOW)
+      : []
+
+    // ─── 5. Recuperar contexto de memória ─────────────────────────────────────
 
     const memoryContext = await memory.getContextForOrchestrator(request.message, scope)
 
-    // ─── 5. Montar mensagens ──────────────────────────────────────────────────
+    // ─── 6. Montar mensagens ──────────────────────────────────────────────────
 
     const systemPrompt = this.buildSystemPrompt(domainPack, memoryContext)
-    const history = this.buildHistory(session)
     const messages: AIMessage[] = [
       { role: 'system', content: systemPrompt },
       ...history,
       { role: 'user', content: request.message },
     ]
 
-    // ─── 6. Obter tools disponíveis ───────────────────────────────────────────
+    // ─── 7. Obter tools disponíveis ───────────────────────────────────────────
 
     const toolContext: ToolExecutionContext = {
       userId: request.userId,
@@ -93,7 +116,7 @@ export class AgentOrchestrator {
     }
     const availableTools = tools.getAvailableTools(toolContext)
 
-    // ─── 7. Loop de inferência + tool calls ──────────────────────────────────
+    // ─── 8. Loop de inferência + tool calls ───────────────────────────────────
 
     let finalContent = ''
     const toolsUsed: string[] = []
@@ -108,7 +131,7 @@ export class AgentOrchestrator {
       const aiCallStart = Date.now()
       const response = await gateway.complete({
         messages: conversationMessages,
-        model: domainPack.identity.id === 'core' ? DEFAULT_MODEL : DEFAULT_MODEL,
+        model: DEFAULT_MODEL,
         temperature: 0.3,
         tools: availableTools.length > 0 ? availableTools : undefined,
         traceId,
@@ -135,7 +158,6 @@ export class AgentOrchestrator {
         const toolName = toolCall.function.name
         toolsUsed.push(toolName)
 
-        // Verifica policy antes de executar
         const toolPolicy = policy.checkToolAccess(toolName, request.userRole, domainPack)
         if (!toolPolicy.allowed) {
           conversationMessages.push({
@@ -167,7 +189,40 @@ export class AgentOrchestrator {
       }
     }
 
-    // ─── 8. Gravar fatos de sessão ────────────────────────────────────────────
+    const totalLatencyMs = Date.now() - start
+
+    // ─── 9. Persistir mensagens ───────────────────────────────────────────────
+
+    if (sessionStore && finalContent) {
+      await sessionStore
+        .persistMessages({
+          sessionId: session.id,
+          tenantId: request.tenantId,
+          userId: request.userId,
+          userMessage: request.message,
+          assistantMessage: finalContent,
+          model: DEFAULT_MODEL,
+          tokensUsed: totalTokens,
+          latencyMs: totalLatencyMs,
+          traceId,
+        })
+        .catch(err => {
+          // Não deixa falha de persistência derrubar a resposta ao usuário
+          console.error('[AgentOrchestrator] Erro ao persistir mensagens:', err)
+        })
+    }
+
+    // ─── 10. Atualizar sessão ─────────────────────────────────────────────────
+
+    const updatedTurnCount = session.turnCount + 1
+
+    if (sessionStore) {
+      await sessionStore.touchSession(session.id, updatedTurnCount).catch(err => {
+        console.error('[AgentOrchestrator] Erro ao atualizar sessão:', err)
+      })
+    }
+
+    // ─── 11. Gravar fatos de metadados na memória de sessão ───────────────────
 
     if (request.metadata) {
       for (const [key, value] of Object.entries(request.metadata)) {
@@ -181,9 +236,8 @@ export class AgentOrchestrator {
       }
     }
 
-    // ─── 9. Registrar trace ───────────────────────────────────────────────────
+    // ─── 12. Registrar trace ──────────────────────────────────────────────────
 
-    const totalLatencyMs = Date.now() - start
     tracer.recordTrace({
       traceId,
       sessionId: session.id,
@@ -206,13 +260,13 @@ export class AgentOrchestrator {
       completedAt: new Date().toISOString(),
     })
 
-    // ─── 10. Retornar resposta ────────────────────────────────────────────────
+    // ─── 13. Retornar resposta ────────────────────────────────────────────────
 
     return {
       content: finalContent,
       session: {
         ...session,
-        turnCount: session.turnCount + 1,
+        turnCount: updatedTurnCount,
         lastActiveAt: new Date().toISOString(),
       },
       sources: sourcesUsed.map(s => ({ type: s as never, label: s })),
@@ -226,9 +280,8 @@ export class AgentOrchestrator {
 
   // ─── privados ──────────────────────────────────────────────────────────────
 
-  private async resolveSession(request: AgentRequest): Promise<AgentSession> {
-    // Sprint 2: recuperar sessão do Supabase por request.sessionId
-    // Sprint 1: sessão em memória
+  /** Fallback in-memory quando sessionStore não está injetado (demo/dev) */
+  private resolveSessionInMemory(request: AgentRequest): AgentSession {
     const now = new Date().toISOString()
     return {
       id: request.sessionId ?? randomUUID(),
@@ -264,11 +317,5 @@ export class AgentOrchestrator {
     // TODO Sprint 4: injetar excerpts de documentos
 
     return prompt
-  }
-
-  private buildHistory(_session: AgentSession): AIMessage[] {
-    // Sprint 2: buscar histórico do Supabase (limitado a N mensagens)
-    // Sprint 1: sem histórico persistido
-    return []
   }
 }

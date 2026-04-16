@@ -1,9 +1,14 @@
 /**
  * POST /api/agent/chat
  *
- * Endpoint principal do agente conversacional.
- * Autenticação herdada do template (getAuthUser).
- * Resposta JSON síncrona (streaming via SSE em Sprint 2+).
+ * Endpoint do agente conversacional.
+ * Sprint 2: persistência real via SupabaseAgentSessionStore.
+ *
+ * Arquitetura de singletons:
+ *   - Infraestrutura stateless (gateway, tools, policy, tracer, packRegistry, memory)
+ *     → inicializada uma vez por processo (warm entre requests)
+ *   - SupabaseAgentSessionStore → criada por request (precisa de cookies context)
+ *   - AgentOrchestrator → criado por request (combina singletons + store per-request)
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -17,7 +22,8 @@ import {
   DomainPackRegistry,
   coreDomainPack,
 } from '@template/agent'
-import { getAuthUser } from '@/lib/auth-guard'
+import { getAuthGateway } from '@/lib/data'
+import { SupabaseAgentSessionStore, isValidTenantId } from '@/lib/agent-session-store'
 import { badRequest, unauthorized, serverError } from '@/lib/api-response'
 
 // ─── Schema de entrada ────────────────────────────────────────────────────────
@@ -29,37 +35,28 @@ const ChatRequestSchema = z.object({
   metadata: z.record(z.unknown()).optional(),
 })
 
-// ─── Singletons por processo (warm entre requisições) ──────────────────────────
+// ─── Infraestrutura stateless — singletons por processo ──────────────────────
+//
+// Estes objetos são stateless entre requests: não guardam cookies,
+// não têm referência a usuário específico, podem ser reutilizados com segurança.
 
-function buildOrchestrator(): AgentOrchestrator {
-  const gateway = new OpenAIGateway()
-  const memory = new MemoryManager(gateway)
-  const tools = new ToolRegistry()
-  const policy = new PolicyEngine()
-  const tracer = new AgentTracer()
-  const packRegistry = new DomainPackRegistry()
-
-  // Registra o core pack como fallback
-  packRegistry.register(coreDomainPack)
-
-  // TODO Sprint 2: registrar domain packs específicos das aplicações
-  // packRegistry.register(financialDomainPack)
-
-  return new AgentOrchestrator({ gateway, memory, tools, policy, packRegistry, tracer })
-}
-
-let _orchestrator: AgentOrchestrator | null = null
-
-function getOrchestrator(): AgentOrchestrator {
-  if (!_orchestrator) _orchestrator = buildOrchestrator()
-  return _orchestrator
-}
+const _gateway = new OpenAIGateway()
+const _memory = new MemoryManager(_gateway)
+const _tools = new ToolRegistry()
+const _policy = new PolicyEngine()
+const _tracer = new AgentTracer()
+const _packRegistry = (() => {
+  const r = new DomainPackRegistry()
+  r.register(coreDomainPack)
+  // TODO Sprint 3: r.register(domainPackEspecífico)
+  return r
+})()
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  // 1. Autenticação
-  const { user } = await getAuthUser()
+  // 1. Autenticação — usa getAuthGateway() que inclui tenantId
+  const { user } = await getAuthGateway().getUser()
   if (!user) return unauthorized()
 
   // 2. Parse do body
@@ -78,23 +75,41 @@ export async function POST(req: NextRequest) {
   const { message, sessionId, metadata } = parsed.data
   const appId = parsed.data.appId ?? 'web'
 
-  // 3. Verificar se OPENAI_API_KEY está configurada
+  // 3. Verificar OPENAI_API_KEY
   if (!process.env.OPENAI_API_KEY) {
     console.error('[AgentChat] OPENAI_API_KEY não configurada')
-    return serverError('Serviço de IA não configurado')
+    return serverError('Serviço de IA não configurado. Configure OPENAI_API_KEY.')
   }
 
-  // 4. Executar orquestrador
-  try {
-    const orchestrator = getOrchestrator()
+  // 4. Resolver tenantId
+  //    Se tenantId for UUID válido → persistência real (Supabase)
+  //    Se null ou inválido (ex: demo mode) → sessão efêmera in-memory
+  const tenantId = isValidTenantId(user.tenantId) ? user.tenantId : 'default'
+  const hasPersistence = isValidTenantId(user.tenantId)
 
+  // 5. Session store por request (precisa de cookies context)
+  const sessionStore = hasPersistence ? new SupabaseAgentSessionStore() : undefined
+
+  // 6. Orquestrador por request (combina singletons + store)
+  const orchestrator = new AgentOrchestrator({
+    gateway: _gateway,
+    memory: _memory,
+    tools: _tools,
+    policy: _policy,
+    packRegistry: _packRegistry,
+    tracer: _tracer,
+    sessionStore,
+  })
+
+  // 7. Executar orquestrador
+  try {
     const response = await orchestrator.run({
       message,
       sessionId: sessionId ?? null,
       userId: user.id,
-      tenantId: 'default', // Sprint 2: extrair do perfil via getAuthGateway()
+      tenantId,
       appId,
-      userRole: user.role ?? 'viewer',
+      userRole: (user.role ?? 'VIEWER').toLowerCase(),
       metadata,
     })
 
@@ -109,6 +124,7 @@ export async function POST(req: NextRequest) {
         tokensUsed: response.tokensUsed,
         latencyMs: response.latencyMs,
         traceId: response.traceId,
+        persisted: hasPersistence,
       },
     })
   } catch (err) {

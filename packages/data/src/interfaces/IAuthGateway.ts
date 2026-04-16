@@ -10,6 +10,8 @@ export interface AuthenticatedUser {
   id: string
   email: string
   role: UserRole
+  /** tenant_id do perfil. Null em demo mode ou quando perfil não tem tenant. */
+  tenantId: string | null
 }
 
 export interface AuthGatewayResult {

@@ -3,22 +3,52 @@
 /**
  * useChat — estado completo do agente conversacional.
  *
- * Gerencia:
- * - Visibilidade do painel (open/close/toggle)
- * - Histórico de mensagens (local, Sprint 1 — sem persistência)
- * - Chamadas para POST /api/agent/chat
- * - sessionId por conversa (gerado no cliente, enviado ao backend)
- * - clearSession para reiniciar conversa
+ * Sprint 2: sessionId persistido em localStorage por appId.
+ * Isso permite retomar a conversa após reload da página.
  *
- * Sprint 2: persistir sessionId + mensagens no Supabase via agentSessionService.
+ * Regras de sessão:
+ * - Na primeira montagem, lê sessionId do localStorage (se existir)
+ * - Após cada resposta, atualiza sessionId com o retornado pelo backend
+ * - clearSession() apaga o localStorage e gera novo sessionId
+ * - Chave de localStorage: `agent_session_<appId>` (isolada por app)
  */
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import type { ChatMessageData } from '@/components/chat'
 
-// crypto.randomUUID() é Web API disponível em browsers modernos e Next.js RSC/Client
+// crypto.randomUUID() é Web API disponível em browsers modernos
 const uuid = () => crypto.randomUUID()
 
-// ─── Tipo exportado para tipagem do prop chat={...} ───────────────────────────
+// ─── Chave de localStorage por appId ─────────────────────────────────────────
+
+function storageKey(appId: string) {
+  return `agent_session_${appId}`
+}
+
+function readStoredSessionId(appId: string): string | null {
+  try {
+    return localStorage.getItem(storageKey(appId))
+  } catch {
+    return null
+  }
+}
+
+function writeStoredSessionId(appId: string, sessionId: string) {
+  try {
+    localStorage.setItem(storageKey(appId), sessionId)
+  } catch {
+    // Ignorar erros de localStorage (modo privado, storage cheio, etc.)
+  }
+}
+
+function clearStoredSessionId(appId: string) {
+  try {
+    localStorage.removeItem(storageKey(appId))
+  } catch {
+    // ignora
+  }
+}
+
+// ─── Tipos exportados ─────────────────────────────────────────────────────────
 
 export interface UseChat {
   isOpen: boolean
@@ -38,7 +68,18 @@ export function useChat(appId = 'web'): UseChat {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessageData[]>([])
   const [isLoading, setIsLoading] = useState(false)
+
+  // Inicializa sessionId com valor do localStorage (se existir)
+  // useRef para não causar re-render ao atualizar
   const sessionIdRef = useRef<string>(uuid())
+
+  // Após hydratação, restaura sessionId do localStorage
+  useEffect(() => {
+    const stored = readStoredSessionId(appId)
+    if (stored) {
+      sessionIdRef.current = stored
+    }
+  }, [appId])
 
   const open = useCallback(() => setIsOpen(true), [])
   const close = useCallback(() => setIsOpen(false), [])
@@ -46,15 +87,18 @@ export function useChat(appId = 'web'): UseChat {
 
   const clearSession = useCallback(() => {
     setMessages([])
-    sessionIdRef.current = uuid()
-  }, [])
+    const newId = uuid()
+    sessionIdRef.current = newId
+    clearStoredSessionId(appId)
+    // Não persiste o novo UUID ainda — será persitido após primeira mensagem
+  }, [appId])
 
   const sendMessage = useCallback(
     async (content: string) => {
       const trimmed = content.trim()
       if (!trimmed || isLoading) return
 
-      // Adiciona mensagem do usuário imediatamente
+      // Otimistic: adiciona mensagem do usuário imediatamente
       const userMessage: ChatMessageData = {
         id: uuid(),
         role: 'user',
@@ -77,7 +121,9 @@ export function useChat(appId = 'web'): UseChat {
 
         if (!res.ok) {
           const err = await res.json().catch(() => ({ error: { message: 'Erro na requisição' } }))
-          throw new Error(err?.error?.message ?? `HTTP ${res.status}`)
+          throw new Error(
+            (err as { error?: { message?: string } })?.error?.message ?? `HTTP ${res.status}`
+          )
         }
 
         const json = (await res.json()) as {
@@ -92,9 +138,10 @@ export function useChat(appId = 'web'): UseChat {
 
         if (!json.ok) throw new Error('Resposta inválida do agente')
 
-        // Atualiza sessionId com o retornado pelo backend (pode ter sido gerado lá)
+        // Sincroniza sessionId com o retornado pelo backend (pode ser novo)
         if (json.data.session?.id) {
           sessionIdRef.current = json.data.session.id
+          writeStoredSessionId(appId, json.data.session.id)
         }
 
         const assistantMessage: ChatMessageData = {

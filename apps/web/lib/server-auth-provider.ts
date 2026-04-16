@@ -90,6 +90,9 @@ export class SupabaseServerAuth implements IServerAuthProvider {
       // Role extraído de app_metadata (imutável pelo client — seguro para RBAC).
       // Supabase getUser() já retorna app_metadata sem query extra.
       role: ((user.app_metadata?.role as string) || 'VIEWER').toUpperCase() as UserRole,
+      // tenantId não disponível no middleware (sem query ao profiles para performance).
+      // Será populado nas API routes via SupabaseAuthGateway.getUser().
+      tenantId: null,
     }
 
     return { user: authenticatedUser, response: supabaseResponse }

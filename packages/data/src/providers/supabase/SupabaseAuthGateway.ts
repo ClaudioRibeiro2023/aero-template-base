@@ -25,10 +25,10 @@ export class SupabaseAuthGateway implements IAuthGateway {
       return { user: null, error: 'Unauthorized' }
     }
 
-    // Buscar role do perfil
+    // Buscar role e tenant_id do perfil
     const { data: profile } = await client
       .from('profiles')
-      .select('role')
+      .select('role, tenant_id')
       .eq('id', user.id)
       .single()
 
@@ -37,6 +37,7 @@ export class SupabaseAuthGateway implements IAuthGateway {
         id: user.id,
         email: user.email ?? '',
         role: (profile?.role ?? 'VIEWER') as UserRole,
+        tenantId: (profile?.tenant_id as string | null) ?? null,
       },
       error: null,
     }
