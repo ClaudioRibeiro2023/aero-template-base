@@ -26,6 +26,7 @@ import { domainTools } from '@/lib/agent-tools'
 import { getAuthGateway } from '@/lib/data'
 import { SupabaseAgentSessionStore, isValidTenantId } from '@/lib/agent-session-store'
 import { SupabaseMemoryStore } from '@/lib/agent-memory-store'
+import { ToolLogPersister } from '@/lib/agent-tool-log-persister'
 import { badRequest, unauthorized, serverError } from '@/lib/api-response'
 
 // ─── Schema de entrada ────────────────────────────────────────────────────────
@@ -49,6 +50,10 @@ const _tools = (() => {
   registry.registerAll(domainTools)
   return registry
 })()
+const _toolLogPersister = new ToolLogPersister()
+_tools.onLogWritten(log => {
+  _toolLogPersister.persist(log).catch(() => {})
+})
 const _policy = new PolicyEngine()
 const _tracer = new AgentTracer()
 const _packRegistry = (() => {

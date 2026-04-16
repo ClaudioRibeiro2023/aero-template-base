@@ -3,22 +3,15 @@
 /**
  * useChat — estado completo do agente conversacional.
  *
- * Sprint 2: sessionId persistido em localStorage por appId.
- * Isso permite retomar a conversa após reload da página.
- *
- * Regras de sessão:
- * - Na primeira montagem, lê sessionId do localStorage (se existir)
- * - Após cada resposta, atualiza sessionId com o retornado pelo backend
- * - clearSession() apaga o localStorage e gera novo sessionId
- * - Chave de localStorage: `agent_session_<appId>` (isolada por app)
+ * Sprint 5: suporte a streaming SSE + fallback JSON.
+ * sessionId persistido em localStorage por appId.
  */
 import { useState, useCallback, useRef, useEffect } from 'react'
 import type { ChatMessageData } from '@/components/chat'
 
-// crypto.randomUUID() é Web API disponível em browsers modernos
 const uuid = () => crypto.randomUUID()
 
-// ─── Chave de localStorage por appId ─────────────────────────────────────────
+// ─── localStorage helpers ────────────────────────────────────────────────────
 
 function storageKey(appId: string) {
   return `agent_session_${appId}`
@@ -35,20 +28,41 @@ function readStoredSessionId(appId: string): string | null {
 function writeStoredSessionId(appId: string, sessionId: string) {
   try {
     localStorage.setItem(storageKey(appId), sessionId)
-  } catch {
-    // Ignorar erros de localStorage (modo privado, storage cheio, etc.)
-  }
+  } catch {}
 }
 
 function clearStoredSessionId(appId: string) {
   try {
     localStorage.removeItem(storageKey(appId))
+  } catch {}
+}
+
+// ─── SSE parser ──────────────────────────────────────────────────────────────
+
+interface SSEEvent {
+  type: string
+  content?: string
+  name?: string
+  success?: boolean
+  error?: string
+  session?: { id: string }
+  sources?: Array<{ type: string; label: string; detail?: string }>
+  toolsUsed?: string[]
+  degraded?: boolean
+  traceId?: string
+  latencyMs?: number
+}
+
+function parseSSELine(line: string): SSEEvent | null {
+  if (!line.startsWith('data: ')) return null
+  try {
+    return JSON.parse(line.slice(6)) as SSEEvent
   } catch {
-    // ignora
+    return null
   }
 }
 
-// ─── Tipos exportados ─────────────────────────────────────────────────────────
+// ─── Tipos ───────────────────────────────────────────────────────────────────
 
 export interface UseChat {
   isOpen: boolean
@@ -62,23 +76,18 @@ export interface UseChat {
   clearSession: () => void
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
+// ─── Hook ────────────────────────────────────────────────────────────────────
 
 export function useChat(appId = 'web'): UseChat {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessageData[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  // Inicializa sessionId com valor do localStorage (se existir)
-  // useRef para não causar re-render ao atualizar
   const sessionIdRef = useRef<string>(uuid())
 
-  // Após hydratação, restaura sessionId do localStorage
   useEffect(() => {
     const stored = readStoredSessionId(appId)
-    if (stored) {
-      sessionIdRef.current = stored
-    }
+    if (stored) sessionIdRef.current = stored
   }, [appId])
 
   const open = useCallback(() => setIsOpen(true), [])
@@ -87,10 +96,8 @@ export function useChat(appId = 'web'): UseChat {
 
   const clearSession = useCallback(() => {
     setMessages([])
-    const newId = uuid()
-    sessionIdRef.current = newId
+    sessionIdRef.current = uuid()
     clearStoredSessionId(appId)
-    // Não persiste o novo UUID ainda — será persitido após primeira mensagem
   }, [appId])
 
   const sendMessage = useCallback(
@@ -98,7 +105,6 @@ export function useChat(appId = 'web'): UseChat {
       const trimmed = content.trim()
       if (!trimmed || isLoading) return
 
-      // Otimistic: adiciona mensagem do usuário imediatamente
       const userMessage: ChatMessageData = {
         id: uuid(),
         role: 'user',
@@ -108,8 +114,12 @@ export function useChat(appId = 'web'): UseChat {
       setMessages(prev => [...prev, userMessage])
       setIsLoading(true)
 
+      // ID para a mensagem do assistant (atualizada incrementalmente)
+      const assistantId = uuid()
+
       try {
-        const res = await fetch('/api/agent/chat', {
+        // ─── Tentar streaming primeiro ────────────────────────────
+        const res = await fetch('/api/agent/chat/stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -119,52 +129,140 @@ export function useChat(appId = 'web'): UseChat {
           }),
         })
 
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({ error: { message: 'Erro na requisição' } }))
-          throw new Error(
-            (err as { error?: { message?: string } })?.error?.message ?? `HTTP ${res.status}`
-          )
+        if (!res.ok || !res.body) {
+          throw new Error('Stream indisponível')
         }
 
-        const json = (await res.json()) as {
-          ok: boolean
-          data: {
-            content: string
-            toolsUsed?: string[]
-            latencyMs?: number
-            session?: { id: string }
+        // Adiciona placeholder de mensagem vazio
+        setMessages(prev => [
+          ...prev,
+          { id: assistantId, role: 'assistant', content: '', createdAt: new Date() },
+        ])
+
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+        let accumulatedContent = ''
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() ?? ''
+
+          for (const line of lines) {
+            const event = parseSSELine(line.trim())
+            if (!event) continue
+
+            if (event.type === 'delta' && event.content) {
+              accumulatedContent += event.content
+              const currentContent = accumulatedContent
+              setMessages(prev =>
+                prev.map(m => (m.id === assistantId ? { ...m, content: currentContent } : m))
+              )
+            } else if (event.type === 'done') {
+              // Finaliza com metadados completos
+              if (event.session?.id) {
+                sessionIdRef.current = event.session.id
+                writeStoredSessionId(appId, event.session.id)
+              }
+
+              const finalContent = event.content ?? accumulatedContent
+              setMessages(prev =>
+                prev.map(m =>
+                  m.id === assistantId
+                    ? {
+                        ...m,
+                        content: finalContent || '—',
+                        toolsUsed: event.toolsUsed,
+                        latencyMs: event.latencyMs,
+                      }
+                    : m
+                )
+              )
+            } else if (event.type === 'error') {
+              setMessages(prev =>
+                prev.map(m =>
+                  m.id === assistantId
+                    ? { ...m, content: `Erro: ${event.error ?? 'Desconhecido'}` }
+                    : m
+                )
+              )
+            }
+            // tool_start/tool_end are handled silently for now (content keeps streaming)
           }
         }
+      } catch {
+        // ─── Fallback para JSON ──────────────────────────────────
+        try {
+          const res = await fetch('/api/agent/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              message: trimmed,
+              sessionId: sessionIdRef.current,
+              appId,
+            }),
+          })
 
-        if (!json.ok) throw new Error('Resposta inválida do agente')
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: { message: 'Erro na requisição' } }))
+            throw new Error(
+              (err as { error?: { message?: string } })?.error?.message ?? `HTTP ${res.status}`
+            )
+          }
 
-        // Sincroniza sessionId com o retornado pelo backend (pode ser novo)
-        if (json.data.session?.id) {
-          sessionIdRef.current = json.data.session.id
-          writeStoredSessionId(appId, json.data.session.id)
+          const json = (await res.json()) as {
+            ok: boolean
+            data: {
+              content: string
+              toolsUsed?: string[]
+              latencyMs?: number
+              session?: { id: string }
+            }
+          }
+
+          if (!json.ok) throw new Error('Resposta inválida do agente')
+
+          if (json.data.session?.id) {
+            sessionIdRef.current = json.data.session.id
+            writeStoredSessionId(appId, json.data.session.id)
+          }
+
+          setMessages(prev => {
+            // Remove placeholder if exists, then add final
+            const cleaned = prev.filter(m => m.id !== assistantId)
+            return [
+              ...cleaned,
+              {
+                id: assistantId,
+                role: 'assistant' as const,
+                content: json.data.content || '—',
+                toolsUsed: json.data.toolsUsed,
+                latencyMs: json.data.latencyMs,
+                createdAt: new Date(),
+              },
+            ]
+          })
+        } catch (fallbackErr) {
+          setMessages(prev => {
+            const cleaned = prev.filter(m => m.id !== assistantId)
+            return [
+              ...cleaned,
+              {
+                id: assistantId,
+                role: 'assistant' as const,
+                content:
+                  fallbackErr instanceof Error
+                    ? `Erro: ${fallbackErr.message}`
+                    : 'Ocorreu um erro ao processar sua mensagem.',
+                createdAt: new Date(),
+              },
+            ]
+          })
         }
-
-        const assistantMessage: ChatMessageData = {
-          id: uuid(),
-          role: 'assistant',
-          content: json.data.content || '—',
-          toolsUsed: json.data.toolsUsed,
-          latencyMs: json.data.latencyMs,
-          createdAt: new Date(),
-        }
-
-        setMessages(prev => [...prev, assistantMessage])
-      } catch (err) {
-        const errorMessage: ChatMessageData = {
-          id: uuid(),
-          role: 'assistant',
-          content:
-            err instanceof Error
-              ? `Erro: ${err.message}`
-              : 'Ocorreu um erro ao processar sua mensagem. Tente novamente.',
-          createdAt: new Date(),
-        }
-        setMessages(prev => [...prev, errorMessage])
       } finally {
         setIsLoading(false)
       }

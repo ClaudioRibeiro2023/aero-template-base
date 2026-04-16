@@ -21,6 +21,7 @@ import type { GatewayToolDefinition } from '../types/gateway'
 export class ToolRegistry {
   private readonly tools = new Map<string, ToolDefinition>()
   private readonly logs: ToolExecutionLog[] = [] // in-memory; em prod → Supabase
+  private _onLogWritten?: (log: ToolExecutionLog) => void
 
   /** Registra uma tool no registry */
   register(tool: ToolDefinition): void {
@@ -33,6 +34,11 @@ export class ToolRegistry {
   /** Registra múltiplas tools de uma vez */
   registerAll(tools: ToolDefinition[]): void {
     for (const tool of tools) this.register(tool)
+  }
+
+  /** Configura callback invocado após cada writeLog (para persistência externa) */
+  onLogWritten(callback: (log: ToolExecutionLog) => void): void {
+    this._onLogWritten = callback
   }
 
   /** Retorna as definições de tools disponíveis para um contexto */
@@ -167,10 +173,11 @@ export class ToolRegistry {
 
   private writeLog(log: ToolExecutionLog): void {
     this.logs.push(log)
-    // TODO Sprint 5: persistir em Supabase (agent_tool_logs)
     if (process.env.NODE_ENV !== 'production') {
       console.debug('[ToolRegistry]', log.toolName, log.success ? '✓' : '✗', `${log.durationMs}ms`)
     }
+    // Callback para persistência externa (Sprint 5)
+    this._onLogWritten?.(log)
   }
 }
 

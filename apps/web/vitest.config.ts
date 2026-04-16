@@ -21,6 +21,7 @@ export default defineConfig({
       '@template/design-system': path.resolve(__dirname, '../../packages/design-system/src'),
       '@template/shared': path.resolve(__dirname, '../../packages/shared/src'),
       '@template/types': path.resolve(__dirname, '../../packages/types/src'),
+      '@template/agent': path.resolve(__dirname, '../../packages/agent/src/index.ts'),
       '@template/data/supabase': path.resolve(
         __dirname,
         '../../packages/data/src/providers/supabase/index.ts'
