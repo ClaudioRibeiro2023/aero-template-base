@@ -44,6 +44,15 @@ export interface AgentTrace {
   /** Fontes usadas */
   sourcesUsed: string[]
 
+  /** Camadas de memória consultadas neste turno */
+  memoryLayersUsed?: string[]
+  /** Documentos recuperados via RAG */
+  documentsRetrieved?: number
+  /** Indica que o turno operou em modo degradado */
+  degraded?: boolean
+  /** Razões de degradação */
+  degradationReasons?: string[]
+
   /** Sucesso do turno */
   success: boolean
   errorCode?: string

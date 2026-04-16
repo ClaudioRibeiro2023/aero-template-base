@@ -5,8 +5,8 @@
  * 1. Resolver Domain Pack
  * 2. Verificar policy (RBAC + escopo)
  * 3. Criar/recuperar sessão (via IAgentSessionStore ou in-memory)
- * 4. Carregar histórico (via IAgentSessionStore ou vazio)
- * 5. Recuperar contexto de memória
+ * 4. Carregar histórico (via IAgentSessionStore ou vazio) + compactar se longo
+ * 5. Recuperar contexto de memória (session + user + domain + semantic/RAG)
  * 6. Montar mensagens (system + history + user)
  * 7. Obter tools disponíveis
  * 8. Loop de inferência + tool calls (max 5 rounds)
@@ -14,18 +14,20 @@
  * 10. Atualizar sessão (turn_count, last_active_at)
  * 11. Gravar fatos de metadados na memória de sessão
  * 12. Registrar trace
- * 13. Retornar resposta consolidada
+ * 13. Retornar resposta consolidada (com sinalização de degradação)
  */
 import { randomUUID } from 'crypto'
 import type { IAIGateway, AIMessage } from '../types/gateway'
 import type { AgentRequest, AgentResponse, AgentContext, AgentSession } from '../types/agent'
-import type { IMemoryManager, MemoryScope } from '../types/memory'
+import type { IMemoryManager, IExternalMemoryStore, MemoryScope } from '../types/memory'
 import type { ToolExecutionContext } from '../types/tool'
 import type { IAgentSessionStore } from '../types/session-store'
 import { PolicyEngine } from '../policy/PolicyEngine'
 import { DomainPackRegistry } from '../domain-packs/DomainPackRegistry'
 import { ToolRegistry } from '../tools/ToolRegistry'
 import { AgentTracer } from '../observability/AgentTracer'
+import { HistoryCompactor } from '../memory/HistoryCompactor'
+import { MemoryManager } from '../memory/MemoryManager'
 import { DEFAULT_MODEL } from '../types/gateway'
 
 /** Máximo de rounds de tool calls por turno (previne loops infinitos) */
@@ -44,9 +46,13 @@ export interface OrchestratorConfig {
   /**
    * Store de persistência de sessões/mensagens.
    * Opcional — se não injetado, a sessão é volátil (in-memory por request).
-   * Sprint 2: injeta SupabaseAgentSessionStore.
    */
   sessionStore?: IAgentSessionStore
+  /**
+   * Store de memória externa (user + domain + semantic).
+   * Opcional — se não injetado, apenas session memory disponível.
+   */
+  memoryStore?: IExternalMemoryStore
 }
 
 export class AgentOrchestrator {
@@ -55,8 +61,14 @@ export class AgentOrchestrator {
   async run(request: AgentRequest): Promise<AgentResponse> {
     const start = Date.now()
     const traceId = randomUUID()
+    const degradationReasons: string[] = []
 
-    const { gateway, memory, tools, policy, packRegistry, tracer, sessionStore } = this.config
+    const { gateway, tools, policy, packRegistry, tracer, sessionStore, memoryStore } = this.config
+
+    // Cria MemoryManager com o externalStore injetado (se disponível)
+    const memory: IMemoryManager = memoryStore
+      ? new MemoryManager(gateway, memoryStore)
+      : this.config.memory
 
     // ─── 1. Resolver domain pack ──────────────────────────────────────────────
 
@@ -85,15 +97,32 @@ export class AgentOrchestrator {
       sessionId: session.id,
     }
 
-    // ─── 4. Carregar histórico ────────────────────────────────────────────────
+    // ─── 4. Carregar histórico + compactar se longo ───────────────────────────
 
-    const history = sessionStore
-      ? await sessionStore.loadHistory(session.id, request.tenantId, HISTORY_WINDOW)
-      : []
+    let rawHistory: AIMessage[] = []
+    if (sessionStore) {
+      try {
+        rawHistory = await sessionStore.loadHistory(session.id, request.tenantId, HISTORY_WINDOW)
+      } catch {
+        degradationReasons.push('falha-historico-persistencia')
+      }
+    }
+
+    const compactor = new HistoryCompactor(gateway)
+    const history = await compactor.compact(rawHistory).catch(() => {
+      degradationReasons.push('falha-compactacao-historico')
+      return rawHistory
+    })
 
     // ─── 5. Recuperar contexto de memória ─────────────────────────────────────
 
     const memoryContext = await memory.getContextForOrchestrator(request.message, scope)
+
+    // Coleta camadas efetivamente usadas
+    const memoryLayersUsed: string[] = ['session']
+    if (memoryContext.userPreferences.length > 0) memoryLayersUsed.push('user')
+    if (memoryContext.domainFacts.length > 0) memoryLayersUsed.push('domain')
+    if (memoryContext.documentExcerpts.length > 0) memoryLayersUsed.push('semantic')
 
     // ─── 6. Montar mensagens ──────────────────────────────────────────────────
 
@@ -207,7 +236,7 @@ export class AgentOrchestrator {
           traceId,
         })
         .catch(err => {
-          // Não deixa falha de persistência derrubar a resposta ao usuário
+          degradationReasons.push('falha-persistencia-mensagens')
           console.error('[AgentOrchestrator] Erro ao persistir mensagens:', err)
         })
     }
@@ -218,6 +247,7 @@ export class AgentOrchestrator {
 
     if (sessionStore) {
       await sessionStore.touchSession(session.id, updatedTurnCount).catch(err => {
+        degradationReasons.push('falha-update-sessao')
         console.error('[AgentOrchestrator] Erro ao atualizar sessão:', err)
       })
     }
@@ -238,6 +268,8 @@ export class AgentOrchestrator {
 
     // ─── 12. Registrar trace ──────────────────────────────────────────────────
 
+    const degraded = degradationReasons.length > 0
+
     tracer.recordTrace({
       traceId,
       sessionId: session.id,
@@ -255,6 +287,10 @@ export class AgentOrchestrator {
       model: DEFAULT_MODEL,
       toolsCalled: toolsUsed,
       sourcesUsed,
+      memoryLayersUsed,
+      documentsRetrieved: memoryContext.documentExcerpts.length,
+      degraded,
+      degradationReasons: degraded ? degradationReasons : undefined,
       success: true,
       startedAt: new Date(start).toISOString(),
       completedAt: new Date().toISOString(),
@@ -269,12 +305,21 @@ export class AgentOrchestrator {
         turnCount: updatedTurnCount,
         lastActiveAt: new Date().toISOString(),
       },
-      sources: sourcesUsed.map(s => ({ type: s as never, label: s })),
+      sources: [
+        ...sourcesUsed.map(s => ({ type: s as never, label: s })),
+        ...memoryContext.documentExcerpts.map(d => ({
+          type: 'document' as const,
+          label: d.source,
+          detail: `score: ${d.score.toFixed(2)}`,
+        })),
+      ],
       toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
       model: DEFAULT_MODEL,
       tokensUsed: totalTokens,
       latencyMs: totalLatencyMs,
       traceId,
+      degraded: degraded || undefined,
+      degradationReasons: degraded ? degradationReasons : undefined,
     }
   }
 
@@ -298,7 +343,7 @@ export class AgentOrchestrator {
 
   private buildSystemPrompt(
     pack: ReturnType<DomainPackRegistry['resolve']>,
-    _memoryContext: AgentContext['memoryContext']
+    memoryContext: AgentContext['memoryContext']
   ): string {
     if (!pack) return ''
     const { systemPrompt } = pack
@@ -313,8 +358,27 @@ export class AgentOrchestrator {
       prompt += `\n\n## Regras de resposta\n${systemPrompt.responseRules.map(r => `- ${r}`).join('\n')}`
     }
 
-    // TODO Sprint 3: injetar memória relevante no prompt
-    // TODO Sprint 4: injetar excerpts de documentos
+    // Sprint 3: injetar memória relevante
+    if (memoryContext.userPreferences.length > 0) {
+      const prefs = memoryContext.userPreferences
+        .map(e => `- ${e.key}: ${JSON.stringify(e.value)}`)
+        .join('\n')
+      prompt += `\n\n## Preferências do usuário\n${prefs}`
+    }
+
+    if (memoryContext.domainFacts.length > 0) {
+      const facts = memoryContext.domainFacts
+        .map(e => `- ${e.key}: ${JSON.stringify(e.value)}`)
+        .join('\n')
+      prompt += `\n\n## Fatos do domínio\n${facts}`
+    }
+
+    if (memoryContext.documentExcerpts.length > 0) {
+      const excerpts = memoryContext.documentExcerpts
+        .map(d => `[${d.source}] ${d.content}`)
+        .join('\n\n')
+      prompt += `\n\n## Documentos relevantes\n${excerpts}`
+    }
 
     return prompt
   }

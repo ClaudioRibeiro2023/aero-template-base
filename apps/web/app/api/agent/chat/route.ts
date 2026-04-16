@@ -24,6 +24,7 @@ import {
 } from '@template/agent'
 import { getAuthGateway } from '@/lib/data'
 import { SupabaseAgentSessionStore, isValidTenantId } from '@/lib/agent-session-store'
+import { SupabaseMemoryStore } from '@/lib/agent-memory-store'
 import { badRequest, unauthorized, serverError } from '@/lib/api-response'
 
 // ─── Schema de entrada ────────────────────────────────────────────────────────
@@ -99,6 +100,7 @@ export async function POST(req: NextRequest) {
     packRegistry: _packRegistry,
     tracer: _tracer,
     sessionStore,
+    memoryStore: hasPersistence ? new SupabaseMemoryStore() : undefined,
   })
 
   // 7. Executar orquestrador
@@ -125,6 +127,7 @@ export async function POST(req: NextRequest) {
         latencyMs: response.latencyMs,
         traceId: response.traceId,
         persisted: hasPersistence,
+        degraded: response.degraded ?? false,
       },
     })
   } catch (err) {

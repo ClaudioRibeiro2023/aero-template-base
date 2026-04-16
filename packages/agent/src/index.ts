@@ -21,6 +21,12 @@ export type { OrchestratorConfig } from './orchestrator/index'
 
 // ─── Memória ──────────────────────────────────────────────────────────────────
 export { MemoryManager, SessionMemory } from './memory/index'
+export { HistoryCompactor, SemanticRetriever } from './memory/index'
+export type {
+  IExternalMemoryStore,
+  DocumentExcerpt,
+  ExternalMemorySearchOptions,
+} from './memory/index'
 
 // ─── Tools ────────────────────────────────────────────────────────────────────
 export { ToolRegistry, getToolRegistry } from './tools/index'

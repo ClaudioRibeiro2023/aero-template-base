@@ -100,6 +100,10 @@ export interface AgentResponse {
   latencyMs: number
   /** ID de rastreabilidade */
   traceId: string
+  /** Indica que o agente operou em modo degradado (fallback in-memory) */
+  degraded?: boolean
+  /** Razões de degradação (ex: falha de persistência, embedding indisponível) */
+  degradationReasons?: string[]
 }
 
 // ─── Fonte de informação ──────────────────────────────────────────────────────

@@ -3,31 +3,39 @@
  *
  * Camadas:
  * 1. session  → SessionMemory (in-process, volátil)
- * 2. user     → Supabase (persistente por usuário)
- * 3. domain   → Supabase (persistente por domínio/tenant)
- * 4. semantic → Supabase + pgvector (documentos indexados, RAG)
+ * 2. user     → IExternalMemoryStore (persistente por usuário)
+ * 3. domain   → IExternalMemoryStore (persistente por domínio/tenant)
+ * 4. semantic → IExternalMemoryStore + pgvector (documentos indexados, RAG)
  *
  * Sprint 1: session totalmente funcional.
- * Sprint 3: user + domain via Supabase.
- * Sprint 4: semantic/RAG via pgvector.
+ * Sprint 3: user + domain + semantic via IExternalMemoryStore.
  */
 import type {
   IMemoryManager,
+  IExternalMemoryStore,
   MemoryEntry,
   MemoryLayer,
   MemoryScope,
   MemorySearchOptions,
   MemoryContext,
+  DocumentExcerpt,
 } from '../types/memory'
 import { SessionMemory } from './SessionMemory'
+import { SemanticRetriever } from './SemanticRetriever'
 import type { IAIGateway } from '../types/gateway'
 
 export class MemoryManager implements IMemoryManager {
   private readonly sessionMemory = new SessionMemory()
+  private readonly retriever: SemanticRetriever | null = null
 
   constructor(
-    private readonly gateway?: IAIGateway // usado para sumarização e embeddings
-  ) {}
+    private readonly gateway?: IAIGateway,
+    private readonly externalStore?: IExternalMemoryStore
+  ) {
+    if (gateway && externalStore) {
+      this.retriever = new SemanticRetriever(gateway, externalStore)
+    }
+  }
 
   async set(entry: Omit<MemoryEntry, 'id' | 'createdAt' | 'updatedAt'>): Promise<MemoryEntry> {
     switch (entry.layer) {
@@ -42,10 +50,13 @@ export class MemoryManager implements IMemoryManager {
       case 'user':
       case 'domain':
       case 'semantic':
-        // Sprint 3/4: persistência Supabase
-        console.warn(
-          `[MemoryManager] Camada "${entry.layer}" ainda não implementada — usando session como fallback`
-        )
+        if (this.externalStore) {
+          return this.externalStore.set({
+            ...entry,
+            layer: entry.layer as Exclude<MemoryLayer, 'session'>,
+          })
+        }
+        // Fallback gracioso quando store não injetado
         return this.sessionMemory.set(
           entry.key,
           entry.value,
@@ -63,29 +74,41 @@ export class MemoryManager implements IMemoryManager {
       if (layer === 'session') {
         const all = this.sessionMemory.getAll(options.scope)
         results.push(...all)
+      } else if (this.externalStore) {
+        const found = await this.externalStore.search(
+          options.key ?? options.semanticQuery ?? '',
+          options.scope,
+          {
+            layers: [layer as Exclude<MemoryLayer, 'session'>],
+            limit: options.limit,
+            minScore: options.minScore,
+          }
+        )
+        results.push(...found)
       }
-      // Sprint 3/4: busca nas camadas user/domain/semantic
     }
 
-    if (options.limit) {
-      return results.slice(0, options.limit)
-    }
-    return results
+    return options.limit ? results.slice(0, options.limit) : results
   }
 
   async get(layer: MemoryLayer, key: string, scope: MemoryScope): Promise<MemoryEntry | null> {
     if (layer === 'session') {
       return this.sessionMemory.get(key, scope)
     }
-    // Sprint 3/4: busca Supabase
+    if (this.externalStore) {
+      return this.externalStore.get(layer as Exclude<MemoryLayer, 'session'>, key, scope)
+    }
     return null
   }
 
   async delete(layer: MemoryLayer, key: string, scope: MemoryScope): Promise<void> {
     if (layer === 'session') {
       this.sessionMemory.delete(key, scope)
+      return
     }
-    // Sprint 3/4: delete Supabase
+    if (this.externalStore) {
+      await this.externalStore.delete(layer as Exclude<MemoryLayer, 'session'>, key, scope)
+    }
   }
 
   async summarizeSession(sessionId: string, scope: MemoryScope): Promise<string> {
@@ -118,19 +141,45 @@ export class MemoryManager implements IMemoryManager {
   }
 
   async getContextForOrchestrator(
-    _query: string,
+    query: string,
     scope: MemoryScope,
     _maxTokenBudget = 2000
   ): Promise<MemoryContext> {
-    // Sprint 1: apenas sessão disponível
     const sessionFacts = this.sessionMemory.getAll(scope)
+
+    let userPreferences: MemoryEntry[] = []
+    let domainFacts: MemoryEntry[] = []
+
+    if (this.externalStore) {
+      try {
+        const [userResults, domainResults] = await Promise.all([
+          this.externalStore.search(query, scope, { layers: ['user'], limit: 10 }),
+          this.externalStore.search(query, scope, { layers: ['domain'], limit: 10 }),
+        ])
+        userPreferences = userResults
+        domainFacts = domainResults
+      } catch {
+        // Degradação silenciosa — sessão ainda funciona
+      }
+    }
+
+    let documentExcerpts: DocumentExcerpt[] = []
+    if (this.retriever) {
+      try {
+        documentExcerpts = await this.retriever.retrieve(query, scope)
+      } catch {
+        // Degradação silenciosa — sessão ainda funciona sem RAG
+      }
+    }
+
+    const allEntries = [...sessionFacts, ...userPreferences, ...domainFacts]
 
     return {
       sessionFacts,
-      userPreferences: [], // Sprint 3
-      domainFacts: [], // Sprint 3
-      documentExcerpts: [], // Sprint 4
-      estimatedTokens: estimateTokens(sessionFacts),
+      userPreferences,
+      domainFacts,
+      documentExcerpts,
+      estimatedTokens: estimateTokens(allEntries),
     }
   }
 }
