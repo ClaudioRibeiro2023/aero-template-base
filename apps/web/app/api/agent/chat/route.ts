@@ -22,6 +22,7 @@ import {
   DomainPackRegistry,
   coreDomainPack,
 } from '@template/agent'
+import { domainTools } from '@/lib/agent-tools'
 import { getAuthGateway } from '@/lib/data'
 import { SupabaseAgentSessionStore, isValidTenantId } from '@/lib/agent-session-store'
 import { SupabaseMemoryStore } from '@/lib/agent-memory-store'
@@ -43,7 +44,11 @@ const ChatRequestSchema = z.object({
 
 const _gateway = new OpenAIGateway()
 const _memory = new MemoryManager(_gateway)
-const _tools = new ToolRegistry()
+const _tools = (() => {
+  const registry = new ToolRegistry()
+  registry.registerAll(domainTools)
+  return registry
+})()
 const _policy = new PolicyEngine()
 const _tracer = new AgentTracer()
 const _packRegistry = (() => {

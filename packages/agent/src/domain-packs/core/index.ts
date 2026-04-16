@@ -53,7 +53,14 @@ Regras obrigatórias:
   },
 
   authorizedSources: {
-    internalTools: ['search_internal_documents'],
+    internalTools: [
+      'search_internal_documents',
+      'get_open_tasks',
+      'get_ticket_status',
+      'get_pending_items',
+      'get_recent_activity',
+      'get_operational_snapshot',
+    ],
     externalSources: [],
     documentTypes: ['faq', 'manual', 'policy'],
   },
