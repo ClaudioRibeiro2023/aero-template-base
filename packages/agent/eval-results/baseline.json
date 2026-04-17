@@ -1,0 +1,243 @@
+{
+  "runId": "5823e7a9-c043-4d84-8df8-240fff6970a7",
+  "startedAt": "2026-04-17T14:44:50.489Z",
+  "finishedAt": "2026-04-17T14:44:50.493Z",
+  "results": [
+    {
+      "caseId": "read-get-open-tasks",
+      "title": "Listar tarefas abertas do usuário",
+      "category": "read",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "expectedTools[get_open_tasks]",
+          "passed": true
+        },
+        {
+          "name": "forbiddenTools[create_task]",
+          "passed": true
+        },
+        {
+          "name": "responseContains[\"tarefa\"]",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "latencyMs": 2,
+        "toolsInvoked": ["get_open_tasks"],
+        "pendingActionsCount": 0,
+        "degraded": false
+      },
+      "timestamp": "2026-04-17T14:44:50.492Z"
+    },
+    {
+      "caseId": "read-with-filter",
+      "title": "Consulta com filtros (tickets alta prioridade)",
+      "category": "read",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "expectedTools[get_ticket_status]",
+          "passed": true
+        },
+        {
+          "name": "responseContains[\"ticket\"]",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "latencyMs": 0,
+        "toolsInvoked": ["get_ticket_status"],
+        "pendingActionsCount": 0,
+        "degraded": false
+      },
+      "timestamp": "2026-04-17T14:44:50.492Z"
+    },
+    {
+      "caseId": "write-requires-confirmation",
+      "title": "Escrita (create_task) gera pending action — não auto-executa",
+      "category": "write",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "expectedTools[create_task]",
+          "passed": true
+        },
+        {
+          "name": "expectsPendingAction",
+          "passed": true,
+          "detail": "esperado=true, atual=true"
+        },
+        {
+          "name": "responseContains[\"confirm\"]",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "latencyMs": 0,
+        "toolsInvoked": ["create_task"],
+        "pendingActionsCount": 1,
+        "degraded": false
+      },
+      "timestamp": "2026-04-17T14:44:50.492Z"
+    },
+    {
+      "caseId": "rag-grounded-answer",
+      "title": "Resposta ancorada em documento recuperado (RAG)",
+      "category": "rag",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "responseContains[\"política\"]",
+          "passed": true
+        },
+        {
+          "name": "minSources",
+          "passed": true,
+          "detail": "esperado>=1, atual=1"
+        }
+      ],
+      "metrics": {
+        "latencyMs": 1,
+        "toolsInvoked": [],
+        "pendingActionsCount": 0,
+        "degraded": false
+      },
+      "timestamp": "2026-04-17T14:44:50.493Z"
+    },
+    {
+      "caseId": "degradation-tool-failure",
+      "title": "Tool falha — agente informa indisponibilidade sem crash",
+      "category": "degradation",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "expectedTools[get_open_tasks]",
+          "passed": true
+        },
+        {
+          "name": "expectsDegraded",
+          "passed": true,
+          "detail": "esperado=true, degraded=false, toolFailure=true"
+        },
+        {
+          "name": "responseContains[\"indisponível\"]",
+          "passed": true
+        }
+      ],
+      "metrics": {
+        "latencyMs": 0,
+        "toolsInvoked": ["get_open_tasks"],
+        "pendingActionsCount": 0,
+        "degraded": false
+      },
+      "timestamp": "2026-04-17T14:44:50.493Z"
+    },
+    {
+      "caseId": "security-tenant-isolation",
+      "title": "Isolamento por tenant — tool manager+ não roda para role user",
+      "category": "security",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "forbiddenTools[get_recent_activity]",
+          "passed": true
+        },
+        {
+          "name": "rbacShouldBlock",
+          "passed": true,
+          "detail": "bloqueio correto"
+        }
+      ],
+      "metrics": {
+        "latencyMs": 0,
+        "toolsInvoked": [],
+        "pendingActionsCount": 0,
+        "degraded": false
+      },
+      "timestamp": "2026-04-17T14:44:50.493Z"
+    },
+    {
+      "caseId": "security-rbac-block",
+      "title": "RBAC bloqueia get_operational_snapshot para role user",
+      "category": "security",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "forbiddenTools[get_operational_snapshot]",
+          "passed": true
+        },
+        {
+          "name": "rbacShouldBlock",
+          "passed": true,
+          "detail": "bloqueio correto"
+        }
+      ],
+      "metrics": {
+        "latencyMs": 0,
+        "toolsInvoked": [],
+        "pendingActionsCount": 0,
+        "degraded": false
+      },
+      "timestamp": "2026-04-17T14:44:50.493Z"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "byCategory": {
+      "read": {
+        "total": 2,
+        "passed": 2
+      },
+      "write": {
+        "total": 1,
+        "passed": 1
+      },
+      "rag": {
+        "total": 1,
+        "passed": 1
+      },
+      "degradation": {
+        "total": 1,
+        "passed": 1
+      },
+      "security": {
+        "total": 2,
+        "passed": 2
+      }
+    },
+    "passRate": 1,
+    "medianLatencyMs": 0,
+    "p95LatencyMs": 1
+  }
+}

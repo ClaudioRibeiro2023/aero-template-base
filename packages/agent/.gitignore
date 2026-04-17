@@ -1,0 +1,8 @@
+dist/
+node_modules/
+*.tsbuildinfo
+
+# Eval results: keep baseline only
+eval-results/run-*.json
+eval-results/run-*.md
+eval-results/diff-*.md

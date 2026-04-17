@@ -40,3 +40,6 @@ export { AgentTracer, getAgentTracer } from './observability/index'
 
 // ─── Domain Packs ─────────────────────────────────────────────────────────────
 export { DomainPackRegistry, getDomainPackRegistry, coreDomainPack } from './domain-packs/index'
+
+// ─── Eval Harness ─────────────────────────────────────────────────────────────
+export * from './eval/index'

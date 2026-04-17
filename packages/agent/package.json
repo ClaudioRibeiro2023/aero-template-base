@@ -17,7 +17,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "eval": "tsx src/eval/cli.ts",
+    "eval:baseline": "tsx src/eval/cli.ts --update-baseline"
   },
   "dependencies": {
     "@template/types": "workspace:*",
@@ -26,6 +28,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
   "peerDependencies": {
