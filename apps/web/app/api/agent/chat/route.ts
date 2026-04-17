@@ -22,6 +22,8 @@ import {
   DomainPackRegistry,
   coreDomainPack,
   tasksDomainPack,
+  supportDomainPack,
+  tasksEnterpriseDomainPack,
 } from '@template/agent'
 import { domainTools } from '@/lib/agent-tools'
 import { getAuthGateway } from '@/lib/data'
@@ -63,6 +65,12 @@ const _packRegistry = (() => {
   const r = new DomainPackRegistry()
   r.register(coreDomainPack)
   r.register(tasksDomainPack)
+  r.register(supportDomainPack)
+  // Tenant override — enterprise variation of tasks pack (opt-in via env)
+  const enterpriseTenantId = process.env.AGENT_ENTERPRISE_TENANT_ID
+  if (enterpriseTenantId) {
+    r.registerForTenant(tasksEnterpriseDomainPack, enterpriseTenantId)
+  }
   return r
 })()
 

@@ -13,6 +13,8 @@ import { AgentTracer } from '../observability/AgentTracer'
 import { DomainPackRegistry } from '../domain-packs/DomainPackRegistry'
 import { coreDomainPack } from '../domain-packs/core/index'
 import { tasksDomainPack } from '../domain-packs/tasks/index'
+import { supportDomainPack } from '../domain-packs/support/index'
+import { tasksEnterpriseDomainPack } from '../domain-packs/tasks-enterprise/index'
 import { MemoryManager } from '../memory/MemoryManager'
 import { MockAIGateway } from './MockAIGateway'
 import type { EvalCase, EvalResult, EvalRun, AssertionResult, MockTurn } from './types'
@@ -219,6 +221,8 @@ export async function runEvalCase(kase: EvalCase): Promise<EvalResult> {
   const packRegistry = new DomainPackRegistry()
   packRegistry.register(coreDomainPack)
   packRegistry.register(tasksDomainPack)
+  packRegistry.register(supportDomainPack)
+  packRegistry.registerForTenant(tasksEnterpriseDomainPack, 'enterprise-tenant-eval')
 
   const memoryStore = kase.mockMemoryHits ? makeFakeMemoryStore(kase.mockMemoryHits) : undefined
   const memory = new MemoryManager(gateway, memoryStore)

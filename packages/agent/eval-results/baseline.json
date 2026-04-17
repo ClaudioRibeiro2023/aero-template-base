@@ -1,7 +1,7 @@
 {
-  "runId": "fcfd2cb0-4eb5-4470-ac3d-411b737a4ec2",
-  "startedAt": "2026-04-17T19:53:15.272Z",
-  "finishedAt": "2026-04-17T19:53:15.278Z",
+  "runId": "13f1c73b-41be-462a-9aea-0136fc8b0bb8",
+  "startedAt": "2026-04-17T20:31:01.397Z",
+  "finishedAt": "2026-04-17T20:31:01.403Z",
   "results": [
     {
       "caseId": "read-get-open-tasks",
@@ -33,7 +33,7 @@
         "degraded": false,
         "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T19:53:15.276Z"
+      "timestamp": "2026-04-17T20:31:01.400Z"
     },
     {
       "caseId": "read-with-filter",
@@ -61,7 +61,7 @@
         "degraded": false,
         "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T19:53:15.276Z"
+      "timestamp": "2026-04-17T20:31:01.400Z"
     },
     {
       "caseId": "write-requires-confirmation",
@@ -94,7 +94,7 @@
         "degraded": false,
         "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T19:53:15.277Z"
+      "timestamp": "2026-04-17T20:31:01.401Z"
     },
     {
       "caseId": "rag-grounded-answer",
@@ -123,7 +123,7 @@
         "degraded": false,
         "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T19:53:15.277Z"
+      "timestamp": "2026-04-17T20:31:01.401Z"
     },
     {
       "caseId": "degradation-tool-failure",
@@ -156,7 +156,7 @@
         "degraded": false,
         "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T19:53:15.277Z"
+      "timestamp": "2026-04-17T20:31:01.401Z"
     },
     {
       "caseId": "security-tenant-isolation",
@@ -185,7 +185,7 @@
         "degraded": false,
         "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T19:53:15.277Z"
+      "timestamp": "2026-04-17T20:31:01.401Z"
     },
     {
       "caseId": "security-rbac-block",
@@ -214,7 +214,7 @@
         "degraded": false,
         "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T19:53:15.277Z"
+      "timestamp": "2026-04-17T20:31:01.401Z"
     },
     {
       "caseId": "multipack-core-fallback",
@@ -242,13 +242,13 @@
         }
       ],
       "metrics": {
-        "latencyMs": 1,
+        "latencyMs": 0,
         "toolsInvoked": [],
         "pendingActionsCount": 0,
         "degraded": false,
         "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T19:53:15.278Z"
+      "timestamp": "2026-04-17T20:31:01.401Z"
     },
     {
       "caseId": "multipack-tasks-resolved",
@@ -285,13 +285,13 @@
         }
       ],
       "metrics": {
-        "latencyMs": 0,
+        "latencyMs": 1,
         "toolsInvoked": ["create_task"],
         "pendingActionsCount": 1,
         "degraded": false,
         "domainPackId": "tasks"
       },
-      "timestamp": "2026-04-17T19:53:15.278Z"
+      "timestamp": "2026-04-17T20:31:01.402Z"
     },
     {
       "caseId": "multipack-tasks-forbidden-tool",
@@ -330,7 +330,7 @@
         "degraded": false,
         "domainPackId": "tasks"
       },
-      "timestamp": "2026-04-17T19:53:15.278Z"
+      "timestamp": "2026-04-17T20:31:01.402Z"
     },
     {
       "caseId": "multipack-tasks-tool-allowed",
@@ -368,21 +368,175 @@
         "degraded": false,
         "domainPackId": "tasks"
       },
-      "timestamp": "2026-04-17T19:53:15.278Z"
+      "timestamp": "2026-04-17T20:31:01.402Z"
+    },
+    {
+      "caseId": "multipack-support-resolved",
+      "title": "Multi-pack: appId=support resolve ao supportDomainPack e consulta ticket",
+      "category": "read",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "expectedTools[get_ticket_status]",
+          "passed": true
+        },
+        {
+          "name": "responseContains[\"ticket\"]",
+          "passed": true
+        },
+        {
+          "name": "responseContains[\"123\"]",
+          "passed": true
+        },
+        {
+          "name": "expectedDomainPackId",
+          "passed": true,
+          "detail": "esperado=\"support\", atual=\"support\""
+        },
+        {
+          "name": "expectedDomainPackFallback",
+          "passed": true,
+          "detail": "esperado=false, atual=false"
+        }
+      ],
+      "metrics": {
+        "latencyMs": 0,
+        "toolsInvoked": ["get_ticket_status"],
+        "pendingActionsCount": 0,
+        "degraded": false,
+        "domainPackId": "support"
+      },
+      "timestamp": "2026-04-17T20:31:01.402Z"
+    },
+    {
+      "caseId": "multipack-support-tool-forbidden",
+      "title": "Multi-pack: pack support bloqueia create_task (fora do escopo)",
+      "category": "security",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "forbiddenTools[create_task]",
+          "passed": true
+        },
+        {
+          "name": "expectedDomainPackId",
+          "passed": true,
+          "detail": "esperado=\"support\", atual=\"support\""
+        },
+        {
+          "name": "expectedDomainPackFallback",
+          "passed": true,
+          "detail": "esperado=false, atual=false"
+        },
+        {
+          "name": "rbacShouldBlock",
+          "passed": true,
+          "detail": "bloqueio correto"
+        }
+      ],
+      "metrics": {
+        "latencyMs": 0,
+        "toolsInvoked": [],
+        "pendingActionsCount": 0,
+        "degraded": false,
+        "domainPackId": "support"
+      },
+      "timestamp": "2026-04-17T20:31:01.402Z"
+    },
+    {
+      "caseId": "multipack-tenant-override",
+      "title": "Multi-pack: tenant override resolve tasksEnterpriseDomainPack no lugar de tasks",
+      "category": "write",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "expectedTools[create_task]",
+          "passed": true
+        },
+        {
+          "name": "expectsPendingAction",
+          "passed": true,
+          "detail": "esperado=true, atual=true"
+        },
+        {
+          "name": "expectedDomainPackId",
+          "passed": true,
+          "detail": "esperado=\"tasks-enterprise\", atual=\"tasks-enterprise\""
+        },
+        {
+          "name": "expectedDomainPackFallback",
+          "passed": true,
+          "detail": "esperado=false, atual=false"
+        }
+      ],
+      "metrics": {
+        "latencyMs": 1,
+        "toolsInvoked": ["create_task"],
+        "pendingActionsCount": 1,
+        "degraded": false,
+        "domainPackId": "tasks-enterprise"
+      },
+      "timestamp": "2026-04-17T20:31:01.403Z"
+    },
+    {
+      "caseId": "multipack-tenant-isolation",
+      "title": "Multi-pack: tenant sem override recebe pack tasks padrão (branch app)",
+      "category": "security",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "expectedTools[get_open_tasks]",
+          "passed": true
+        },
+        {
+          "name": "expectedDomainPackId",
+          "passed": true,
+          "detail": "esperado=\"tasks\", atual=\"tasks\""
+        },
+        {
+          "name": "expectedDomainPackFallback",
+          "passed": true,
+          "detail": "esperado=false, atual=false"
+        }
+      ],
+      "metrics": {
+        "latencyMs": 0,
+        "toolsInvoked": ["get_open_tasks"],
+        "pendingActionsCount": 0,
+        "degraded": false,
+        "domainPackId": "tasks"
+      },
+      "timestamp": "2026-04-17T20:31:01.403Z"
     }
   ],
   "summary": {
-    "total": 11,
-    "passed": 11,
+    "total": 15,
+    "passed": 15,
     "failed": 0,
     "byCategory": {
       "read": {
-        "total": 3,
-        "passed": 3
+        "total": 4,
+        "passed": 4
       },
       "write": {
-        "total": 2,
-        "passed": 2
+        "total": 3,
+        "passed": 3
       },
       "rag": {
         "total": 1,
@@ -393,8 +547,8 @@
         "passed": 1
       },
       "security": {
-        "total": 4,
-        "passed": 4
+        "total": 6,
+        "passed": 6
       }
     },
     "passRate": 1,

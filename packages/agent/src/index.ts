@@ -44,6 +44,8 @@ export {
   getDomainPackRegistry,
   coreDomainPack,
   tasksDomainPack,
+  supportDomainPack,
+  tasksEnterpriseDomainPack,
 } from './domain-packs/index'
 export type { ResolveStrategy, ResolveResult } from './domain-packs/index'
 

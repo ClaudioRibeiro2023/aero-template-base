@@ -4,7 +4,12 @@
  * Sprint 10: usado pelos dropdowns de filtro por pack no admin.
  */
 import type { NextRequest } from 'next/server'
-import { DomainPackRegistry, coreDomainPack, tasksDomainPack } from '@template/agent'
+import {
+  DomainPackRegistry,
+  coreDomainPack,
+  tasksDomainPack,
+  supportDomainPack,
+} from '@template/agent'
 import { rateLimit, getClientIp } from '@/lib/rate-limit'
 import { ok, unauthorized, forbidden, tooManyRequests, serverError } from '@/lib/api-response'
 import { getAuthGateway } from '@/lib/data'
@@ -18,6 +23,7 @@ const _registry = (() => {
   const r = new DomainPackRegistry()
   r.register(coreDomainPack)
   r.register(tasksDomainPack)
+  r.register(supportDomainPack)
   return r
 })()
 

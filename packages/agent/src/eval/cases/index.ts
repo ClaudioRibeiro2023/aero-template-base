@@ -9,6 +9,10 @@ import multipackCoreFallback from './multipack-core-fallback'
 import multipackTasksResolved from './multipack-tasks-resolved'
 import multipackTasksForbiddenTool from './multipack-tasks-forbidden-tool'
 import multipackTasksToolAllowed from './multipack-tasks-tool-allowed'
+import multipackSupportResolved from './multipack-support-resolved'
+import multipackSupportToolForbidden from './multipack-support-tool-forbidden'
+import multipackTenantOverride from './multipack-tenant-override'
+import multipackTenantIsolation from './multipack-tenant-isolation'
 import type { EvalCase } from '../types'
 
 export const goldenCases: EvalCase[] = [
@@ -23,6 +27,10 @@ export const goldenCases: EvalCase[] = [
   multipackTasksResolved,
   multipackTasksForbiddenTool,
   multipackTasksToolAllowed,
+  multipackSupportResolved,
+  multipackSupportToolForbidden,
+  multipackTenantOverride,
+  multipackTenantIsolation,
 ]
 
 /**
