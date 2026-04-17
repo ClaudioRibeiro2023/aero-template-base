@@ -271,6 +271,7 @@ export async function runEvalCase(kase: EvalCase): Promise<EvalResult> {
       pendingActionsCount: response?.pendingActions?.length ?? 0,
       degraded: response?.degraded === true,
       error: runError,
+      domainPackId: response?.domainPackId,
     },
     timestamp: new Date().toISOString(),
   }

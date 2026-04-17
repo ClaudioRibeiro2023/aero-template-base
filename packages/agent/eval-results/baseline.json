@@ -1,7 +1,7 @@
 {
-  "runId": "adf164dc-37c3-4556-b475-c02907f8897f",
-  "startedAt": "2026-04-17T15:18:01.941Z",
-  "finishedAt": "2026-04-17T15:18:01.945Z",
+  "runId": "fcfd2cb0-4eb5-4470-ac3d-411b737a4ec2",
+  "startedAt": "2026-04-17T19:53:15.272Z",
+  "finishedAt": "2026-04-17T19:53:15.278Z",
   "results": [
     {
       "caseId": "read-get-open-tasks",
@@ -30,9 +30,10 @@
         "latencyMs": 2,
         "toolsInvoked": ["get_open_tasks"],
         "pendingActionsCount": 0,
-        "degraded": false
+        "degraded": false,
+        "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T15:18:01.944Z"
+      "timestamp": "2026-04-17T19:53:15.276Z"
     },
     {
       "caseId": "read-with-filter",
@@ -57,9 +58,10 @@
         "latencyMs": 0,
         "toolsInvoked": ["get_ticket_status"],
         "pendingActionsCount": 0,
-        "degraded": false
+        "degraded": false,
+        "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T15:18:01.944Z"
+      "timestamp": "2026-04-17T19:53:15.276Z"
     },
     {
       "caseId": "write-requires-confirmation",
@@ -86,12 +88,13 @@
         }
       ],
       "metrics": {
-        "latencyMs": 0,
+        "latencyMs": 1,
         "toolsInvoked": ["create_task"],
         "pendingActionsCount": 1,
-        "degraded": false
+        "degraded": false,
+        "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T15:18:01.944Z"
+      "timestamp": "2026-04-17T19:53:15.277Z"
     },
     {
       "caseId": "rag-grounded-answer",
@@ -117,9 +120,10 @@
         "latencyMs": 0,
         "toolsInvoked": [],
         "pendingActionsCount": 0,
-        "degraded": false
+        "degraded": false,
+        "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T15:18:01.944Z"
+      "timestamp": "2026-04-17T19:53:15.277Z"
     },
     {
       "caseId": "degradation-tool-failure",
@@ -146,12 +150,13 @@
         }
       ],
       "metrics": {
-        "latencyMs": 1,
+        "latencyMs": 0,
         "toolsInvoked": ["get_open_tasks"],
         "pendingActionsCount": 0,
-        "degraded": false
+        "degraded": false,
+        "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T15:18:01.945Z"
+      "timestamp": "2026-04-17T19:53:15.277Z"
     },
     {
       "caseId": "security-tenant-isolation",
@@ -177,9 +182,10 @@
         "latencyMs": 0,
         "toolsInvoked": [],
         "pendingActionsCount": 0,
-        "degraded": false
+        "degraded": false,
+        "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T15:18:01.945Z"
+      "timestamp": "2026-04-17T19:53:15.277Z"
     },
     {
       "caseId": "security-rbac-block",
@@ -205,9 +211,10 @@
         "latencyMs": 0,
         "toolsInvoked": [],
         "pendingActionsCount": 0,
-        "degraded": false
+        "degraded": false,
+        "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T15:18:01.945Z"
+      "timestamp": "2026-04-17T19:53:15.277Z"
     },
     {
       "caseId": "multipack-core-fallback",
@@ -235,12 +242,13 @@
         }
       ],
       "metrics": {
-        "latencyMs": 0,
+        "latencyMs": 1,
         "toolsInvoked": [],
         "pendingActionsCount": 0,
-        "degraded": false
+        "degraded": false,
+        "domainPackId": "core"
       },
-      "timestamp": "2026-04-17T15:18:01.945Z"
+      "timestamp": "2026-04-17T19:53:15.278Z"
     },
     {
       "caseId": "multipack-tasks-resolved",
@@ -280,9 +288,10 @@
         "latencyMs": 0,
         "toolsInvoked": ["create_task"],
         "pendingActionsCount": 1,
-        "degraded": false
+        "degraded": false,
+        "domainPackId": "tasks"
       },
-      "timestamp": "2026-04-17T15:18:01.945Z"
+      "timestamp": "2026-04-17T19:53:15.278Z"
     },
     {
       "caseId": "multipack-tasks-forbidden-tool",
@@ -318,9 +327,10 @@
         "latencyMs": 0,
         "toolsInvoked": [],
         "pendingActionsCount": 0,
-        "degraded": false
+        "degraded": false,
+        "domainPackId": "tasks"
       },
-      "timestamp": "2026-04-17T15:18:01.945Z"
+      "timestamp": "2026-04-17T19:53:15.278Z"
     },
     {
       "caseId": "multipack-tasks-tool-allowed",
@@ -355,9 +365,10 @@
         "latencyMs": 0,
         "toolsInvoked": ["get_open_tasks"],
         "pendingActionsCount": 0,
-        "degraded": false
+        "degraded": false,
+        "domainPackId": "tasks"
       },
-      "timestamp": "2026-04-17T15:18:01.945Z"
+      "timestamp": "2026-04-17T19:53:15.278Z"
     }
   ],
   "summary": {

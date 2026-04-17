@@ -7,6 +7,14 @@ import { fetchJson } from '@/lib/fetch-json'
 
 // ── Types ──
 
+export interface AdminAgentMetricsByPack {
+  pack_id: string | null
+  sessions_count: number
+  tool_calls_count: number
+  fallback_count: number
+  avg_latency_ms: number | null
+}
+
 export interface AdminAgentMetrics {
   period: string
   sessions_total: number
@@ -16,6 +24,15 @@ export interface AdminAgentMetrics {
   degraded_total: number
   latency_avg_ms: number
   latency_p95_ms: number
+  by_pack?: AdminAgentMetricsByPack[]
+}
+
+export interface AdminAgentPack {
+  id: string
+  version: string
+  display_name: string
+  app_ids: string[]
+  authorized_tool_count: number
 }
 
 export interface AdminAgentSession {
@@ -30,6 +47,10 @@ export interface AdminAgentSession {
   started_at: string
   last_active_at: string
   created_at: string
+  domain_pack_id: string | null
+  domain_pack_version: string | null
+  domain_pack_fallback: boolean
+  domain_pack_strategy: 'tenant' | 'app' | 'fallback-core' | 'none' | null
 }
 
 export interface AdminAgentMessage {
@@ -63,6 +84,7 @@ export interface AdminAgentToolLog {
   user_role: string | null
   app_id: string | null
   created_at: string
+  domain_pack_id?: string | null
 }
 
 export interface AdminAgentPendingAction {
@@ -127,6 +149,9 @@ export interface SessionsFilters {
   status?: string
   from?: string
   to?: string
+  domain_pack_id?: string
+  domain_pack_fallback?: boolean
+  domain_pack_legacy?: boolean
 }
 
 export interface ToolLogsFilters {
@@ -138,6 +163,7 @@ export interface ToolLogsFilters {
   user_id?: string
   from?: string
   to?: string
+  domain_pack_id?: string
 }
 
 export interface PendingActionsFilters {
@@ -170,6 +196,7 @@ export const adminAgentKeys = {
   toolLogs: (f: ToolLogsFilters) => [...adminAgentKeys.all, 'tool-logs', f] as const,
   pending: (f: PendingActionsFilters) => [...adminAgentKeys.all, 'pending', f] as const,
   degradations: (f: DegradationsFilters) => [...adminAgentKeys.all, 'degradations', f] as const,
+  packs: () => [...adminAgentKeys.all, 'packs'] as const,
 }
 
 // ── Helpers ──
@@ -233,6 +260,14 @@ export function useAdminAgentPendingActions(filters: PendingActionsFilters = {})
         `/api/admin/agent/pending-actions${buildParams(filters as Record<string, unknown>)}`
       ),
     staleTime: 15_000,
+  })
+}
+
+export function useAdminAgentPacks() {
+  return useQuery<{ items: AdminAgentPack[] }>({
+    queryKey: adminAgentKeys.packs(),
+    queryFn: () => fetchJson<{ items: AdminAgentPack[] }>(`/api/admin/agent/packs`),
+    staleTime: 5 * 60_000,
   })
 }
 

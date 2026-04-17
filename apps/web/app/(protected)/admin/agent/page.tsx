@@ -128,6 +128,62 @@ export default function AgentAdminPage() {
           {' · '}p95: <span className="text-[var(--text-primary)]">{data.latency_p95_ms} ms</span>
         </div>
       )}
+
+      {!isLoading && data?.by_pack && data.by_pack.length > 0 && (
+        <section className="relative z-10 mt-4 glass-panel p-4">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Por Domain Pack</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <caption className="sr-only">Agregações por domain pack</caption>
+              <thead>
+                <tr className="border-b border-[var(--glass-border)] bg-white/[0.02]">
+                  <th className="px-3 py-2 text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                    Pack
+                  </th>
+                  <th className="px-3 py-2 text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                    Sessoes
+                  </th>
+                  <th className="px-3 py-2 text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                    Tool calls
+                  </th>
+                  <th className="px-3 py-2 text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                    Fallbacks
+                  </th>
+                  <th className="px-3 py-2 text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                    Latencia media
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.by_pack.map((row, idx) => (
+                  <tr
+                    key={row.pack_id ?? `__legacy__${idx}`}
+                    className="border-b border-[var(--glass-border)]"
+                  >
+                    <td className="px-3 py-2 text-xs font-mono text-[var(--text-primary)]">
+                      {row.pack_id ?? (
+                        <span className="text-[var(--text-muted)] italic">legado</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2 text-xs text-[var(--text-primary)]">
+                      {row.sessions_count}
+                    </td>
+                    <td className="px-3 py-2 text-xs text-[var(--text-primary)]">
+                      {row.tool_calls_count}
+                    </td>
+                    <td className="px-3 py-2 text-xs text-[var(--text-primary)]">
+                      {row.fallback_count}
+                    </td>
+                    <td className="px-3 py-2 text-xs text-[var(--text-muted)]">
+                      {row.avg_latency_ms != null ? `${row.avg_latency_ms} ms` : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </main>
   )
 }

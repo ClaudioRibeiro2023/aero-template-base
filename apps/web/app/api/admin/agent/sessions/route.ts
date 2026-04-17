@@ -33,6 +33,11 @@ export const GET = withApiLog('admin-agent-sessions', async function GET(request
   const status = searchParams.get('status') ?? undefined
   const from = searchParams.get('from') ?? undefined
   const to = searchParams.get('to') ?? undefined
+  const domainPackId = searchParams.get('domain_pack_id') ?? undefined
+  const domainPackFallbackRaw = searchParams.get('domain_pack_fallback')
+  const domainPackFallback =
+    domainPackFallbackRaw === 'true' ? true : domainPackFallbackRaw === 'false' ? false : undefined
+  const domainPackLegacy = searchParams.get('domain_pack_legacy') === 'true'
 
   const db = new SupabaseDbClient()
   const client = db.asAdmin()
@@ -55,7 +60,7 @@ export const GET = withApiLog('admin-agent-sessions', async function GET(request
     let q: any = client
       .from('agent_sessions')
       .select(
-        'id, tenant_id, user_id, app_id, status, title, turn_count, metadata, started_at, last_active_at, created_at',
+        'id, tenant_id, user_id, app_id, status, title, turn_count, metadata, started_at, last_active_at, created_at, domain_pack_id, domain_pack_version, domain_pack_fallback, domain_pack_strategy',
         { count: 'exact' }
       )
       .order('last_active_at', { ascending: false })
@@ -66,6 +71,9 @@ export const GET = withApiLog('admin-agent-sessions', async function GET(request
     if (status) q = q.eq('status', status)
     if (from) q = q.gte('created_at', from)
     if (to) q = q.lte('created_at', to)
+    if (domainPackId) q = q.eq('domain_pack_id', domainPackId)
+    if (domainPackFallback !== undefined) q = q.eq('domain_pack_fallback', domainPackFallback)
+    if (domainPackLegacy) q = q.is('domain_pack_id', null)
 
     const { data, count, error } = await q
     if (error) {

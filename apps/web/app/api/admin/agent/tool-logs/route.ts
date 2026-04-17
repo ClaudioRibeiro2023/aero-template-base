@@ -36,6 +36,7 @@ export const GET = withApiLog('admin-agent-tool-logs', async function GET(reques
   const userIdParam = searchParams.get('user_id') ?? undefined
   const from = searchParams.get('from') ?? undefined
   const to = searchParams.get('to') ?? undefined
+  const domainPackId = searchParams.get('domain_pack_id') ?? undefined
 
   const db = new SupabaseDbClient()
   const client = db.asAdmin()
@@ -55,6 +56,27 @@ export const GET = withApiLog('admin-agent-tool-logs', async function GET(reques
   const toIdx = fromIdx + pageSize - 1
 
   try {
+    // Se filtro por domain_pack_id: two-phase query (mais simples que join).
+    // Busca sessions matching o pack, depois filtra logs por session_id.
+    let packSessionIds: string[] | null = null
+    if (domainPackId) {
+      let ssQ: any = client
+        .from('agent_sessions')
+        .select('id')
+        .eq('domain_pack_id', domainPackId)
+        .limit(5000) // cap pragmático; o filtro no UI é por pack individual
+      if (scopedTenantId) ssQ = ssQ.eq('tenant_id', scopedTenantId)
+      const { data: ssRows, error: ssErr } = await ssQ
+      if (ssErr) {
+        console.error('[admin/agent/tool-logs] sessões por pack:', ssErr)
+        return serverError()
+      }
+      packSessionIds = ((ssRows as Array<{ id: string }> | null) ?? []).map(r => r.id)
+      if (packSessionIds.length === 0) {
+        return ok({ items: [], total: 0, page, page_size: pageSize, total_pages: 1 })
+      }
+    }
+
     let q: any = client
       .from('agent_tool_logs')
       .select('*', { count: 'exact' })
@@ -68,6 +90,7 @@ export const GET = withApiLog('admin-agent-tool-logs', async function GET(reques
     if (statusFilter === 'fail') q = q.eq('success', false)
     if (from) q = q.gte('created_at', from)
     if (to) q = q.lte('created_at', to)
+    if (packSessionIds) q = q.in('session_id', packSessionIds)
 
     const { data, count, error } = await q
     if (error) {
@@ -75,10 +98,29 @@ export const GET = withApiLog('admin-agent-tool-logs', async function GET(reques
       return serverError()
     }
 
-    const items = ((data as any[] | null) ?? []).map(r => ({
+    // Enrich com domain_pack_id derivado da sessão (join manual em JS).
+    const rawItems = (data as any[] | null) ?? []
+    let sessionPackMap = new Map<string, string | null>()
+    if (rawItems.length > 0) {
+      const sessionIds = Array.from(
+        new Set(rawItems.map(r => r.session_id).filter((x): x is string => !!x))
+      )
+      if (sessionIds.length > 0) {
+        const { data: sessRows } = await client
+          .from('agent_sessions')
+          .select('id, domain_pack_id')
+          .in('id', sessionIds)
+        for (const s of (sessRows as Array<{ id: string; domain_pack_id: string | null }>) ?? []) {
+          sessionPackMap.set(s.id, s.domain_pack_id ?? null)
+        }
+      }
+    }
+
+    const items = rawItems.map(r => ({
       ...r,
       input: sanitizeJsonPayload(r.input),
       output: r.output ? sanitizeJsonPayload(r.output) : null,
+      domain_pack_id: r.session_id ? (sessionPackMap.get(r.session_id) ?? null) : null,
     }))
     const total = count ?? 0
 

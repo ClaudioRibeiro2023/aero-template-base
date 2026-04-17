@@ -88,6 +88,36 @@ export default function AgentSessionDetailPage() {
                   })}
                 </dd>
               </div>
+              <div>
+                <dt className="text-[var(--text-muted)] uppercase tracking-wider">Domain Pack</dt>
+                <dd className="text-[var(--text-primary)]">
+                  {data.session.domain_pack_id ? (
+                    <span className="inline-flex items-center gap-2 flex-wrap">
+                      <span className="font-mono">
+                        {data.session.domain_pack_id}
+                        {data.session.domain_pack_version
+                          ? ` v${data.session.domain_pack_version}`
+                          : ''}
+                      </span>
+                      {data.session.domain_pack_fallback && (
+                        <span className="inline-block px-2 py-0.5 rounded bg-amber-400/10 text-amber-300 text-[10px] font-medium">
+                          fallback
+                        </span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-[var(--text-muted)]">—</span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[var(--text-muted)] uppercase tracking-wider">Strategy</dt>
+                <dd className="text-[var(--text-primary)] font-mono">
+                  {data.session.domain_pack_strategy ?? (
+                    <span className="text-[var(--text-muted)]">—</span>
+                  )}
+                </dd>
+              </div>
             </dl>
           </section>
 

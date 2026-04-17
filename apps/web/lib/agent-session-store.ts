@@ -13,7 +13,7 @@
  */
 import { randomUUID } from 'crypto'
 import { SupabaseDbClient } from '@template/data/supabase'
-import type { IAgentSessionStore, PersistMessagesParams } from '@template/agent'
+import type { IAgentSessionStore, PersistMessagesParams, DomainPackInfo } from '@template/agent'
 import type { AgentRequest, AgentSession, AIMessage } from '@template/agent'
 
 /** Limite padrão de histórico injetado no prompt (janela segura de tokens) */
@@ -180,6 +180,26 @@ export class SupabaseAgentSessionStore implements IAgentSessionStore {
 
     if (error) {
       console.error('[AgentSessionStore] Erro ao atualizar sessão:', error.message)
+    }
+  }
+
+  // ─── recordDomainPack (Sprint 10) ──────────────────────────────────────────
+
+  async recordDomainPack(sessionId: string, info: DomainPackInfo): Promise<void> {
+    const client = await this.db.asUser()
+
+    const { error } = await client
+      .from('agent_sessions')
+      .update({
+        domain_pack_id: info.id,
+        domain_pack_version: info.version,
+        domain_pack_fallback: info.fallback,
+        domain_pack_strategy: info.strategy,
+      })
+      .eq('id', sessionId)
+
+    if (error) {
+      console.error('[AgentSessionStore] Erro ao registrar domain pack:', error.message)
     }
   }
 }

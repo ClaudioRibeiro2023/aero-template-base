@@ -123,6 +123,21 @@ export class AgentOrchestrator {
       ? await sessionStore.resolveSession(request)
       : this.resolveSessionInMemory(request)
 
+    // Sprint 10: persistir o domain pack resolvido na sessão.
+    // Silencioso: se store não injetado ou método ausente, apenas pula.
+    if (sessionStore?.recordDomainPack) {
+      await sessionStore
+        .recordDomainPack(session.id, {
+          id: domainPack.identity.id,
+          version: domainPack.identity.version,
+          fallback: domainPackFallback,
+          strategy: packStrategy,
+        })
+        .catch(err => {
+          console.error('[AgentOrchestrator] Erro ao registrar domain pack na sessão:', err)
+        })
+    }
+
     const scope: MemoryScope = {
       tenantId: request.tenantId,
       appId: request.appId,

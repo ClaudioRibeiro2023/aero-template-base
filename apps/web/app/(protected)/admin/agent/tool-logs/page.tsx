@@ -4,21 +4,24 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Filter, FileSearch } from 'lucide-react'
 import { useFormatter } from 'next-intl'
-import { useAdminAgentToolLogs } from '@/hooks/useAdminAgent'
+import { useAdminAgentToolLogs, useAdminAgentPacks } from '@/hooks/useAdminAgent'
 
 export default function AgentToolLogsPage() {
   const [tool, setTool] = useState('')
   const [status, setStatus] = useState<'' | 'success' | 'fail'>('')
   const [tenant, setTenant] = useState('')
   const [user, setUser] = useState('')
+  const [packFilter, setPackFilter] = useState('')
   const [page, setPage] = useState(1)
   const format = useFormatter()
 
+  const { data: packsData } = useAdminAgentPacks()
   const { data, isLoading } = useAdminAgentToolLogs({
     tool: tool || undefined,
     status: status || undefined,
     tenant_id: tenant || undefined,
     user_id: user || undefined,
+    domain_pack_id: packFilter || undefined,
     page,
     page_size: 50,
   })
@@ -90,6 +93,22 @@ export default function AgentToolLogsPage() {
           }}
           className="min-w-[180px] px-3 py-1.5 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm text-[var(--text-primary)] focus:outline-none placeholder:text-[var(--text-muted)]"
         />
+        <select
+          aria-label="Filtrar por domain pack"
+          value={packFilter}
+          onChange={e => {
+            setPackFilter(e.target.value)
+            setPage(1)
+          }}
+          className="px-3 py-1.5 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm text-[var(--text-primary)] focus:outline-none"
+        >
+          <option value="">Todos packs</option>
+          {packsData?.items.map(p => (
+            <option key={p.id} value={p.id}>
+              {p.display_name} ({p.id})
+            </option>
+          ))}
+        </select>
         {data && (
           <span className="text-xs text-[var(--text-muted)] ml-auto">{data.total} registros</span>
         )}
@@ -106,6 +125,9 @@ export default function AgentToolLogsPage() {
                 </th>
                 <th className="px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                   Ferramenta
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                  Pack
                 </th>
                 <th className="px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                   Status
@@ -125,7 +147,7 @@ export default function AgentToolLogsPage() {
               {isLoading && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-4 py-8 text-center text-sm text-[var(--text-muted)]"
                   >
                     Carregando...
@@ -134,7 +156,7 @@ export default function AgentToolLogsPage() {
               )}
               {!isLoading && items.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-16">
+                  <td colSpan={7} className="py-16">
                     <div className="flex flex-col items-center gap-3 text-center">
                       <FileSearch
                         size={40}
@@ -164,6 +186,15 @@ export default function AgentToolLogsPage() {
                   </td>
                   <td className="px-4 py-3 text-xs text-[var(--text-primary)] font-mono truncate max-w-[200px]">
                     {t.tool_name}
+                  </td>
+                  <td className="px-4 py-3 text-xs">
+                    {t.domain_pack_id ? (
+                      <span className="inline-block px-2 py-0.5 rounded bg-sky-400/10 text-sky-300 font-mono text-[10px]">
+                        {t.domain_pack_id}
+                      </span>
+                    ) : (
+                      <span className="text-[var(--text-muted)]">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span

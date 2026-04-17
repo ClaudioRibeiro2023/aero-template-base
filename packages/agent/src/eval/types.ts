@@ -63,6 +63,8 @@ export interface EvalResult {
     pendingActionsCount: number
     degraded: boolean
     error?: string
+    /** Sprint 10: domain pack resolvido no response. */
+    domainPackId?: string
   }
   timestamp: string
 }

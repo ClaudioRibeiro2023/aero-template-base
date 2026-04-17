@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Filter, FileSearch } from 'lucide-react'
 import { useFormatter } from 'next-intl'
-import { useAdminAgentSessions } from '@/hooks/useAdminAgent'
+import { useAdminAgentSessions, useAdminAgentPacks } from '@/hooks/useAdminAgent'
 
 const STATUS_COLORS: Record<string, string> = {
   active: 'text-emerald-400 bg-emerald-400/10',
@@ -16,16 +16,24 @@ export default function AgentSessionsPage() {
   const [tenant, setTenant] = useState('')
   const [userId, setUserId] = useState('')
   const [status, setStatus] = useState('')
+  const [packFilter, setPackFilter] = useState('') // '' | '__legacy__' | '__fallback__' | <packId>
   const [page, setPage] = useState(1)
   const format = useFormatter()
 
-  const { data, isLoading } = useAdminAgentSessions({
+  const { data: packsData } = useAdminAgentPacks()
+
+  const sessionFilters: Parameters<typeof useAdminAgentSessions>[0] = {
     tenant_id: tenant || undefined,
     user_id: userId || undefined,
     status: status || undefined,
     page,
     page_size: 50,
-  })
+  }
+  if (packFilter === '__legacy__') sessionFilters.domain_pack_legacy = true
+  else if (packFilter === '__fallback__') sessionFilters.domain_pack_fallback = true
+  else if (packFilter) sessionFilters.domain_pack_id = packFilter
+
+  const { data, isLoading } = useAdminAgentSessions(sessionFilters)
 
   const items = data?.items ?? []
   const totalPages = data?.total_pages ?? 1
@@ -86,6 +94,24 @@ export default function AgentSessionsPage() {
           <option value="archived">archived</option>
           <option value="expired">expired</option>
         </select>
+        <select
+          aria-label="Filtrar por domain pack"
+          value={packFilter}
+          onChange={e => {
+            setPackFilter(e.target.value)
+            setPage(1)
+          }}
+          className="px-3 py-1.5 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] text-sm text-[var(--text-primary)] focus:outline-none"
+        >
+          <option value="">Todos packs</option>
+          <option value="__legacy__">Legado (sem pack)</option>
+          <option value="__fallback__">Apenas fallback</option>
+          {packsData?.items.map(p => (
+            <option key={p.id} value={p.id}>
+              {p.display_name} ({p.id})
+            </option>
+          ))}
+        </select>
         {data && (
           <span className="text-xs text-[var(--text-muted)] ml-auto">{data.total} sessoes</span>
         )}
@@ -107,6 +133,9 @@ export default function AgentSessionsPage() {
                   Titulo
                 </th>
                 <th className="px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                  Pack
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                   Turnos
                 </th>
                 <th className="px-4 py-3 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
@@ -121,7 +150,7 @@ export default function AgentSessionsPage() {
               {isLoading && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-4 py-8 text-center text-sm text-[var(--text-muted)]"
                   >
                     Carregando...
@@ -130,7 +159,7 @@ export default function AgentSessionsPage() {
               )}
               {!isLoading && items.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-16">
+                  <td colSpan={7} className="py-16">
                     <div className="flex flex-col items-center gap-3 text-center">
                       <FileSearch
                         size={40}
@@ -171,6 +200,26 @@ export default function AgentSessionsPage() {
                     </td>
                     <td className="px-4 py-3 text-xs text-[var(--text-primary)] truncate max-w-[280px]">
                       {s.title ?? <span className="text-[var(--text-muted)]">—</span>}
+                    </td>
+                    <td className="px-4 py-3 text-xs">
+                      {s.domain_pack_id ? (
+                        <span className="inline-flex items-center gap-1">
+                          <span className="inline-block px-2 py-0.5 rounded bg-sky-400/10 text-sky-300 font-mono text-[10px]">
+                            {s.domain_pack_id}
+                            {s.domain_pack_version ? ` v${s.domain_pack_version}` : ''}
+                          </span>
+                          {s.domain_pack_fallback && (
+                            <span
+                              className="inline-block px-2 py-0.5 rounded bg-amber-400/10 text-amber-300 text-[10px] font-medium"
+                              title="Pack resolvido por fallback-core"
+                            >
+                              fallback
+                            </span>
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-[var(--text-muted)]">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-xs text-[var(--text-muted)]">{s.turn_count}</td>
                     <td className="px-4 py-3 text-xs text-[var(--text-muted)] font-mono">

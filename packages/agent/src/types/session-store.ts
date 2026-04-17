@@ -24,6 +24,15 @@ export interface PersistMessagesParams {
   traceId: string
 }
 
+// ─── Info do domain pack resolvido (Sprint 10) ────────────────────────────────
+
+export interface DomainPackInfo {
+  id: string
+  version: string
+  fallback: boolean
+  strategy: 'tenant' | 'app' | 'fallback-core' | 'none'
+}
+
 // ─── Interface principal ──────────────────────────────────────────────────────
 
 export interface IAgentSessionStore {
@@ -48,4 +57,10 @@ export interface IAgentSessionStore {
    * Atualiza last_active_at e turn_count da sessão.
    */
   touchSession(sessionId: string, turnCount: number): Promise<void>
+
+  /**
+   * Sprint 10: persiste o domain pack resolvido na sessão.
+   * Opcional para compatibilidade reversa (eval Runner não supre store).
+   */
+  recordDomainPack?(sessionId: string, info: DomainPackInfo): Promise<void>
 }
