@@ -53,6 +53,11 @@ export interface AgentTrace {
   /** Razões de degradação */
   degradationReasons?: string[]
 
+  /** Domain pack usado no turno (ex: 'tasks', 'core') */
+  domainPack?: string
+  /** Estratégia de resolução: 'tenant' | 'app' | 'fallback-core' | 'none' */
+  domainPackStrategy?: string
+
   /** Sucesso do turno */
   success: boolean
   errorCode?: string

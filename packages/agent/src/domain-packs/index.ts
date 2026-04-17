@@ -1,3 +1,5 @@
 export { DomainPackRegistry, getDomainPackRegistry } from './DomainPackRegistry'
+export type { ResolveStrategy, ResolveResult } from './DomainPackRegistry'
 export { coreDomainPack } from './core/index'
+export { tasksDomainPack } from './tasks/index'
 export type { DomainPack, IDomainPackRegistry } from '../types/domain-pack'

@@ -21,6 +21,7 @@ import {
   AgentOrchestrator,
   DomainPackRegistry,
   coreDomainPack,
+  tasksDomainPack,
 } from '@template/agent'
 import { domainTools } from '@/lib/agent-tools'
 import { getAuthGateway } from '@/lib/data'
@@ -61,7 +62,7 @@ const _tracer = new AgentTracer()
 const _packRegistry = (() => {
   const r = new DomainPackRegistry()
   r.register(coreDomainPack)
-  // TODO Sprint 3: r.register(domainPackEspecífico)
+  r.register(tasksDomainPack)
   return r
 })()
 
@@ -152,6 +153,13 @@ export async function POST(req: NextRequest) {
         pendingActions: response.pendingActions ?? [],
         persisted: hasPersistence,
         degraded: response.degraded ?? false,
+        domainPack: response.domainPackId
+          ? {
+              id: response.domainPackId,
+              version: response.domainPackVersion,
+              fallback: response.domainPackFallback,
+            }
+          : undefined,
       },
     })
   } catch (err) {

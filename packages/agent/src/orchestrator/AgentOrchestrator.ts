@@ -96,9 +96,18 @@ export class AgentOrchestrator {
 
     // ─── 1. Resolver domain pack ──────────────────────────────────────────────
 
-    const domainPack = packRegistry.resolve(request.appId, request.tenantId)
+    const { pack: domainPack, strategy: packStrategy } = packRegistry.resolveWithMetadata(
+      request.appId,
+      request.tenantId
+    )
     if (!domainPack) {
       throw new Error(`Nenhum domain pack encontrado para app "${request.appId}"`)
+    }
+
+    const domainPackFallback =
+      packStrategy === 'fallback-core' && request.appId !== 'core' && request.appId !== '*'
+    if (domainPackFallback) {
+      degradationReasons.push('domain-pack-fallback')
     }
 
     // ─── 2. Verificar policy ──────────────────────────────────────────────────
@@ -167,7 +176,10 @@ export class AgentOrchestrator {
       sessionId: session.id,
       traceId,
     }
-    const availableTools = tools.getAvailableTools(toolContext)
+    const authorizedToolNames = new Set(domainPack.authorizedSources.internalTools)
+    const availableTools = tools
+      .getAvailableTools(toolContext)
+      .filter(t => authorizedToolNames.has(t.function.name))
 
     // ─── 8. Loop de inferência + tool calls ───────────────────────────────────
 
@@ -326,7 +338,9 @@ export class AgentOrchestrator {
 
     // ─── 12. Registrar trace ──────────────────────────────────────────────────
 
-    const degraded = degradationReasons.length > 0
+    // domain-pack-fallback é observável mas não conta como degradação real
+    const degradedReasons = degradationReasons.filter(r => r !== 'domain-pack-fallback')
+    const degraded = degradedReasons.length > 0
 
     tracer.recordTrace({
       traceId,
@@ -349,6 +363,8 @@ export class AgentOrchestrator {
       documentsRetrieved: memoryContext.documentExcerpts.length,
       degraded,
       degradationReasons: degraded ? degradationReasons : undefined,
+      domainPack: domainPack.identity.id,
+      domainPackStrategy: packStrategy,
       success: true,
       startedAt: new Date(start).toISOString(),
       completedAt: new Date().toISOString(),
@@ -377,8 +393,11 @@ export class AgentOrchestrator {
       latencyMs: totalLatencyMs,
       traceId,
       degraded: degraded || undefined,
-      degradationReasons: degraded ? degradationReasons : undefined,
+      degradationReasons: degradationReasons.length > 0 ? degradationReasons : undefined,
       pendingActions: pendingActions.length > 0 ? pendingActions : undefined,
+      domainPackId: domainPack.identity.id,
+      domainPackVersion: domainPack.identity.version,
+      domainPackFallback,
     }
   }
 

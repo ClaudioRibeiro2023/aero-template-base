@@ -39,7 +39,13 @@ export { PolicyEngine, getPolicyEngine } from './policy/index'
 export { AgentTracer, getAgentTracer } from './observability/index'
 
 // ─── Domain Packs ─────────────────────────────────────────────────────────────
-export { DomainPackRegistry, getDomainPackRegistry, coreDomainPack } from './domain-packs/index'
+export {
+  DomainPackRegistry,
+  getDomainPackRegistry,
+  coreDomainPack,
+  tasksDomainPack,
+} from './domain-packs/index'
+export type { ResolveStrategy, ResolveResult } from './domain-packs/index'
 
 // ─── Eval Harness ─────────────────────────────────────────────────────────────
 export * from './eval/index'

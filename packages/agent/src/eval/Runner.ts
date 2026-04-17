@@ -12,6 +12,7 @@ import { PolicyEngine } from '../policy/PolicyEngine'
 import { AgentTracer } from '../observability/AgentTracer'
 import { DomainPackRegistry } from '../domain-packs/DomainPackRegistry'
 import { coreDomainPack } from '../domain-packs/core/index'
+import { tasksDomainPack } from '../domain-packs/tasks/index'
 import { MemoryManager } from '../memory/MemoryManager'
 import { MockAIGateway } from './MockAIGateway'
 import type { EvalCase, EvalResult, EvalRun, AssertionResult, MockTurn } from './types'
@@ -217,6 +218,7 @@ export async function runEvalCase(kase: EvalCase): Promise<EvalResult> {
   const tracer = new AgentTracer()
   const packRegistry = new DomainPackRegistry()
   packRegistry.register(coreDomainPack)
+  packRegistry.register(tasksDomainPack)
 
   const memoryStore = kase.mockMemoryHits ? makeFakeMemoryStore(kase.mockMemoryHits) : undefined
   const memory = new MemoryManager(gateway, memoryStore)
@@ -234,6 +236,7 @@ export async function runEvalCase(kase: EvalCase): Promise<EvalResult> {
 
   const userRole = kase.expectations.userRole ?? 'user'
   const tenantId = kase.expectations.tenantId ?? 'eval-tenant'
+  const appId = kase.expectations.appId ?? 'eval'
 
   let response: Awaited<ReturnType<AgentOrchestrator['run']>> | null = null
   let runError: string | undefined
@@ -244,7 +247,7 @@ export async function runEvalCase(kase: EvalCase): Promise<EvalResult> {
       sessionId: null,
       userId: 'eval-user',
       tenantId,
-      appId: 'eval',
+      appId,
       userRole,
     })
   } catch (err) {
@@ -376,6 +379,24 @@ function evaluateAssertions(
       name: 'maxLatencyMs',
       passed: latencyMs <= exp.maxLatencyMs,
       detail: `latência=${latencyMs}ms (limite ${exp.maxLatencyMs}ms)`,
+    })
+  }
+
+  if (exp.expectedDomainPackId !== undefined) {
+    const actual = response?.domainPackId
+    results.push({
+      name: 'expectedDomainPackId',
+      passed: actual === exp.expectedDomainPackId,
+      detail: `esperado="${exp.expectedDomainPackId}", atual="${actual ?? 'undefined'}"`,
+    })
+  }
+
+  if (exp.expectedDomainPackFallback !== undefined) {
+    const actual = response?.domainPackFallback ?? false
+    results.push({
+      name: 'expectedDomainPackFallback',
+      passed: actual === exp.expectedDomainPackFallback,
+      detail: `esperado=${exp.expectedDomainPackFallback}, atual=${actual}`,
     })
   }
 

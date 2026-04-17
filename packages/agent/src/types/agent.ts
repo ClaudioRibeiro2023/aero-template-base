@@ -107,6 +107,12 @@ export interface AgentResponse {
   degradationReasons?: string[]
   /** Ações pendentes de confirmação do usuário */
   pendingActions?: PendingAction[]
+  /** ID do Domain Pack usado para responder (ex: 'tasks', 'core') */
+  domainPackId?: string
+  /** Versão do Domain Pack usado (ex: '1.0.0') */
+  domainPackVersion?: string
+  /** true quando o resolver caiu no core porque não havia pack específico para appId */
+  domainPackFallback?: boolean
 }
 
 // ─── Fonte de informação ──────────────────────────────────────────────────────

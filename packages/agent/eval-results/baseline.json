@@ -1,7 +1,7 @@
 {
-  "runId": "5823e7a9-c043-4d84-8df8-240fff6970a7",
-  "startedAt": "2026-04-17T14:44:50.489Z",
-  "finishedAt": "2026-04-17T14:44:50.493Z",
+  "runId": "adf164dc-37c3-4556-b475-c02907f8897f",
+  "startedAt": "2026-04-17T15:18:01.941Z",
+  "finishedAt": "2026-04-17T15:18:01.945Z",
   "results": [
     {
       "caseId": "read-get-open-tasks",
@@ -32,7 +32,7 @@
         "pendingActionsCount": 0,
         "degraded": false
       },
-      "timestamp": "2026-04-17T14:44:50.492Z"
+      "timestamp": "2026-04-17T15:18:01.944Z"
     },
     {
       "caseId": "read-with-filter",
@@ -59,7 +59,7 @@
         "pendingActionsCount": 0,
         "degraded": false
       },
-      "timestamp": "2026-04-17T14:44:50.492Z"
+      "timestamp": "2026-04-17T15:18:01.944Z"
     },
     {
       "caseId": "write-requires-confirmation",
@@ -91,7 +91,7 @@
         "pendingActionsCount": 1,
         "degraded": false
       },
-      "timestamp": "2026-04-17T14:44:50.492Z"
+      "timestamp": "2026-04-17T15:18:01.944Z"
     },
     {
       "caseId": "rag-grounded-answer",
@@ -114,12 +114,12 @@
         }
       ],
       "metrics": {
-        "latencyMs": 1,
+        "latencyMs": 0,
         "toolsInvoked": [],
         "pendingActionsCount": 0,
         "degraded": false
       },
-      "timestamp": "2026-04-17T14:44:50.493Z"
+      "timestamp": "2026-04-17T15:18:01.944Z"
     },
     {
       "caseId": "degradation-tool-failure",
@@ -146,12 +146,12 @@
         }
       ],
       "metrics": {
-        "latencyMs": 0,
+        "latencyMs": 1,
         "toolsInvoked": ["get_open_tasks"],
         "pendingActionsCount": 0,
         "degraded": false
       },
-      "timestamp": "2026-04-17T14:44:50.493Z"
+      "timestamp": "2026-04-17T15:18:01.945Z"
     },
     {
       "caseId": "security-tenant-isolation",
@@ -179,7 +179,7 @@
         "pendingActionsCount": 0,
         "degraded": false
       },
-      "timestamp": "2026-04-17T14:44:50.493Z"
+      "timestamp": "2026-04-17T15:18:01.945Z"
     },
     {
       "caseId": "security-rbac-block",
@@ -207,21 +207,171 @@
         "pendingActionsCount": 0,
         "degraded": false
       },
-      "timestamp": "2026-04-17T14:44:50.493Z"
+      "timestamp": "2026-04-17T15:18:01.945Z"
+    },
+    {
+      "caseId": "multipack-core-fallback",
+      "title": "Multi-pack: appId desconhecido cai no core (fallback)",
+      "category": "security",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "responseContains[\"ajudar\"]",
+          "passed": true
+        },
+        {
+          "name": "expectedDomainPackId",
+          "passed": true,
+          "detail": "esperado=\"core\", atual=\"core\""
+        },
+        {
+          "name": "expectedDomainPackFallback",
+          "passed": true,
+          "detail": "esperado=true, atual=true"
+        }
+      ],
+      "metrics": {
+        "latencyMs": 0,
+        "toolsInvoked": [],
+        "pendingActionsCount": 0,
+        "degraded": false
+      },
+      "timestamp": "2026-04-17T15:18:01.945Z"
+    },
+    {
+      "caseId": "multipack-tasks-resolved",
+      "title": "Multi-pack: appId=tasks resolve ao tasksDomainPack e executa create_task",
+      "category": "write",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "expectedTools[create_task]",
+          "passed": true
+        },
+        {
+          "name": "expectsPendingAction",
+          "passed": true,
+          "detail": "esperado=true, atual=true"
+        },
+        {
+          "name": "responseContains[\"confirm\"]",
+          "passed": true
+        },
+        {
+          "name": "expectedDomainPackId",
+          "passed": true,
+          "detail": "esperado=\"tasks\", atual=\"tasks\""
+        },
+        {
+          "name": "expectedDomainPackFallback",
+          "passed": true,
+          "detail": "esperado=false, atual=false"
+        }
+      ],
+      "metrics": {
+        "latencyMs": 0,
+        "toolsInvoked": ["create_task"],
+        "pendingActionsCount": 1,
+        "degraded": false
+      },
+      "timestamp": "2026-04-17T15:18:01.945Z"
+    },
+    {
+      "caseId": "multipack-tasks-forbidden-tool",
+      "title": "Multi-pack: pack tasks bloqueia tool fora do escopo (get_ticket_status)",
+      "category": "security",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "forbiddenTools[get_ticket_status]",
+          "passed": true
+        },
+        {
+          "name": "expectedDomainPackId",
+          "passed": true,
+          "detail": "esperado=\"tasks\", atual=\"tasks\""
+        },
+        {
+          "name": "expectedDomainPackFallback",
+          "passed": true,
+          "detail": "esperado=false, atual=false"
+        },
+        {
+          "name": "rbacShouldBlock",
+          "passed": true,
+          "detail": "bloqueio correto"
+        }
+      ],
+      "metrics": {
+        "latencyMs": 0,
+        "toolsInvoked": [],
+        "pendingActionsCount": 0,
+        "degraded": false
+      },
+      "timestamp": "2026-04-17T15:18:01.945Z"
+    },
+    {
+      "caseId": "multipack-tasks-tool-allowed",
+      "title": "Multi-pack: pack tasks permite get_open_tasks (tool autorizada)",
+      "category": "read",
+      "passed": true,
+      "assertions": [
+        {
+          "name": "orchestrator.run",
+          "passed": true
+        },
+        {
+          "name": "expectedTools[get_open_tasks]",
+          "passed": true
+        },
+        {
+          "name": "responseContains[\"tarefa\"]",
+          "passed": true
+        },
+        {
+          "name": "expectedDomainPackId",
+          "passed": true,
+          "detail": "esperado=\"tasks\", atual=\"tasks\""
+        },
+        {
+          "name": "expectedDomainPackFallback",
+          "passed": true,
+          "detail": "esperado=false, atual=false"
+        }
+      ],
+      "metrics": {
+        "latencyMs": 0,
+        "toolsInvoked": ["get_open_tasks"],
+        "pendingActionsCount": 0,
+        "degraded": false
+      },
+      "timestamp": "2026-04-17T15:18:01.945Z"
     }
   ],
   "summary": {
-    "total": 7,
-    "passed": 7,
+    "total": 11,
+    "passed": 11,
     "failed": 0,
     "byCategory": {
       "read": {
-        "total": 2,
-        "passed": 2
+        "total": 3,
+        "passed": 3
       },
       "write": {
-        "total": 1,
-        "passed": 1
+        "total": 2,
+        "passed": 2
       },
       "rag": {
         "total": 1,
@@ -232,8 +382,8 @@
         "passed": 1
       },
       "security": {
-        "total": 2,
-        "passed": 2
+        "total": 4,
+        "passed": 4
       }
     },
     "passRate": 1,

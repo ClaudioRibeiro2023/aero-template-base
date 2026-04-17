@@ -24,6 +24,12 @@ export interface EvalExpectations {
   userRole?: string
   rbacShouldBlock?: boolean
   tenantId?: string
+  /** Override de appId (default 'eval') */
+  appId?: string
+  /** Asserta que response.domainPackId === este valor */
+  expectedDomainPackId?: string
+  /** Asserta que response.domainPackFallback === este valor */
+  expectedDomainPackFallback?: boolean
 }
 
 export interface EvalCase {

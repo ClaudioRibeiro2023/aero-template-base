@@ -21,6 +21,7 @@ import {
   AgentTracer,
   DomainPackRegistry,
   coreDomainPack,
+  tasksDomainPack,
   HistoryCompactor,
 } from '@template/agent'
 import type { AIMessage, ToolExecutionContext } from '@template/agent'
@@ -60,6 +61,7 @@ const _tracer = new AgentTracer()
 const _packRegistry = (() => {
   const r = new DomainPackRegistry()
   r.register(coreDomainPack)
+  r.register(tasksDomainPack)
   return r
 })()
 
@@ -147,11 +149,19 @@ export async function POST(req: NextRequest) {
 
       try {
         // ─── Resolve domain pack ────────────────────────────────────
-        const domainPack = _packRegistry.resolve(appId, tenantId)
+        const { pack: domainPack, strategy: packStrategy } = _packRegistry.resolveWithMetadata(
+          appId,
+          tenantId
+        )
         if (!domainPack) {
           send({ type: 'error', error: `Nenhum domain pack para app "${appId}"` })
           controller.close()
           return
+        }
+        const domainPackFallback =
+          packStrategy === 'fallback-core' && appId !== 'core' && appId !== '*'
+        if (domainPackFallback) {
+          degradationReasons.push('domain-pack-fallback')
         }
 
         // ─── Policy ─────────────────────────────────────────────────
@@ -247,7 +257,10 @@ export async function POST(req: NextRequest) {
           sessionId: session.id,
           traceId,
         }
-        const availableTools = _tools.getAvailableTools(toolContext)
+        const authorizedToolNames = new Set(domainPack.authorizedSources.internalTools)
+        const availableTools = _tools
+          .getAvailableTools(toolContext)
+          .filter(t => authorizedToolNames.has(t.function.name))
 
         // ─── Inference loop with streaming ──────────────────────────
         let fullContent = ''
@@ -501,7 +514,9 @@ export async function POST(req: NextRequest) {
         }
 
         // ─── Trace ──────────────────────────────────────────────────
-        const degraded = degradationReasons.length > 0
+        // domain-pack-fallback é observável mas não conta como degradação real
+        const realDegradationReasons = degradationReasons.filter(r => r !== 'domain-pack-fallback')
+        const degraded = realDegradationReasons.length > 0
         _tracer.recordTrace({
           traceId,
           sessionId: session.id,
@@ -522,7 +537,9 @@ export async function POST(req: NextRequest) {
           memoryLayersUsed: ['session'],
           documentsRetrieved: memoryContext.documentExcerpts.length,
           degraded,
-          degradationReasons: degraded ? degradationReasons : undefined,
+          degradationReasons: degradationReasons.length > 0 ? degradationReasons : undefined,
+          domainPack: domainPack.identity.id,
+          domainPackStrategy: packStrategy,
           success: true,
           startedAt: new Date(start).toISOString(),
           completedAt: new Date().toISOString(),
@@ -551,6 +568,11 @@ export async function POST(req: NextRequest) {
           latencyMs: totalLatencyMs,
           persisted: hasPersistence,
           pendingActions: pendingActionsForDone.length > 0 ? pendingActionsForDone : undefined,
+          domainPack: {
+            id: domainPack.identity.id,
+            version: domainPack.identity.version,
+            fallback: domainPackFallback,
+          },
         })
       } catch (err) {
         send({
