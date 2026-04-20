@@ -12,6 +12,13 @@ const STATUS_COLORS: Record<string, string> = {
   expired: 'text-rose-400 bg-rose-400/10',
 }
 
+const STRATEGY_COLORS: Record<string, string> = {
+  tenant: 'text-violet-400 bg-violet-400/10',
+  app: 'text-sky-300 bg-sky-400/10',
+  'fallback-core': 'text-amber-300 bg-amber-400/10',
+  none: 'text-gray-400 bg-gray-400/10',
+}
+
 export default function AgentSessionsPage() {
   const [tenant, setTenant] = useState('')
   const [userId, setUserId] = useState('')
@@ -203,11 +210,22 @@ export default function AgentSessionsPage() {
                     </td>
                     <td className="px-4 py-3 text-xs">
                       {s.domain_pack_id ? (
-                        <span className="inline-flex items-center gap-1">
+                        <span className="inline-flex items-center gap-1 flex-wrap">
                           <span className="inline-block px-2 py-0.5 rounded bg-sky-400/10 text-sky-300 font-mono text-[10px]">
                             {s.domain_pack_id}
                             {s.domain_pack_version ? ` v${s.domain_pack_version}` : ''}
                           </span>
+                          {s.domain_pack_strategy && (
+                            <span
+                              className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium ${
+                                STRATEGY_COLORS[s.domain_pack_strategy] ??
+                                'text-gray-400 bg-gray-400/10'
+                              }`}
+                              title={`Resolver strategy: ${s.domain_pack_strategy}`}
+                            >
+                              {s.domain_pack_strategy}
+                            </span>
+                          )}
                           {s.domain_pack_fallback && (
                             <span
                               className="inline-block px-2 py-0.5 rounded bg-amber-400/10 text-amber-300 text-[10px] font-medium"
@@ -218,7 +236,15 @@ export default function AgentSessionsPage() {
                           )}
                         </span>
                       ) : (
-                        <span className="text-[var(--text-muted)]">—</span>
+                        <span className="inline-flex items-center gap-1">
+                          <span className="text-[var(--text-muted)]">—</span>
+                          <span
+                            className="inline-block px-2 py-0.5 rounded bg-gray-400/10 text-gray-400 text-[10px] font-medium"
+                            title="Sessão legada sem pack persistido"
+                          >
+                            legado
+                          </span>
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-xs text-[var(--text-muted)]">{s.turn_count}</td>

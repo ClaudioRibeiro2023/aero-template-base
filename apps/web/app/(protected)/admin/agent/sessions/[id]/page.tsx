@@ -6,6 +6,13 @@ import { ChevronLeft } from 'lucide-react'
 import { useFormatter } from 'next-intl'
 import { useAdminAgentSession } from '@/hooks/useAdminAgent'
 
+const STRATEGY_COLORS: Record<string, string> = {
+  tenant: 'text-violet-400 bg-violet-400/10',
+  app: 'text-sky-300 bg-sky-400/10',
+  'fallback-core': 'text-amber-300 bg-amber-400/10',
+  none: 'text-gray-400 bg-gray-400/10',
+}
+
 function JsonBlock({ value }: { value: unknown }) {
   if (value == null) return <span className="text-[var(--text-muted)]">—</span>
   return (
@@ -112,9 +119,21 @@ export default function AgentSessionDetailPage() {
               </div>
               <div>
                 <dt className="text-[var(--text-muted)] uppercase tracking-wider">Strategy</dt>
-                <dd className="text-[var(--text-primary)] font-mono">
-                  {data.session.domain_pack_strategy ?? (
-                    <span className="text-[var(--text-muted)]">—</span>
+                <dd className="text-[var(--text-primary)]">
+                  {data.session.domain_pack_strategy ? (
+                    <span
+                      className={`inline-block px-2 py-0.5 rounded text-[10px] font-medium ${
+                        STRATEGY_COLORS[data.session.domain_pack_strategy] ??
+                        'text-gray-400 bg-gray-400/10'
+                      }`}
+                      title={`Resolver strategy: ${data.session.domain_pack_strategy}`}
+                    >
+                      {data.session.domain_pack_strategy}
+                    </span>
+                  ) : (
+                    <span className="inline-block px-2 py-0.5 rounded bg-gray-400/10 text-gray-400 text-[10px] font-medium">
+                      legado
+                    </span>
                   )}
                 </dd>
               </div>
