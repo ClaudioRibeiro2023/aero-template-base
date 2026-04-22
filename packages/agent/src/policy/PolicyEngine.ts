@@ -27,11 +27,26 @@ export class PolicyEngine {
     const minimumRole = pack.security?.minimumRole
     if (!minimumRole) return { allowed: true, effectiveRole: request.userRole }
 
-    const roleHierarchy = ['viewer', 'user', 'manager', 'admin', 'super_admin']
+    // Hierarquia: do menor para o maior privilégio.
+    // Inclui aliases PT (gestor≈manager) e roles "humanos" do Aero (owner/master) acima de admin.
+    const roleHierarchy = [
+      'viewer',
+      'user',
+      'manager',
+      'gestor',
+      'admin',
+      'owner',
+      'master',
+      'super_admin',
+    ]
     const userLevel = roleHierarchy.indexOf(request.userRole.toLowerCase())
     const requiredLevel = roleHierarchy.indexOf(minimumRole.toLowerCase())
 
-    if (userLevel < requiredLevel) {
+    // Role desconhecida: trata como 'user' (nível base autenticado),
+    // não como -1 (que bloquearia tudo inclusive 'viewer').
+    const effectiveUserLevel = userLevel < 0 ? roleHierarchy.indexOf('user') : userLevel
+
+    if (effectiveUserLevel < requiredLevel) {
       return {
         allowed: false,
         reason: `Role "${request.userRole}" insuficiente. Requer "${minimumRole}".`,
