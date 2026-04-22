@@ -2,7 +2,20 @@
  * AgentRateLimiter — rate limiting básico por tenant/user/endpoint.
  *
  * Sprint 6: proteção contra abuso agora que o agente pode escrever.
- * Implementação simples em-memória com fallback para Supabase.
+ *
+ * LIMITAÇÃO CONHECIDA (validada em go-live 2026-04-22):
+ * Esta implementação é in-memory (Map). Em Vercel Fluid Compute com
+ * múltiplas instâncias concorrentes, cada instância mantém seu próprio
+ * store e o limite efetivo fica multiplicado pelo número de instâncias.
+ * No teste real, 35 requests em sequência passaram sem bloqueio.
+ *
+ * Mitigações corretas (entram na Fase 3):
+ *   1. Migrar para Supabase `agent_rate_limits` (tabela já existe em
+ *      00022) com UPSERT atômico por janela.
+ *   2. Ou Vercel KV / Upstash Redis via Marketplace.
+ *
+ * Enquanto isso, este limiter é "melhor-esforço" por instância.
+ * NÃO confiar como único throttle em produção distribuída.
  *
  * Limites:
  * - Chat: 30 requests / minuto / user
