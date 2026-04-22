@@ -43,19 +43,57 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(mapSupabaseUser(session.user, session))
-        setIsAuthenticated(true)
-      }
-      setIsLoading(false)
-    })
+    let mounted = true
 
-    // Listen for auth state changes
+    // getSession() pode falhar com "Refresh Token Not Found" quando ha
+    // token stale no localStorage (caso classico em /login apos logout).
+    // Sem try/catch o erro cascateia pelo _handleTokenChanged do
+    // GoTrueClient interno e gera loop de 400/429 em /auth/v1/token.
+    const bootstrap = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession()
+        if (error) {
+          // Token stale — limpar storage local SEM chamar o endpoint remoto
+          // (scope local evita 403 quando o refresh ja esta revogado).
+          if (
+            error.message?.includes('Refresh Token') ||
+            error.message?.includes('refresh_token')
+          ) {
+            try {
+              await supabase.auth.signOut({ scope: 'local' })
+            } catch {
+              /* swallow — storage pode ter sido limpo em paralelo */
+            }
+          }
+          if (mounted) {
+            setUser(null)
+            setIsAuthenticated(false)
+            setIsLoading(false)
+          }
+          return
+        }
+        if (mounted) {
+          if (data.session?.user) {
+            setUser(mapSupabaseUser(data.session.user, data.session))
+            setIsAuthenticated(true)
+          }
+          setIsLoading(false)
+        }
+      } catch {
+        if (mounted) {
+          setUser(null)
+          setIsAuthenticated(false)
+          setIsLoading(false)
+        }
+      }
+    }
+
+    void bootstrap()
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return
       if (session?.user) {
         setUser(mapSupabaseUser(session.user, session))
         setIsAuthenticated(true)
@@ -66,7 +104,10 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
       setIsLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const login = useCallback(async () => {

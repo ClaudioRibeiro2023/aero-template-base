@@ -9,7 +9,14 @@ import { ThemeProvider } from '@/hooks/useTheme'
 import { GlobalSearchProvider } from '@/components/search'
 import { ModuleProvider } from '@/lib/module-context'
 import { enabledModuleIds } from '@/config/modules'
-import { useState, type ReactNode } from 'react'
+import { usePathname } from 'next/navigation'
+import { useState, type ReactNode, Fragment, type ComponentType } from 'react'
+
+// Rotas publicas de auth NAO devem montar SupabaseAuthProvider.
+// O provider dispara supabase.auth.getSession() no mount, o que em
+// presenca de token stale no localStorage cascateia o loop de
+// refresh_token. /login, /register etc. nao precisam de sessao client.
+const PUBLIC_AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password']
 
 // IDs dos módulos habilitados — importado do sistema modular (build-time)
 // Em runtime, o middleware já bloqueia rotas desabilitadas.
@@ -22,8 +29,21 @@ const isDemoMode =
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => createQueryClient())
+  const pathname = usePathname()
 
-  const AuthProvider = isDemoMode ? DemoAuthProvider : SupabaseAuthProvider
+  const isPublicAuthRoute = PUBLIC_AUTH_ROUTES.some(
+    p => pathname === p || pathname.startsWith(`${p}/`)
+  )
+
+  // Em rotas publicas de auth: usar Fragment (sem provider) para evitar
+  // inicializacao do cliente Supabase, que dispara o loop de refresh_token
+  // quando ha token stale no localStorage. A pagina de login gerencia o
+  // signIn localmente via import direto do `supabase` client.
+  const AuthProvider: ComponentType<{ children: ReactNode }> = isPublicAuthRoute
+    ? Fragment
+    : isDemoMode
+      ? DemoAuthProvider
+      : SupabaseAuthProvider
 
   return (
     <QueryClientProvider client={queryClient}>
