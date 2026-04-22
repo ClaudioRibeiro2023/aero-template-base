@@ -80,7 +80,7 @@ export const createTaskTool: ToolDefinition = {
         .insert({
           title: input.title,
           description: input.description ?? null,
-          status: 'open',
+          status: 'todo',
           priority: input.priority ?? 'medium',
           assignee_id: input.assignee_id ?? null,
           created_by: context.userId,

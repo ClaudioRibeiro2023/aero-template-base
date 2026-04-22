@@ -13,8 +13,8 @@ import type {
 const inputSchema = z.object({
   task_id: z.string().uuid().describe('ID da tarefa'),
   new_status: z
-    .enum(['open', 'in_progress', 'review', 'done', 'cancelled'])
-    .describe('Novo status'),
+    .enum(['todo', 'in_progress', 'done', 'cancelled'])
+    .describe('Novo status — valores válidos do enum task_status'),
   reason: z.string().max(500).optional().describe('Motivo da mudança'),
 })
 
