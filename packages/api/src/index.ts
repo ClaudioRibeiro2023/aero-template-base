@@ -1,9 +1,19 @@
 /**
  * @template/api — Cliente HTTP agnóstico a provider.
  *
- * Sprint 4: barrel que re-exporta de @template/shared/api.
- * Sprint 7 (cleanup): código migrado aqui e @template/shared/api passa a re-exportar daqui.
+ * ESTADO ATUAL: alias/barrel para @template/shared/api.
+ * Este package existe para garantir imports estáveis (`@template/api`) enquanto
+ * o código reside em @template/shared/api. Seguirá sendo alias até refatoração futura.
  *
- * Uso: `import { createApiClient, CircuitBreaker } from '@template/api'`
+ * NÃO há breaking change planejada — o alias garante compatibilidade com todo código
+ * que já importa de @template/api.
+ *
+ * Exports disponíveis:
+ *   - apiClient                  — singleton do cliente HTTP com interceptors
+ *   - createApiClient(config)    — factory para criar cliente customizado
+ *   - CircuitBreaker             — proteção contra falhas em cascata
+ *   - ApiError, ApiResponse      — tipos de resposta
+ *
+ * Uso: `import { apiClient, createApiClient } from '@template/api'`
  */
 export * from '@template/shared/api'

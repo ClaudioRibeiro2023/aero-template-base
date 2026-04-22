@@ -1,8 +1,17 @@
 /**
  * Observability Layer — tracing, métricas e logs do sistema agentic.
  *
- * Sprint 1: implementação em memória + console.
- * Sprint 7: integração com OpenTelemetry + Supabase (agent_traces).
+ * v2.0: integração com OpenTelemetry (condicional) + persistência Supabase.
+ *
+ * Estratégia em camadas:
+ *   1. Structured log sempre (console.info em JSON)
+ *   2. Supabase persistence quando SUPABASE_URL disponível
+ *   3. OTEL quando @opentelemetry/api instalado E OTEL_EXPORTER_OTLP_ENDPOINT definido
+ *
+ * Para habilitar OTEL completo:
+ *   npm install @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/exporter-otlp-grpc
+ *   OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+ *   OTEL_SERVICE_NAME=my-agent
  */
 import { randomUUID } from 'crypto'
 
@@ -79,21 +88,118 @@ export interface AgentMetrics {
   p95LatencyMs: number
 }
 
+// ─── OTEL interface mínima (sem dep hard) ────────────────────────────────────
+
+interface OtelTracer {
+  startSpan(name: string, options?: { attributes?: Record<string, unknown> }): OtelSpan
+}
+
+interface OtelSpan {
+  setAttribute(key: string, value: unknown): void
+  setStatus(status: { code: number; message?: string }): void
+  end(): void
+}
+
+/** Carrega OTEL de forma dinâmica — retorna null se não instalado */
+async function loadOtelTracer(serviceName: string): Promise<OtelTracer | null> {
+  if (!process.env.OTEL_EXPORTER_OTLP_ENDPOINT) return null
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { trace } = (await import('@opentelemetry/api' as string as never)) as {
+      trace: { getTracer(name: string): OtelTracer }
+    }
+    return trace.getTracer(serviceName)
+  } catch {
+    // @opentelemetry/api não instalado — modo silencioso
+    return null
+  }
+}
+
+// ─── Supabase persistence helper ─────────────────────────────────────────────
+
+async function persistToSupabase(trace: AgentTrace): Promise<void> {
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+
+  if (!url || !key) return
+
+  try {
+    await fetch(`${url}/rest/v1/agent_traces`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        Prefer: 'return=minimal',
+      },
+      body: JSON.stringify({
+        trace_id: trace.traceId,
+        session_id: trace.sessionId,
+        user_id: trace.userId,
+        tenant_id: trace.tenantId,
+        app_id: trace.appId,
+        model: trace.model,
+        prompt_tokens: trace.promptTokens,
+        completion_tokens: trace.completionTokens,
+        total_tokens: trace.totalTokens,
+        estimated_cost_usd: trace.estimatedCostUsd,
+        total_latency_ms: trace.totalLatencyMs,
+        ai_latency_ms: trace.aiLatencyMs ?? null,
+        tools_latency_ms: trace.toolsLatencyMs ?? null,
+        tools_called: trace.toolsCalled,
+        sources_used: trace.sourcesUsed,
+        memory_layers_used: trace.memoryLayersUsed ?? [],
+        documents_retrieved: trace.documentsRetrieved ?? 0,
+        domain_pack: trace.domainPack ?? null,
+        domain_pack_strategy: trace.domainPackStrategy ?? null,
+        degraded: trace.degraded ?? false,
+        degradation_reasons: trace.degradationReasons ?? [],
+        success: trace.success,
+        error_code: trace.errorCode ?? null,
+        started_at: trace.startedAt,
+        completed_at: trace.completedAt,
+      }),
+    })
+  } catch {
+    // Falha silenciosa — observabilidade não pode derrubar o agente
+  }
+}
+
 // ─── Tracer ───────────────────────────────────────────────────────────────────
 
 export class AgentTracer {
   private readonly traces: AgentTrace[] = []
+  private readonly serviceName: string
+  private otelTracer: OtelTracer | null = null
+  private otelInitialized = false
+
+  constructor(serviceName = process.env.OTEL_SERVICE_NAME ?? 'template-agent') {
+    this.serviceName = serviceName
+  }
+
+  private async ensureOtel(): Promise<OtelTracer | null> {
+    if (!this.otelInitialized) {
+      this.otelTracer = await loadOtelTracer(this.serviceName)
+      this.otelInitialized = true
+    }
+    return this.otelTracer
+  }
 
   /** Cria um novo traceId para o turno */
   startTrace(): string {
     return randomUUID()
   }
 
-  /** Finaliza e persiste um trace */
+  /** Finaliza e persiste um trace — async fire-and-forget */
   recordTrace(trace: AgentTrace): void {
     this.traces.push(trace)
+    this._emit(trace).catch(() => {
+      /* fire-and-forget */
+    })
+  }
 
-    // Log estruturado (production: enviar para OTEL collector)
+  private async _emit(trace: AgentTrace): Promise<void> {
+    // Camada 1 — Structured log (sempre)
     const log = {
       traceId: trace.traceId,
       sessionId: trace.sessionId,
@@ -102,16 +208,44 @@ export class AgentTracer {
       costUsd: trace.estimatedCostUsd?.toFixed(6),
       latencyMs: trace.totalLatencyMs,
       tools: trace.toolsCalled,
+      domainPack: trace.domainPack,
+      degraded: trace.degraded,
       success: trace.success,
+      errorCode: trace.errorCode,
     }
-
     if (process.env.NODE_ENV !== 'production') {
       console.debug('[AgentTrace]', JSON.stringify(log))
     } else {
       console.info('[AgentTrace]', JSON.stringify(log))
     }
 
-    // TODO Sprint 7: enviar para OTEL e persistir em agent_traces (Supabase)
+    // Camada 2 — Supabase persistence (quando env vars presentes)
+    await persistToSupabase(trace)
+
+    // Camada 3 — OpenTelemetry (quando instalado + endpoint configurado)
+    const otel = await this.ensureOtel()
+    if (otel) {
+      const span = otel.startSpan('agent.turn', {
+        attributes: {
+          'agent.session_id': trace.sessionId,
+          'agent.user_id': trace.userId,
+          'agent.tenant_id': trace.tenantId,
+          'agent.model': trace.model,
+          'agent.total_tokens': trace.totalTokens,
+          'agent.estimated_cost_usd': trace.estimatedCostUsd,
+          'agent.latency_ms': trace.totalLatencyMs,
+          'agent.tools_called': trace.toolsCalled.join(','),
+          'agent.domain_pack': trace.domainPack ?? '',
+          'agent.degraded': trace.degraded ?? false,
+          'agent.success': trace.success,
+        },
+      })
+      span.setStatus({
+        code: trace.success ? 1 : 2, // OK = 1, ERROR = 2
+        message: trace.errorCode,
+      })
+      span.end()
+    }
   }
 
   /** Retorna métricas agregadas */
@@ -153,6 +287,11 @@ export class AgentTracer {
   /** Retorna traces filtrados por sessão */
   getTracesBySession(sessionId: string): AgentTrace[] {
     return this.traces.filter(t => t.sessionId === sessionId)
+  }
+
+  /** Retorna os N traces mais recentes */
+  getRecentTraces(limit = 100): AgentTrace[] {
+    return this.traces.slice(-limit)
   }
 }
 

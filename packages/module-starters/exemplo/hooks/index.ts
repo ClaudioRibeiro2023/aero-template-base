@@ -1,0 +1,1 @@
+export { useExampleData } from './useExampleData'

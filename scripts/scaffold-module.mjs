@@ -467,29 +467,129 @@ function addToModulesIndex(name) {
   return true
 }
 
+// ── Copy from starter helper ──────────────────────────────────
+
+const STARTERS_ROOT = path.resolve(__dirname, '..', 'packages', 'module-starters')
+
+/**
+ * Copia um módulo starter como base para o novo módulo,
+ * renomeando IDs e variáveis para o novo nome.
+ */
+function copyFromStarter(starterId, newName) {
+  const starterDir = path.join(STARTERS_ROOT, starterId)
+  if (!fs.existsSync(starterDir)) {
+    console.log(`  ⚠️  Starter '${starterId}' não encontrado em packages/module-starters/`)
+    return false
+  }
+
+  const newKebab = kebabCase(newName)
+  const newPascal = pascalCase(newName)
+  const newTitle = titleCase(newName)
+
+  console.log(`\n  📋 Copiando a partir do starter '${starterId}'...\n`)
+
+  // Manifest
+  const manifestSrc = path.join(starterDir, 'manifest.ts')
+  if (fs.existsSync(manifestSrc)) {
+    let content = fs.readFileSync(manifestSrc, 'utf-8')
+    // Substituir referências ao starter pelo novo módulo
+    content = content
+      .replaceAll(`id: '${starterId}'`, `id: '${newKebab}'`)
+      .replaceAll(`'${starterId}'`, `'${newKebab}'`)
+      .replaceAll(`"${starterId}"`, `"${newKebab}"`)
+      .replaceAll(`/${starterId}`, `/${newKebab}`)
+      .replaceAll(`module.${starterId}`, `module.${newKebab}`)
+    const manifestDst = path.join(WEB_ROOT, 'config', 'modules', `${newKebab}.manifest.ts`)
+    writeFile(manifestDst, content)
+  }
+
+  // API route
+  const apiSrc = path.join(starterDir, 'api', 'route.ts')
+  if (fs.existsSync(apiSrc)) {
+    let content = fs.readFileSync(apiSrc, 'utf-8')
+    content = content.replaceAll(`'${starterId}'`, `'${newKebab}'`).replaceAll(`"${starterId}"`, `"${newKebab}"`)
+    const apiDst = path.join(WEB_ROOT, 'app', 'api', newKebab, 'route.ts')
+    createDir(path.dirname(apiDst))
+    writeFile(apiDst, content)
+  }
+
+  // App pages
+  const appSrc = path.join(starterDir, 'app')
+  if (fs.existsSync(appSrc)) {
+    const appDst = path.join(WEB_ROOT, 'app', '(authenticated)', newKebab)
+    createDir(appDst)
+    for (const file of fs.readdirSync(appSrc)) {
+      const src = path.join(appSrc, file)
+      let content = fs.readFileSync(src, 'utf-8')
+      // Renomear classes/nomes nos componentes para o novo módulo
+      content = content.replaceAll(pascalCase(starterId), newPascal).replaceAll(starterId, newKebab)
+      writeFile(path.join(appDst, file), content)
+    }
+  }
+
+  // Components
+  const compSrc = path.join(starterDir, 'components')
+  if (fs.existsSync(compSrc) && fs.readdirSync(compSrc).length > 0) {
+    const compDst = path.join(WEB_ROOT, 'components', newKebab)
+    createDir(compDst)
+    for (const file of fs.readdirSync(compSrc)) {
+      const src = path.join(compSrc, file)
+      const content = fs.readFileSync(src, 'utf-8')
+      writeFile(path.join(compDst, file), content)
+    }
+    console.log(`  💡 Componentes copiados em components/${newKebab}/ — ajuste imports`)
+  }
+
+  // Types
+  const typesSrc = path.join(starterDir, 'types.ts')
+  if (fs.existsSync(typesSrc)) {
+    let content = fs.readFileSync(typesSrc, 'utf-8')
+    content = content.replaceAll(pascalCase(starterId), newPascal)
+    writeFile(path.join(WEB_ROOT, 'schemas', `${newKebab}.ts`), content)
+  }
+
+  // Migrations note
+  const migrationsSrc = path.join(starterDir, 'migrations')
+  if (fs.existsSync(migrationsSrc)) {
+    console.log(`  💡 Migrations disponíveis em packages/module-starters/${starterId}/migrations/`)
+    console.log(`     Copie para supabase/migrations/ e ajuste o número sequencial`)
+  }
+
+  return true
+}
+
 // ── Main ─────────────────────────────────────────────────────
 
 const args = process.argv.slice(2)
 if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
   console.log(`
-📦 Template Platform — Module Scaffolding
+📦 Template Platform — Module Scaffolding v2.0
 
 Usage:
-  node scripts/scaffold-module.mjs <module-name> [--functions func1,func2,func3]
+  node scripts/scaffold-module.mjs <module-name> [options]
 
 Options:
   --functions, -f   Comma-separated list of function pages to create
+  --from <starter>  Copiar estrutura de um módulo starter existente
 
-Example:
+Starters disponíveis (packages/module-starters/):
+  _template       Template mínimo
+  exemplo         CRUD de referência completo
+  etl             Pipeline ETL
+  lgpd            Privacidade/LGPD
+  observability   Métricas e logs
+  docs            Documentação interna
+
+Examples:
+  node scripts/scaffold-module.mjs financeiro
   node scripts/scaffold-module.mjs financeiro --functions receitas,despesas,relatorios
+  node scripts/scaffold-module.mjs clientes --from exemplo
+  node scripts/scaffold-module.mjs telemetria --from observability
 
-Generated structure:
-  apps/web/config/modules/<module>.manifest.ts (manifest)
-  apps/web/app/api/<module>/route.ts (API route with withModuleGuard)
-  apps/web/modules.config.ts (entry added as enabled: false)
-  apps/web/app/(authenticated)/<module>/
-    ├── page.tsx (main module page)
-    └── <function>/page.tsx (for each function)
+Generated structure (from scratch):
+  apps/web/config/modules/<module>.manifest.ts
+  apps/web/app/api/<module>/route.ts
+  apps/web/app/(authenticated)/<module>/page.tsx
   apps/web/services/<module>.ts
   apps/web/hooks/use<Module>.ts
   apps/web/schemas/<module>.ts
@@ -498,6 +598,8 @@ Generated structure:
 }
 
 const moduleName = args[0]
+const fromFlag = args.indexOf('--from')
+const fromStarter = fromFlag !== -1 ? args[fromFlag + 1] : null
 const functionsFlag = args.indexOf('--functions') !== -1 ? args.indexOf('--functions') : args.indexOf('-f')
 const functions = functionsFlag !== -1 && args[functionsFlag + 1]
   ? args[functionsFlag + 1].split(',').map(f => f.trim()).filter(Boolean)
@@ -507,12 +609,33 @@ const kebab = kebabCase(moduleName)
 const pascal = pascalCase(moduleName)
 
 console.log(`\n🚀 Scaffolding module: ${pascal} (${kebab})`)
-if (functions.length > 0) {
-  console.log(`   Functions: ${functions.join(', ')}`)
-}
+if (fromStarter) console.log(`   Base: starter '${fromStarter}'`)
+if (functions.length > 0) console.log(`   Functions: ${functions.join(', ')}`)
 console.log()
 
-// ── Manifest ──
+// ── Se --from, copiar do starter e registrar ──
+if (fromStarter) {
+  const copied = copyFromStarter(fromStarter, moduleName)
+  if (copied) {
+    addToModulesConfig(moduleName)
+    addToModulesIndex(moduleName)
+    // E2E stub
+    const e2eDir = path.join(WEB_ROOT, '..', '..', 'e2e')
+    createDir(e2eDir)
+    writeFile(path.join(e2eDir, `${kebab}.spec.ts`), e2eStubTemplate(moduleName))
+
+    console.log(`\n✅ Module "${pascal}" criado a partir do starter '${fromStarter}'!`)
+    console.log(`\n📝 Next steps:`)
+    console.log(`   1. Revisar manifest em apps/web/config/modules/${kebab}.manifest.ts`)
+    console.log(`   2. Ativar em apps/web/modules.config.ts (enabled: true)`)
+    console.log(`   3. Adaptar páginas e componentes para seu domínio`)
+    console.log()
+    process.exit(0)
+  }
+  process.exit(1)
+}
+
+// ── Manifest (from scratch) ──
 const manifestDir = path.join(WEB_ROOT, 'config', 'modules')
 createDir(manifestDir)
 writeFile(path.join(manifestDir, `${kebab}.manifest.ts`), manifestTemplate(moduleName))

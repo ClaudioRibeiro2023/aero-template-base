@@ -1,0 +1,1 @@
+// Hooks do módulo Documentação
