@@ -36,21 +36,48 @@ function estimateCost(model: string, promptTokens: number, completionTokens: num
 // Respostas de tools usam { type: 'function_call_output', call_id, output }
 // Mensagens normais usam { role, content }
 function toResponsesInput(messages: AIMessage[]): OpenAI.Responses.ResponseInput {
-  return messages.map((m): OpenAI.Responses.ResponseInputItem => {
+  const out: OpenAI.Responses.ResponseInputItem[] = []
+  for (const m of messages) {
     if (m.role === 'tool') {
-      return {
+      // Saída de ferramenta — referencia o call_id emitido no assistant anterior.
+      out.push({
         type: 'function_call_output',
         call_id: m.tool_call_id ?? '',
         output: m.content,
-      }
+      })
+      continue
     }
-    // assistant com tool_calls vira function_call_output no próximo turno —
-    // aqui só transmitimos a mensagem de texto do assistente
-    return {
-      role: m.role as 'user' | 'system',
+
+    if (m.role === 'assistant' && m.tool_calls && m.tool_calls.length > 0) {
+      // Assistant que decidiu chamar ferramenta(s).
+      // Se houver texto livre, emitimos como message ANTES dos function_call,
+      // preservando ordem. Cada tool_call vira um function_call item próprio
+      // com o mesmo call_id para a OpenAI conseguir correlacionar o output.
+      if (m.content && m.content.trim().length > 0) {
+        out.push({
+          type: 'message',
+          role: 'assistant',
+          content: [{ type: 'output_text', text: m.content }],
+        } as OpenAI.Responses.ResponseInputItem)
+      }
+      for (const tc of m.tool_calls) {
+        out.push({
+          type: 'function_call',
+          call_id: tc.id,
+          name: tc.function.name,
+          arguments: tc.function.arguments,
+        } as OpenAI.Responses.ResponseInputItem)
+      }
+      continue
+    }
+
+    // Mensagem normal (system/user/assistant sem tool_calls).
+    out.push({
+      role: m.role as 'user' | 'system' | 'assistant',
       content: m.content,
-    } as OpenAI.Responses.ResponseInputItem
-  })
+    } as OpenAI.Responses.ResponseInputItem)
+  }
+  return out
 }
 
 export class OpenAIGateway implements IAIGateway {
