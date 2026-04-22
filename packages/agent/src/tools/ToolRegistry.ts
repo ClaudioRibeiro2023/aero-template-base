@@ -169,8 +169,33 @@ export class ToolRegistry {
       if (!auth.allowedApps.includes(context.appId)) return false
     }
 
+    // Hierarquia compartilhada com PolicyEngine.
+    // `requiredRoles` é tratada como "lista de roles válidas" — se o user tem role
+    // igual a qualquer uma delas OU superior na hierarquia, autoriza.
+    // Isso evita que roles reais (owner, master, gestor) fiquem de fora por não
+    // estarem listadas explicitamente em cada tool.
     if (auth.requiredRoles && auth.requiredRoles.length > 0) {
-      if (!auth.requiredRoles.includes(context.userRole)) return false
+      const ROLE_HIERARCHY = [
+        'viewer',
+        'user',
+        'manager',
+        'gestor',
+        'admin',
+        'owner',
+        'master',
+        'super_admin',
+      ]
+      const userLevel = ROLE_HIERARCHY.indexOf(context.userRole.toLowerCase())
+      const effectiveUserLevel = userLevel < 0 ? ROLE_HIERARCHY.indexOf('user') : userLevel
+
+      // Menor nível entre as roles listadas = piso autorizado.
+      const minRequiredLevel = Math.min(
+        ...auth.requiredRoles.map(r => {
+          const lvl = ROLE_HIERARCHY.indexOf(r.toLowerCase())
+          return lvl < 0 ? ROLE_HIERARCHY.length : lvl // role desconhecida = teto
+        })
+      )
+      if (effectiveUserLevel < minRequiredLevel) return false
     }
 
     return true
