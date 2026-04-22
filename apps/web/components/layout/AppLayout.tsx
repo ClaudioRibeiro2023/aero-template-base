@@ -6,8 +6,8 @@ import { usePathname } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { ScrollProgress } from '@/components/common/ScrollProgress'
 import { AppSidebar } from './AppSidebar'
-import { Header } from './Header'
-import { Footer } from './Footer'
+import { Omnibar } from './Omnibar'
+import { ZenFooter } from './ZenFooter'
 import { useGlobalSearch } from '@/components/search'
 import { usePlatformConfig, useIsSetupComplete } from '@/hooks/usePlatformConfig'
 
@@ -250,7 +250,7 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
         className={clsx('flex-1 flex flex-col transition-all duration-300', isMobile && '!ms-0')}
         style={{ marginInlineStart: isMobile ? undefined : getContentMargin() }}
       >
-        <Header
+        <Omnibar
           onMobileMenuToggle={() => setIsMobileMenuOpen(prev => !prev)}
           onSearchOpen={globalSearch.open}
           isMobile={isMobile}
@@ -259,7 +259,7 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
         <main id="main-content" className="flex-1 ambient-gradient overflow-y-auto">
           {children}
         </main>
-        <Footer className="safe-area-bottom" />
+        <ZenFooter className="safe-area-bottom" />
       </div>
 
       {/* Global Search (Ctrl+K) */}
