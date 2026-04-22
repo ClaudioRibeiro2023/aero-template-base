@@ -1,7 +1,7 @@
 'use client'
 
 import '@/styles/auth-animations.css'
-import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { createSupabasePublicAuthClient } from '@/lib/supabase-browser'
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Mail, Loader2, CheckCircle, ArrowLeft } from 'lucide-react'
@@ -13,7 +13,7 @@ import { ResetPasswordSchema } from '@/schemas/auth'
 type ResetPasswordFormData = z.infer<typeof ResetPasswordSchema>
 
 export default function ForgotPasswordPage() {
-  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
+  const supabase = useMemo(() => createSupabasePublicAuthClient(), [])
   const [sent, setSent] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Template Platform'

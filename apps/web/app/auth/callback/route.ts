@@ -1,5 +1,6 @@
 import { SupabaseDbClient } from '@template/data/supabase'
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 
 /**
  * Validates redirect path to prevent open redirect attacks.

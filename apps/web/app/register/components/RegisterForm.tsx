@@ -3,7 +3,7 @@
 import { useState, useMemo, forwardRef } from 'react'
 import { Mail, Loader2, UserPlus } from 'lucide-react'
 import Link from 'next/link'
-import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { createSupabasePublicAuthClient } from '@/lib/supabase-browser'
 import { SignupSchema } from '@/schemas/auth'
 import type { z } from 'zod'
 import { GoogleIcon, TypingText } from '../../login/components/LoginVisualEffects'
@@ -55,7 +55,7 @@ export interface RegisterFormProps {
 }
 
 export function RegisterForm({ appName, logoUrl }: RegisterFormProps) {
-  const supabase = useMemo(() => createSupabaseBrowserClient(), [])
+  const supabase = useMemo(() => createSupabasePublicAuthClient(), [])
   const [socialLoading, setSocialLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
   const [registered, setRegistered] = useState(false)

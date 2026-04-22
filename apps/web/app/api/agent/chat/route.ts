@@ -10,7 +10,8 @@
  *   - SupabaseAgentSessionStore → criada por request (precisa de cookies context)
  *   - AgentOrchestrator → criado por request (combina singletons + store per-request)
  */
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import {
   OpenAIGateway,

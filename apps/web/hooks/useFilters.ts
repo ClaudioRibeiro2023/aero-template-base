@@ -162,7 +162,6 @@ export function useFilters(availableFilters?: FilterConfig[]): UseFiltersReturn 
     } catch {
       // ignore — private browsing, parse error, etc.
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Sincronizar com URL quando valores mudam

@@ -101,7 +101,7 @@ export const GET = withApiLog('admin-agent-tool-logs', async function GET(reques
 
     // Enrich com domain_pack_id derivado da sessão (join manual em JS).
     const rawItems = (data as any[] | null) ?? []
-    let sessionPackMap = new Map<string, string | null>()
+    const sessionPackMap = new Map<string, string | null>()
     if (rawItems.length > 0) {
       const sessionIds = Array.from(
         new Set(rawItems.map(r => r.session_id).filter((x): x is string => !!x))

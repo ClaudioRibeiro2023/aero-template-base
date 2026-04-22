@@ -12,7 +12,8 @@
  * 5. Marcar como executed + persistir resultado
  * 6. Retornar resultado
  */
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { ToolRegistry } from '@template/agent'
 import { domainTools } from '@/lib/agent-tools'

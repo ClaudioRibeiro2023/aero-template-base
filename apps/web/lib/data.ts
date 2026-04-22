@@ -42,6 +42,7 @@ const repositories = {
 type RepositoryName = keyof typeof repositories
 
 // ── Overloads tipados ──
+
 export function getRepository(name: 'tasks'): TaskRepository
 export function getRepository(name: 'users'): UserRepository
 export function getRepository(name: 'roles'): RoleRepository

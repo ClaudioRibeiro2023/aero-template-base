@@ -104,7 +104,6 @@ export const WIZARD_STEPS: WizardStep[] = [
 // Exibe: default + optional, com categoria visual.
 export const AVAILABLE_MODULES = (() => {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { allManifests } = require('@/config/modules')
     return (
       allManifests as Array<{ id: string; name: string; description: string; category: string }>

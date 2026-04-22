@@ -3,7 +3,8 @@
  *
  * Cancela uma ação pendente do agente.
  */
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthGateway } from '@/lib/data'
 import { isValidTenantId } from '@/lib/agent-session-store'

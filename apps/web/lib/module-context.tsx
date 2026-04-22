@@ -70,7 +70,6 @@ export function useModuleEnabled(moduleId: string): boolean {
   // Runtime override via feature flags
   // Flag `module.<id>` pode desabilitar em runtime (rollout gradual)
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { featureFlags } = require('@template/shared/features')
     const flagKey = `module.${moduleId}`
     // Se a flag existe e está explicitamente false, desabilita

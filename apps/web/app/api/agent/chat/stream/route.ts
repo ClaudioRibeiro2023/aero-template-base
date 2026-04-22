@@ -10,7 +10,7 @@
  *   data: {"type":"tool_end","name":"...","success":true|false}
  *   data: {"type":"done","content":"...","session":{...},...}  — final
  */
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import {

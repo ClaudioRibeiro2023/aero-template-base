@@ -116,5 +116,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon\\.svg|manifest\\.json|public/).*)'],
+  // Exclui assets estaticos (Next interno + arquivos com extensao comum em /public).
+  // Sem a exclusao por extensao, arquivos como /aero-logo.png passam pelo middleware
+  // e sao redirecionados para /login, quebrando imagens em rotas publicas.
+  matcher: [
+    '/((?!_next/static|_next/image|favicon\\.ico|icon\\.svg|manifest\\.json|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|bmp|txt|xml|json|webmanifest|woff|woff2|ttf|otf|map)$).*)',
+  ],
 }

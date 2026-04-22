@@ -1,6 +1,6 @@
 'use client'
 
-import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { createSupabasePublicAuthClient } from '@/lib/supabase-browser'
 import { useState, useMemo, forwardRef } from 'react'
 import { Mail, Lock, Loader2 } from 'lucide-react'
 import Link from 'next/link'
@@ -70,7 +70,7 @@ const enabledProviders = (process.env.NEXT_PUBLIC_AUTH_PROVIDERS || '')
 const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 
 export function LoginForm({ appName, logoUrl }: LoginFormProps) {
-  const supabase = useMemo(() => (isDemoMode ? null : createSupabaseBrowserClient()), [])
+  const supabase = useMemo(() => (isDemoMode ? null : createSupabasePublicAuthClient()), [])
   const [socialLoading, setSocialLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null)
   const [mode, setMode] = useState<AuthMode>('password')
@@ -231,6 +231,8 @@ export function LoginForm({ appName, logoUrl }: LoginFormProps) {
                 id="email"
                 type="email"
                 label="Email"
+                autoComplete="email"
+                required
                 currentValue={watchPassword('email') ?? ''}
                 {...registerPassword('email')}
               />
@@ -245,6 +247,8 @@ export function LoginForm({ appName, logoUrl }: LoginFormProps) {
                 id="password"
                 type="password"
                 label="Senha"
+                autoComplete="current-password"
+                required
                 currentValue={watchPassword('password') ?? ''}
                 {...registerPassword('password')}
               />
@@ -283,6 +287,8 @@ export function LoginForm({ appName, logoUrl }: LoginFormProps) {
                 id="magic-email"
                 type="email"
                 label="Email"
+                autoComplete="email"
+                required
                 currentValue={watchMagic('email') ?? ''}
                 {...registerMagic('email')}
               />
