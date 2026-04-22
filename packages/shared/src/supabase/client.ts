@@ -34,14 +34,28 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
+/**
+ * Singleton client para leitura client-side.
+ *
+ * autoRefreshToken=false e detectSessionInUrl=false sao INTENCIONAIS:
+ * - O refresh de sessao e feito server-side pelo middleware via @supabase/ssr
+ *   (leitura/escrita de cookies httpOnly). Deixar client-side auto-refreshing
+ *   gera loop quando ha token residual invalido em /login, /register etc.
+ * - detectSessionInUrl=false evita parse desnecessario do hash em rotas que
+ *   nao sao callback de OAuth (o /auth/callback usa um client dedicado).
+ *
+ * Se precisar de fluxo client-side de recuperacao de sessao (ex: signIn no
+ * browser seguido de onAuthStateChange), use `createBrowserClient` de
+ * `@supabase/ssr` com config dedicada — NAO aumente os defaults aqui.
+ */
 export const supabase: SupabaseClient<Database> = createClient<Database>(
   supabaseUrl || 'http://localhost:54321',
   supabaseAnonKey || 'placeholder',
   {
     auth: {
-      autoRefreshToken: true,
+      autoRefreshToken: false,
       persistSession: true,
-      detectSessionInUrl: true,
+      detectSessionInUrl: false,
     },
     realtime: {
       params: {
