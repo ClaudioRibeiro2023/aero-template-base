@@ -2,6 +2,25 @@
 
 Consolidado das Sprints 7–12, que compõem a Fase 2 do `@template/agent`.
 
+## Go-live — 2026-04-22
+
+- Produção: https://template.aeroeng.tech
+- Deploy prod: `aero-template-72urjxp0d` (Ready, 60s build)
+- Preview validado: `aero-template-i2gi92h31`
+- SHA do código: `1a019cc`
+- Supabase: `ajfmcmjhtwtquxwkhlxc` (factory-h-governance, banco compartilhado)
+- Migrations aplicadas: 00006, 00007, 00022, 00023, 00024 — Conversation OS
+  inteiro pela primeira vez neste banco
+- Env vars configuradas nos 3 environments: OPENAI_API_KEY,
+  NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_AUTH_PROVIDER(S),
+  NEXT_PUBLIC_PRIMARY_COLOR, NEXT_PUBLIC_APP_VERSION, NEXT_PUBLIC_APP_NAME
+- Smoke test automatizado: /login 200, /api/agent/chat sem auth 401
+- Pendente operacional: smoke 12-case autenticado
+  (docs/agent/GO-LIVE-RUNBOOK.md seção 3.2)
+
+---
+
 ## Sprint 7 — Painel admin de observabilidade
 
 Commit: `6ee060f`
