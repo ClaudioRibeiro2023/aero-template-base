@@ -63,7 +63,7 @@ export function ChatPanel({ chat }: ChatPanelProps) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-hidden min-h-0">
+      <div className="flex-1 overflow-y-auto min-h-0">
         <ChatMessages messages={messages} isLoading={isLoading} />
       </div>
 

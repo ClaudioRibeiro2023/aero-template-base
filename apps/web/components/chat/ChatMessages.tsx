@@ -39,7 +39,7 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 py-4 px-3 overflow-y-auto h-full">
+    <div className="flex flex-col gap-4 py-4 px-3">
       {messages.map(msg => (
         <ChatMessage key={msg.id} message={msg} />
       ))}
