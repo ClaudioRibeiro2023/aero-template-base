@@ -13,6 +13,7 @@ import {
   tooManyRequests,
   serverError,
 } from '@/lib/api-response'
+import { isAdminRole } from '@/lib/admin-role'
 import { getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 import { isDemoMode } from '@/lib/demo-data'
@@ -33,7 +34,7 @@ export const GET = withApiLog(
 
     const { user } = await getAuthGateway().getUser()
     if (!user) return unauthorized()
-    if (user.role !== 'ADMIN' && user.role !== 'GESTOR') return forbidden('Acesso restrito')
+    if (!isAdminRole(user.role)) return forbidden('Acesso restrito')
 
     const { id } = await ctx.params
     if (!id) return notFound('Sessao nao encontrada')

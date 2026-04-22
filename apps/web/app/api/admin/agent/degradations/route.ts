@@ -10,6 +10,7 @@ import { getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 import { isDemoMode } from '@/lib/demo-data'
 import { sanitizeJsonPayload } from '@/lib/agent-admin-sanitize'
+import { isAdminRole } from '@/lib/admin-role'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,7 @@ export const GET = withApiLog('admin-agent-degradations', async function GET(req
 
   const { user } = await getAuthGateway().getUser()
   if (!user) return unauthorized()
-  if (user.role !== 'ADMIN' && user.role !== 'GESTOR') return forbidden('Acesso restrito')
+  if (!isAdminRole(user.role)) return forbidden('Acesso restrito')
 
   const { searchParams } = new URL(request.url)
   const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
