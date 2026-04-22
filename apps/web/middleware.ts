@@ -33,6 +33,34 @@ export async function middleware(request: NextRequest) {
 
   // Rotas públicas — sem validação de auth
   if (publicPaths.some(p => pathname.startsWith(p))) {
+    // Em /login e /register: (a) se já há sessão válida, redirect para /dashboard;
+    // (b) senão, limpar cookies sb-* stale que causam loop de refresh_token
+    // (@supabase/ssr força autoRefreshToken=true em browser, ignora override do usuario,
+    // entao a unica defesa e remover o refresh_token stale antes do client inicializar).
+    if (pathname === '/login' || pathname === '/register') {
+      const hasSupabaseConfigured =
+        !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+
+      if (!isDemoMode && hasSupabaseConfigured) {
+        try {
+          const { user } = await getServerAuthProvider().validateRequest(request)
+          if (user) {
+            return NextResponse.redirect(new URL('/dashboard', request.url))
+          }
+        } catch {
+          // ignore — cai no fluxo de limpeza abaixo
+        }
+      }
+
+      const response = NextResponse.next()
+      for (const c of request.cookies.getAll()) {
+        if (c.name.startsWith('sb-')) {
+          response.cookies.set(c.name, '', { maxAge: 0, path: '/' })
+        }
+      }
+      return response
+    }
     return NextResponse.next()
   }
 
