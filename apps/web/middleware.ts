@@ -8,7 +8,13 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { getServerAuthProvider } from '@/lib/server-auth-provider'
 
-const publicPaths = ['/login', '/register', '/auth/callback', '/api/health']
+const publicPaths = [
+  '/login',
+  '/register',
+  '/auth/callback',
+  '/api/health',
+  '/api/telemetry/errors',
+]
 const SUPPORTED_LOCALES = ['pt-BR', 'en-US', 'es']
 
 function detectLocale(request: NextRequest): string | null {

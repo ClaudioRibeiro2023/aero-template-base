@@ -63,8 +63,8 @@ export function getRepository(name: RepositoryName) {
 /** Demo auth gateway — retorna usuário mock quando DEMO_MODE ativo */
 class DemoAuthGateway implements IAuthGateway {
   private readonly demoUser: AuthenticatedUser = {
-    id: 'demo-user-id',
-    email: 'admin@demo.com',
+    id: 'demo-user-001',
+    email: 'admin@template.dev',
     role: 'ADMIN' as const,
     tenantId: null,
   }

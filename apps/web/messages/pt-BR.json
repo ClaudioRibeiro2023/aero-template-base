@@ -127,6 +127,21 @@
       "admin-perfis": "Perfis e Roles",
       "admin-entidades": "Entidades",
       "admin-auditoria": "Auditoria"
+    },
+    "language": "Idioma",
+    "changeLanguage": "Trocar idioma",
+    "segments": {
+      "dashboard": "Dashboard",
+      "admin": "Administração",
+      "usuarios": "Usuários",
+      "config": "Configurações",
+      "geral": "Geral",
+      "aparencia": "Aparência",
+      "integracoes": "Integrações",
+      "notificacoes": "Notificações",
+      "relatorios": "Relatórios",
+      "profile": "Perfil",
+      "tasks": "Tarefas"
     }
   },
   "dashboard": {

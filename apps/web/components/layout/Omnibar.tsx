@@ -32,23 +32,19 @@ const LOCALE_LABELS: Record<string, string> = {
 }
 const LOCALE_OPTIONS = Object.entries(LOCALE_LABELS)
 
-const SEGMENT_LABELS: Record<string, string> = {
-  dashboard: 'Dashboard',
-  admin: 'Administração',
-  usuarios: 'Usuários',
-  config: 'Configurações',
-  geral: 'Geral',
-  aparencia: 'Aparência',
-  integracoes: 'Integrações',
-  notificacoes: 'Notificações',
-  relatorios: 'Relatórios',
-  profile: 'Perfil',
-  tasks: 'Tarefas',
-}
-
-function segmentLabel(seg: string): string {
-  return SEGMENT_LABELS[seg.toLowerCase()] ?? seg.charAt(0).toUpperCase() + seg.slice(1)
-}
+const SEGMENT_KEYS = new Set([
+  'dashboard',
+  'admin',
+  'usuarios',
+  'config',
+  'geral',
+  'aparencia',
+  'integracoes',
+  'notificacoes',
+  'relatorios',
+  'profile',
+  'tasks',
+])
 
 /**
  * Omnibar — topbar pill 56px com AmbientCluster integrado.
@@ -66,7 +62,23 @@ export function Omnibar({
   const router = useRouter()
   const notifs = useNotifications()
   const tNav = useTranslations('nav')
+  const tSeg = useTranslations('nav.segments')
   const tTheme = useTranslations('theme')
+
+  const segmentLabel = useCallback(
+    (seg: string): string => {
+      const key = seg.toLowerCase()
+      if (SEGMENT_KEYS.has(key)) {
+        try {
+          return tSeg(key)
+        } catch {
+          /* fall-through */
+        }
+      }
+      return seg.charAt(0).toUpperCase() + seg.slice(1)
+    },
+    [tSeg]
+  )
   const [showLocalePicker, setShowLocalePicker] = useState(false)
   const { isDark, toggle: toggleTheme } = useTheme()
 
@@ -169,11 +181,11 @@ export function Omnibar({
           />
 
           <div className="relative">
-            <Tooltip content="Idioma">
+            <Tooltip content={tNav('language')}>
               <button
                 onClick={() => setShowLocalePicker(prev => !prev)}
                 className="p-1.5 rounded-full hover:bg-[var(--sidebar-item-hover)] transition-colors min-w-[40px] min-h-[40px] flex items-center justify-center"
-                aria-label="Trocar idioma"
+                aria-label={tNav('changeLanguage')}
                 aria-expanded={showLocalePicker}
               >
                 <Globe size={isMobile ? 16 : 18} className="text-[var(--text-secondary)]" />
