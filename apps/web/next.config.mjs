@@ -15,6 +15,26 @@ const nextConfig = {
     ],
   },
   async headers() {
+    const isDev = process.env.NODE_ENV !== 'production'
+    // CSP NOTES
+    // ---------
+    // - 'unsafe-inline' é necessário em script-src para os bootstraps que o Next
+    //   injeta em tempo de hidratação.
+    // - 'unsafe-eval' é necessário APENAS em dev, porque o webpack usa
+    //   `eval-source-map` → o bundle executa `eval(...)` pra expor sourcemaps.
+    //   Sem isso, main-app.js falha em silêncio → React nunca hidrata → layout
+    //   renderiza mas botões, dropdowns, logout, i18n ficam inertes.
+    // - Em produção o bundle não usa eval — CSP mantém-se estrita.
+    // - 'strict-dynamic' + nonce não é usado porque o Next 14 não injeta nonces
+    //   por padrão (https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy).
+    const scriptSrc = isDev
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+      : "script-src 'self' 'unsafe-inline'"
+    // connect-src em dev precisa aceitar ws://localhost pro HMR do Next.
+    const connectSrc = isDev
+      ? "connect-src 'self' ws://localhost:* http://localhost:* https://*.supabase.co wss://*.supabase.co https://api.open-meteo.com"
+      : "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.open-meteo.com"
+
     return [
       {
         source: '/(.*)',
@@ -28,18 +48,14 @@ const nextConfig = {
             value: 'max-age=31536000; includeSubDomains',
           },
           {
-            // CSP: 'unsafe-inline' required in script-src for Next.js hydration scripts.
-            // 'strict-dynamic' NOT used because Next.js 14 does not inject nonces by default,
-            // causing all scripts (including its own bootstrap) to be blocked.
-            // For nonce-based CSP, see: https://nextjs.org/docs/app/building-your-application/configuring/content-security-policy
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'",
+              scriptSrc,
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https://*.supabase.co",
               "font-src 'self' data: https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.open-meteo.com",
+              connectSrc,
               "frame-ancestors 'none'",
             ].join('; '),
           },

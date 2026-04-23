@@ -22,7 +22,9 @@ export const ZenFooter = memo(function ZenFooter({ className }: { className?: st
         © {APP_YEAR} <span className="text-[var(--text-secondary)]">{appName}</span>
       </span>
       <span className="zen-dot" aria-hidden="true" />
-      <span className="font-mono text-[10px] opacity-80">v{appVersion}</span>
+      <span className="font-mono text-[10px] opacity-80" suppressHydrationWarning>
+        v{appVersion}
+      </span>
       <span className="zen-dot" aria-hidden="true" />
       <Link href="/docs" className="hover:underline">
         {t('docs')}
