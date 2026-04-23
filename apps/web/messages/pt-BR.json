@@ -85,7 +85,13 @@
     "profile": "Perfil",
     "administration": "Administração",
     "main": "Principal",
-    "modules": "Módulos",
+    "modules": {
+      "dashboard": "Dashboard",
+      "relatorios": "Relatórios",
+      "tasks": "Tarefas",
+      "configuracoes": "Configurações",
+      "administracao": "Administração"
+    },
     "system": "Sistema",
     "support": "Suporte",
     "collapseMenu": "Recolher menu",
@@ -96,7 +102,32 @@
     "openMenu": "Abrir menu",
     "toggleTheme": "Alternar tema",
     "home": "Início",
-    "quality": "Qualidade"
+    "quality": "Qualidade",
+    "groups": {
+      "Principal": "Principal",
+      "Módulos": "Módulos",
+      "Administração": "Administração",
+      "Suporte": "Suporte",
+      "Sistema": "Sistema",
+      "Serviços Técnicos": "Serviços Técnicos"
+    },
+    "functions": {
+      "dashboard-main": "Visão Geral",
+      "dashboard-analytics": "Analytics",
+      "dashboard-alerts": "Alertas",
+      "relatorios-gerenciais": "Gerenciais",
+      "relatorios-operacionais": "Operacionais",
+      "exportacoes": "Exportações",
+      "tasks-list": "Todas as Tarefas",
+      "config-geral": "Geral",
+      "config-aparencia": "Aparência",
+      "config-notificacoes": "Notificações",
+      "config-integracao": "Integrações",
+      "admin-usuarios": "Usuários",
+      "admin-perfis": "Perfis e Roles",
+      "admin-entidades": "Entidades",
+      "admin-auditoria": "Auditoria"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -221,7 +252,12 @@
     },
     "empty": "Nenhum ticket encontrado",
     "created": "Ticket criado com sucesso",
-    "updated": "Ticket atualizado"
+    "updated": "Ticket atualizado",
+    "createdAt": "Criado em {date}",
+    "noMessages": "Nenhuma mensagem ainda. Envie a primeira resposta.",
+    "you": "Você",
+    "supportAgent": "Suporte",
+    "weekOf": "Semana de {date}"
   },
   "quality": {
     "title": "Diagnóstico de Qualidade",
@@ -368,70 +404,5 @@
     "title": "Alertas",
     "subtitle": "Notificações e alertas do sistema",
     "count": "{count} alertas"
-  },
-  "support": {
-    "title": "Suporte",
-    "tickets": "Tickets",
-    "newTicket": "Novo Ticket",
-    "ticketDetail": "Detalhes do Ticket",
-    "status": {
-      "open": "Aberto",
-      "in_progress": "Em Andamento",
-      "resolved": "Resolvido",
-      "closed": "Fechado"
-    },
-    "priority": {
-      "low": "Baixa",
-      "medium": "Média",
-      "high": "Alta",
-      "critical": "Crítica"
-    },
-    "category": {
-      "bug": "Bug",
-      "feature": "Funcionalidade",
-      "question": "Dúvida",
-      "access": "Acesso",
-      "performance": "Performance",
-      "other": "Outro"
-    },
-    "form": {
-      "title": "Título",
-      "description": "Descrição",
-      "category": "Categoria",
-      "priority": "Prioridade",
-      "attachments": "Anexos",
-      "submit": "Enviar Ticket"
-    },
-    "thread": {
-      "reply": "Responder",
-      "internalNote": "Nota Interna",
-      "placeholder": "Digite sua mensagem..."
-    },
-    "actions": {
-      "assign": "Atribuir",
-      "changeStatus": "Alterar Status",
-      "resolve": "Resolver",
-      "close": "Fechar",
-      "reopen": "Reabrir"
-    },
-    "rating": {
-      "title": "Avalie o atendimento",
-      "comment": "Comentário (opcional)",
-      "submit": "Enviar Avaliação"
-    },
-    "filters": {
-      "all": "Todos",
-      "myTickets": "Meus Tickets",
-      "assigned": "Atribuídos a Mim",
-      "unassigned": "Sem Atribuição"
-    },
-    "empty": "Nenhum ticket encontrado",
-    "created": "Ticket criado com sucesso",
-    "updated": "Ticket atualizado",
-    "createdAt": "Criado em {date}",
-    "noMessages": "Nenhuma mensagem ainda. Envie a primeira resposta.",
-    "you": "Você",
-    "supportAgent": "Suporte",
-    "weekOf": "Semana de {date}"
   }
 }

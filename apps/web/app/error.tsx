@@ -12,6 +12,31 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error('[App Error]', error)
+    // Telemetria opt-in (Sprint QA+):
+    // 1. Sentry captura se SDK instalado + DSN definido (lib/sentry.ts)
+    // 2. Endpoint próprio /api/telemetry/errors sempre recebe (best-effort)
+    // Nenhum dos dois bloqueia render nem lança.
+    if (typeof window !== 'undefined') {
+      import('@/lib/sentry')
+        .then(({ captureException }) => captureException(error, { digest: error.digest }))
+        .catch(() => {})
+      try {
+        fetch('/api/telemetry/errors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: error.message,
+            digest: error.digest,
+            stack: error.stack?.slice(0, 2000),
+            url: window.location.href,
+            timestamp: new Date().toISOString(),
+          }),
+          keepalive: true,
+        }).catch(() => {})
+      } catch {
+        // ignore
+      }
+    }
   }, [error])
 
   return (

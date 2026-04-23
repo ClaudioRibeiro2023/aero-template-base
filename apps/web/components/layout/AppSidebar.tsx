@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@template/shared'
 import {
   Home,
@@ -121,6 +122,7 @@ function SidebarLink({
       <Link
         href={href}
         prefetch={prefetch}
+        aria-current={isActive ? 'page' : undefined}
         className={clsx(
           'sidebar-nav-item flex items-center gap-2.5 rounded-lg transition-all duration-150 ease-out relative',
           'text-[var(--sidebar-text)] hover:text-[var(--sidebar-text-hover)]',
@@ -198,7 +200,25 @@ export function AppSidebar({
   }
   const { user, logout } = useAuth()
   const pathname = usePathname()
+  const tNav = useTranslations('nav')
   const globalSearch = useGlobalSearch()
+
+  // Translation helpers — fallback to raw label if key missing
+  const translateGroup = (g: string) => {
+    const key = `groups.${g}`
+    const tr = tNav(key as never) as string
+    return tr && tr !== key ? tr : g
+  }
+  const translateModule = (id: string, fallback: string) => {
+    const key = `modules.${id}`
+    const tr = tNav(key as never) as string
+    return tr && tr !== key ? tr : fallback
+  }
+  const translateFn = (id: string, fallback: string) => {
+    const key = `functions.${id}`
+    const tr = tNav(key as never) as string
+    return tr && tr !== key ? tr : fallback
+  }
   const { org, orgs, switchOrg, isLoading: isOrgLoading } = useOrganization()
   const [tooltipItem, setTooltipItem] = useState<string | null>(null)
 
@@ -211,25 +231,26 @@ export function AppSidebar({
   const logoUrl = config?.logoUrl
   const logoCompactUrl = config?.branding?.logoCompactUrl || logoUrl
 
-  // Converter módulos para itens de navegação
+  // Converter módulos para itens de navegação (com labels i18n)
   const navItems: NavItem[] = useMemo(
     () =>
       authorizedModules
         .filter(m => m.showInSidebar !== false && m.enabled)
         .map(module => ({
-          label: module.name,
+          label: translateModule(module.id, module.name),
           path: module.path,
           icon: getIcon(module.icon),
           group: module.group || 'Módulos',
           badge: module.metadata?.badge as string | undefined,
           notificationCount: module.metadata?.notificationCount as number | undefined,
           children: module.functions?.map(fn => ({
-            label: fn.name,
+            label: translateFn(fn.id, fn.name),
             path: fn.path,
             icon: fn.icon ? getIcon(fn.icon) : undefined,
           })),
         })),
-    [authorizedModules]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [authorizedModules, tNav]
   )
 
   // Expand/collapse state for modules with children
@@ -351,10 +372,10 @@ export function AppSidebar({
               )}
               {!collapsed ? (
                 <p className="px-2.5 mb-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--sidebar-text-muted)] opacity-60 select-none">
-                  {groupName}
+                  {translateGroup(groupName)}
                 </p>
               ) : (
-                <div className="sr-only">{groupName}</div>
+                <div className="sr-only">{translateGroup(groupName)}</div>
               )}
 
               {/* Group items */}
@@ -434,6 +455,7 @@ export function AppSidebar({
                                     key={child.path}
                                     href={child.path}
                                     prefetch={groupName === 'Principal' ? undefined : false}
+                                    aria-current={childActive ? 'page' : undefined}
                                     className={clsx(
                                       'sidebar-nav-item flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] transition-all',
                                       childActive

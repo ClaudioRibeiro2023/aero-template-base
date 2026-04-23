@@ -85,7 +85,13 @@
     "profile": "Profile",
     "administration": "Administration",
     "main": "Main",
-    "modules": "Modules",
+    "modules": {
+      "dashboard": "Dashboard",
+      "relatorios": "Reports",
+      "tasks": "Tasks",
+      "configuracoes": "Settings",
+      "administracao": "Administration"
+    },
     "system": "System",
     "support": "Support",
     "collapseMenu": "Collapse menu",
@@ -96,7 +102,32 @@
     "openMenu": "Open menu",
     "toggleTheme": "Toggle theme",
     "home": "Home",
-    "quality": "Quality"
+    "quality": "Quality",
+    "groups": {
+      "Principal": "Main",
+      "Módulos": "Modules",
+      "Administração": "Administration",
+      "Suporte": "Support",
+      "Sistema": "System",
+      "Serviços Técnicos": "Technical Services"
+    },
+    "functions": {
+      "dashboard-main": "Overview",
+      "dashboard-analytics": "Analytics",
+      "dashboard-alerts": "Alerts",
+      "relatorios-gerenciais": "Managerial",
+      "relatorios-operacionais": "Operational",
+      "exportacoes": "Exports",
+      "tasks-list": "All Tasks",
+      "config-geral": "General",
+      "config-aparencia": "Appearance",
+      "config-notificacoes": "Notifications",
+      "config-integracao": "Integrations",
+      "admin-usuarios": "Users",
+      "admin-perfis": "Profiles & Roles",
+      "admin-entidades": "Entities",
+      "admin-auditoria": "Audit"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -174,7 +205,12 @@
       "resolved": "Resolved",
       "closed": "Closed"
     },
-    "priority": { "low": "Low", "medium": "Medium", "high": "High", "critical": "Critical" },
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
     "category": {
       "bug": "Bug",
       "feature": "Feature",
@@ -216,7 +252,12 @@
     },
     "empty": "No tickets found",
     "created": "Ticket created successfully",
-    "updated": "Ticket updated"
+    "updated": "Ticket updated",
+    "createdAt": "Created on {date}",
+    "noMessages": "No messages yet. Send the first reply.",
+    "you": "You",
+    "supportAgent": "Support",
+    "weekOf": "Week of {date}"
   },
   "quality": {
     "title": "Quality Diagnostic",
@@ -234,7 +275,11 @@
       "dependencies": "Dependencies",
       "codeQuality": "Code Quality"
     },
-    "status": { "pass": "Pass", "warn": "Warning", "fail": "Fail" },
+    "status": {
+      "pass": "Pass",
+      "warn": "Warning",
+      "fail": "Fail"
+    },
     "history": "Diagnostic History",
     "noReports": "No diagnostics performed",
     "recommendation": "Recommendation",
@@ -359,65 +404,5 @@
     "title": "Alerts",
     "subtitle": "System notifications and alerts",
     "count": "{count} alerts"
-  },
-  "support": {
-    "title": "Support",
-    "tickets": "Tickets",
-    "newTicket": "New Ticket",
-    "ticketDetail": "Ticket Details",
-    "status": {
-      "open": "Open",
-      "in_progress": "In Progress",
-      "resolved": "Resolved",
-      "closed": "Closed"
-    },
-    "priority": { "low": "Low", "medium": "Medium", "high": "High", "critical": "Critical" },
-    "category": {
-      "bug": "Bug",
-      "feature": "Feature",
-      "question": "Question",
-      "access": "Access",
-      "performance": "Performance",
-      "other": "Other"
-    },
-    "form": {
-      "title": "Title",
-      "description": "Description",
-      "category": "Category",
-      "priority": "Priority",
-      "attachments": "Attachments",
-      "submit": "Submit Ticket"
-    },
-    "thread": {
-      "reply": "Reply",
-      "internalNote": "Internal Note",
-      "placeholder": "Type your message..."
-    },
-    "actions": {
-      "assign": "Assign",
-      "changeStatus": "Change Status",
-      "resolve": "Resolve",
-      "close": "Close",
-      "reopen": "Reopen"
-    },
-    "rating": {
-      "title": "Rate the support",
-      "comment": "Comment (optional)",
-      "submit": "Submit Rating"
-    },
-    "filters": {
-      "all": "All",
-      "myTickets": "My Tickets",
-      "assigned": "Assigned to Me",
-      "unassigned": "Unassigned"
-    },
-    "empty": "No tickets found",
-    "created": "Ticket created successfully",
-    "updated": "Ticket updated",
-    "createdAt": "Created on {date}",
-    "noMessages": "No messages yet. Send the first reply.",
-    "you": "You",
-    "supportAgent": "Support",
-    "weekOf": "Week of {date}"
   }
 }

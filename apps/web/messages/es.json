@@ -85,7 +85,13 @@
     "profile": "Perfil",
     "administration": "Administración",
     "main": "Principal",
-    "modules": "Módulos",
+    "modules": {
+      "dashboard": "Panel",
+      "relatorios": "Informes",
+      "tasks": "Tareas",
+      "configuracoes": "Configuración",
+      "administracao": "Administración"
+    },
     "system": "Sistema",
     "support": "Soporte",
     "collapseMenu": "Contraer menú",
@@ -96,7 +102,32 @@
     "openMenu": "Abrir menú",
     "toggleTheme": "Cambiar tema",
     "home": "Inicio",
-    "quality": "Calidad"
+    "quality": "Calidad",
+    "groups": {
+      "Principal": "Principal",
+      "Módulos": "Módulos",
+      "Administração": "Administración",
+      "Suporte": "Soporte",
+      "Sistema": "Sistema",
+      "Serviços Técnicos": "Servicios Técnicos"
+    },
+    "functions": {
+      "dashboard-main": "Vista general",
+      "dashboard-analytics": "Analítica",
+      "dashboard-alerts": "Alertas",
+      "relatorios-gerenciais": "Gerenciales",
+      "relatorios-operacionais": "Operativos",
+      "exportacoes": "Exportaciones",
+      "tasks-list": "Todas las Tareas",
+      "config-geral": "General",
+      "config-aparencia": "Apariencia",
+      "config-notificacoes": "Notificaciones",
+      "config-integracao": "Integraciones",
+      "admin-usuarios": "Usuarios",
+      "admin-perfis": "Perfiles y Roles",
+      "admin-entidades": "Entidades",
+      "admin-auditoria": "Auditoría"
+    }
   },
   "dashboard": {
     "title": "Panel",
@@ -174,7 +205,12 @@
       "resolved": "Resuelto",
       "closed": "Cerrado"
     },
-    "priority": { "low": "Baja", "medium": "Media", "high": "Alta", "critical": "Crítica" },
+    "priority": {
+      "low": "Baja",
+      "medium": "Media",
+      "high": "Alta",
+      "critical": "Crítica"
+    },
     "category": {
       "bug": "Bug",
       "feature": "Funcionalidad",
@@ -216,7 +252,12 @@
     },
     "empty": "No se encontraron tickets",
     "created": "Ticket creado con éxito",
-    "updated": "Ticket actualizado"
+    "updated": "Ticket actualizado",
+    "createdAt": "Creado el {date}",
+    "noMessages": "Ningún mensaje aún. Envíe la primera respuesta.",
+    "you": "Usted",
+    "supportAgent": "Soporte",
+    "weekOf": "Semana del {date}"
   },
   "quality": {
     "title": "Diagnóstico de Calidad",
@@ -234,7 +275,11 @@
       "dependencies": "Dependencias",
       "codeQuality": "Calidad de Código"
     },
-    "status": { "pass": "Aprobado", "warn": "Atención", "fail": "Reprobado" },
+    "status": {
+      "pass": "Aprobado",
+      "warn": "Atención",
+      "fail": "Reprobado"
+    },
     "history": "Historial de Diagnósticos",
     "noReports": "No se realizaron diagnósticos",
     "recommendation": "Recomendación",
@@ -359,65 +404,5 @@
     "title": "Alertas",
     "subtitle": "Notificaciones y alertas del sistema",
     "count": "{count} alertas"
-  },
-  "support": {
-    "title": "Soporte",
-    "tickets": "Tickets",
-    "newTicket": "Nuevo Ticket",
-    "ticketDetail": "Detalles del Ticket",
-    "status": {
-      "open": "Abierto",
-      "in_progress": "En Progreso",
-      "resolved": "Resuelto",
-      "closed": "Cerrado"
-    },
-    "priority": { "low": "Baja", "medium": "Media", "high": "Alta", "critical": "Crítica" },
-    "category": {
-      "bug": "Bug",
-      "feature": "Funcionalidad",
-      "question": "Pregunta",
-      "access": "Acceso",
-      "performance": "Rendimiento",
-      "other": "Otro"
-    },
-    "form": {
-      "title": "Título",
-      "description": "Descripción",
-      "category": "Categoría",
-      "priority": "Prioridad",
-      "attachments": "Adjuntos",
-      "submit": "Enviar Ticket"
-    },
-    "thread": {
-      "reply": "Responder",
-      "internalNote": "Nota Interna",
-      "placeholder": "Escriba su mensaje..."
-    },
-    "actions": {
-      "assign": "Asignar",
-      "changeStatus": "Cambiar Estado",
-      "resolve": "Resolver",
-      "close": "Cerrar",
-      "reopen": "Reabrir"
-    },
-    "rating": {
-      "title": "Evalúe el soporte",
-      "comment": "Comentario (opcional)",
-      "submit": "Enviar Evaluación"
-    },
-    "filters": {
-      "all": "Todos",
-      "myTickets": "Mis Tickets",
-      "assigned": "Asignados a Mí",
-      "unassigned": "Sin Asignar"
-    },
-    "empty": "No se encontraron tickets",
-    "created": "Ticket creado con éxito",
-    "updated": "Ticket actualizado",
-    "createdAt": "Creado el {date}",
-    "noMessages": "Ningún mensaje aún. Envíe la primera respuesta.",
-    "you": "Usted",
-    "supportAgent": "Soporte",
-    "weekOf": "Semana del {date}"
   }
 }

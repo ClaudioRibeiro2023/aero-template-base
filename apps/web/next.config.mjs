@@ -14,6 +14,13 @@ const nextConfig = {
       { protocol: 'https', hostname: '**.supabase.co' },
     ],
   },
+  async rewrites() {
+    // /favicon.ico é solicitado automaticamente por todos os browsers.
+    // Como não temos um .ico binário, reescrevemos para /icon.svg (suportado em browsers modernos).
+    return [
+      { source: '/favicon.ico', destination: '/icon.svg' },
+    ]
+  },
   async headers() {
     const isDev = process.env.NODE_ENV !== 'production'
     // CSP NOTES
