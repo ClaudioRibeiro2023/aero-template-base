@@ -51,6 +51,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <body
         className={fontSans.className}
+        suppressHydrationWarning
         style={
           {
             '--ambient-color-1': process.env.NEXT_PUBLIC_AMBIENT_COLOR_1 || undefined,
