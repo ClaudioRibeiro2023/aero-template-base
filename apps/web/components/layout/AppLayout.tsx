@@ -204,11 +204,13 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
   }, [isMobile, isMobileMenuOpen])
 
   // Calcular margem do conteúdo principal
+  // Proposta C · Floating Islands: sidebar está em `position: fixed` com inset 12px.
+  // Gap entre sidebar e main = 12px → margin = 12 (inset) + width + 12 (gap) = width + 24.
   const getContentMargin = () => {
     if (isMobile) return '0'
     return effectiveCollapsed
-      ? 'calc(var(--sidebar-collapsed-width) + 36px)'
-      : 'calc(var(--sidebar-width) + 36px)'
+      ? 'calc(var(--sidebar-w-collapsed) + 24px)'
+      : 'calc(var(--sidebar-w-expanded) + 24px)'
   }
 
   return (
@@ -223,25 +225,17 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
         aria-hidden="true"
       />
 
-      {/* ── Sidebar ── */}
-      <div
-        ref={isMobile ? drawerRef : undefined}
-        className={clsx(
-          // Mobile: off-screen drawer
-          isMobile && [
-            'fixed inset-y-0 start-0 z-[70] w-[var(--sidebar-width)]',
-            'transition-transform duration-300 ease-out',
-            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
-          ],
-          // Tablet / Desktop: static
-          !isMobile && ''
-        )}
-      >
+      {/* ── Sidebar (Proposta C · Floating Islands) ──
+          FloatingSidebar é position:fixed. Mobile drawer: o componente usa
+          translate-x internamente via mobileOpenProp/isMobileOpen. */}
+      <div ref={isMobile ? drawerRef : undefined}>
         <AppSidebar
           collapsed={isMobile ? false : effectiveCollapsed}
           onToggle={
             isMobile ? undefined : isTablet ? undefined : () => setIsSidebarCollapsed(prev => !prev)
           }
+          mobileOpen={isMobile ? isMobileMenuOpen : undefined}
+          onMobileToggle={isMobile ? setIsMobileMenuOpen : undefined}
         />
       </div>
 

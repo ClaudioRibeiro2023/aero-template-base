@@ -38,6 +38,7 @@ import { useOrganization } from '@/hooks/useOrganization'
 import { TenantSwitcher } from '@/components/common/TenantSwitcher'
 import { SidebarHeader } from './SidebarHeader'
 import { SidebarFooter } from './SidebarFooter'
+import { FloatingSidebar, SidebarIsle } from './FloatingSidebar'
 
 // Mapa de ícones dinâmicos — cobre todos os ícones usados em navigation configs
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -318,205 +319,205 @@ export function AppSidebar({
         </button>
       )}
 
-      <aside
-        role="navigation"
-        aria-label="Menu principal"
+      <FloatingSidebar
+        collapsed={collapsed}
         className={clsx(
-          'flex flex-col sidebar-island',
-          'transition-[width,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
-          collapsed ? 'w-[var(--sidebar-collapsed-width,56px)]' : 'w-[var(--sidebar-width)]',
           'lg:translate-x-0',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-        {/* ── Header: Logo + Collapse Toggle + Quick Search ── */}
-        <SidebarHeader
-          collapsed={collapsed}
-          onToggle={onToggle}
-          appName={appName}
-          appInitial={appInitial}
-          logoUrl={logoUrl}
-          logoCompactUrl={logoCompactUrl}
-          onOpenSearch={() => globalSearch.open()}
-        />
+        <SidebarIsle variant="main" className="flex flex-col">
+          {/* ── Header: Logo + Collapse Toggle + Quick Search ── */}
+          <SidebarHeader
+            collapsed={collapsed}
+            onToggle={onToggle}
+            appName={appName}
+            appInitial={appInitial}
+            logoUrl={logoUrl}
+            logoCompactUrl={logoCompactUrl}
+            onOpenSearch={() => globalSearch.open()}
+          />
 
-        {/* ── Tenant Switcher ── */}
-        {!isOrgLoading && orgs.length > 1 && !collapsed && (
-          <div className="px-2 pb-1">
-            <TenantSwitcher
-              tenants={orgs.map(o => ({
-                id: o.id,
-                name: o.name,
-                slug: o.slug,
-                logoUrl: o.logo_url,
-              }))}
-              currentTenantId={org?.id}
-              onSwitch={t => switchOrg(t.id)}
-              className="w-full"
-            />
-          </div>
-        )}
+          {/* ── Tenant Switcher ── */}
+          {!isOrgLoading && orgs.length > 1 && !collapsed && (
+            <div className="px-2 pb-1">
+              <TenantSwitcher
+                tenants={orgs.map(o => ({
+                  id: o.id,
+                  name: o.name,
+                  slug: o.slug,
+                  logoUrl: o.logo_url,
+                }))}
+                currentTenantId={org?.id}
+                onSwitch={t => switchOrg(t.id)}
+                className="w-full"
+              />
+            </div>
+          )}
 
-        {/* ── Grouped Navigation ── */}
-        <nav
-          className="flex-1 py-1 px-2 overflow-y-auto scrollbar-thin"
-          aria-label="Navegação por módulos"
-        >
-          {Array.from(groupedItems.entries()).map(([groupName, items], groupIdx) => (
-            <div key={groupName} className={clsx(groupIdx > 0 && 'mt-2 pt-2')}>
-              {/* Group divider + label */}
-              {groupIdx > 0 && (
-                <div
-                  className={clsx('sidebar-divider', collapsed ? 'mx-2 mb-1.5' : 'mx-2.5 mb-1.5')}
-                />
-              )}
-              {!collapsed ? (
-                <p className="px-2.5 mb-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--sidebar-text-muted)] opacity-60 select-none">
-                  {translateGroup(groupName)}
-                </p>
-              ) : (
-                <div className="sr-only">{translateGroup(groupName)}</div>
-              )}
+          {/* ── Grouped Navigation ── */}
+          <nav
+            className="flex-1 py-1 px-2 overflow-y-auto scrollbar-thin"
+            aria-label="Navegação por módulos"
+          >
+            {Array.from(groupedItems.entries()).map(([groupName, items], groupIdx) => (
+              <div key={groupName} className={clsx(groupIdx > 0 && 'mt-2 pt-2')}>
+                {/* Group divider + label */}
+                {groupIdx > 0 && (
+                  <div
+                    className={clsx('sidebar-divider', collapsed ? 'mx-2 mb-1.5' : 'mx-2.5 mb-1.5')}
+                  />
+                )}
+                {!collapsed ? (
+                  <p className="px-2.5 mb-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--sidebar-text-muted)] opacity-60 select-none">
+                    {translateGroup(groupName)}
+                  </p>
+                ) : (
+                  <div className="sr-only">{translateGroup(groupName)}</div>
+                )}
 
-              {/* Group items */}
-              <ul className="space-y-0.5">
-                {items.map(item => {
-                  const ItemIcon = item.icon
-                  const isActive = prefixPaths.has(item.path)
-                    ? pathname === item.path
-                    : (pathname?.startsWith(item.path) ?? false)
-                  const hasChildren = item.children && item.children.length > 0
+                {/* Group items */}
+                <ul className="space-y-0.5">
+                  {items.map(item => {
+                    const ItemIcon = item.icon
+                    const isActive = prefixPaths.has(item.path)
+                      ? pathname === item.path
+                      : (pathname?.startsWith(item.path) ?? false)
+                    const hasChildren = item.children && item.children.length > 0
 
-                  return (
-                    <li
-                      key={item.path}
-                      className="relative group"
-                      onMouseEnter={() => (collapsed ? setTooltipItem(item.path) : undefined)}
-                      onMouseLeave={() => setTooltipItem(null)}
-                    >
-                      {hasChildren ? (
-                        <div>
-                          <button
-                            aria-expanded={expandedModules.has(item.path)}
-                            onClick={() => {
-                              setExpandedModules(prev => {
-                                const next = new Set(prev)
-                                if (next.has(item.path)) next.delete(item.path)
-                                else next.add(item.path)
-                                return next
-                              })
-                            }}
-                            className={clsx(
-                              'sidebar-nav-item w-full flex items-center gap-2.5 rounded-lg transition-all duration-150 ease-out',
-                              'text-[var(--sidebar-text)] hover:text-[var(--sidebar-text-hover)]',
-                              'hover:bg-[var(--sidebar-item-hover)]',
-                              collapsed
-                                ? 'p-2 justify-center min-w-[44px] min-h-[44px]'
-                                : 'px-2.5 py-1.5',
-                              isActive && 'sidebar-nav-item-active text-[#00b4d8]'
-                            )}
-                          >
-                            <span className="flex-shrink-0 group-hover:text-[var(--brand-primary)] transition-colors">
-                              <ItemIcon size={18} aria-hidden="true" />
-                            </span>
-                            {!collapsed && (
-                              <>
-                                <span className="text-[13px] font-medium flex-1 truncate text-start">
-                                  {item.label}
-                                </span>
-                                {item.badge && (
-                                  <span
-                                    className={clsx(
-                                      'text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full tracking-wide',
-                                      BADGE_COLORS[item.badge] || 'bg-white/10 text-white/50'
-                                    )}
-                                  >
-                                    {item.badge}
+                    return (
+                      <li
+                        key={item.path}
+                        className="relative group"
+                        onMouseEnter={() => (collapsed ? setTooltipItem(item.path) : undefined)}
+                        onMouseLeave={() => setTooltipItem(null)}
+                      >
+                        {hasChildren ? (
+                          <div>
+                            <button
+                              aria-expanded={expandedModules.has(item.path)}
+                              onClick={() => {
+                                setExpandedModules(prev => {
+                                  const next = new Set(prev)
+                                  if (next.has(item.path)) next.delete(item.path)
+                                  else next.add(item.path)
+                                  return next
+                                })
+                              }}
+                              className={clsx(
+                                'sidebar-nav-item w-full flex items-center gap-2.5 rounded-lg transition-all duration-150 ease-out',
+                                'text-[var(--sidebar-text)] hover:text-[var(--sidebar-text-hover)]',
+                                'hover:bg-[var(--sidebar-item-hover)]',
+                                collapsed
+                                  ? 'p-2 justify-center min-w-[44px] min-h-[44px]'
+                                  : 'px-2.5 py-1.5',
+                                isActive && 'sidebar-nav-item-active text-[#00b4d8]'
+                              )}
+                            >
+                              <span className="flex-shrink-0 group-hover:text-[var(--brand-primary)] transition-colors">
+                                <ItemIcon size={18} aria-hidden="true" />
+                              </span>
+                              {!collapsed && (
+                                <>
+                                  <span className="text-[13px] font-medium flex-1 truncate text-start">
+                                    {item.label}
                                   </span>
-                                )}
-                                <ChevronDown
-                                  size={14}
-                                  className={clsx(
-                                    'transition-transform duration-200 text-[var(--sidebar-text-muted)] flex-shrink-0',
-                                    !expandedModules.has(item.path) && '-rotate-90'
+                                  {item.badge && (
+                                    <span
+                                      className={clsx(
+                                        'text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full tracking-wide',
+                                        BADGE_COLORS[item.badge] || 'bg-white/10 text-white/50'
+                                      )}
+                                    >
+                                      {item.badge}
+                                    </span>
                                   )}
-                                />
-                              </>
-                            )}
-                          </button>
-                          {/* Children */}
-                          {!collapsed && expandedModules.has(item.path) && (
-                            <div className="ms-4 mt-0.5 space-y-0.5 ps-2 border-s border-[rgba(0,135,168,0.15)]">
-                              {item.children!.map(child => {
-                                const childActive =
-                                  pathname === child.path || pathname.startsWith(child.path + '/')
-                                return (
-                                  <Link
-                                    key={child.path}
-                                    href={child.path}
-                                    prefetch={groupName === 'Principal' ? undefined : false}
-                                    aria-current={childActive ? 'page' : undefined}
+                                  <ChevronDown
+                                    size={14}
                                     className={clsx(
-                                      'sidebar-nav-item flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] transition-all',
-                                      childActive
-                                        ? 'text-[var(--brand-primary)] font-medium bg-[var(--brand-primary)]/10'
-                                        : 'text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text)] hover:bg-[var(--sidebar-item-hover)]'
+                                      'transition-transform duration-200 text-[var(--sidebar-text-muted)] flex-shrink-0',
+                                      !expandedModules.has(item.path) && '-rotate-90'
                                     )}
-                                  >
-                                    {child.label}
-                                  </Link>
-                                )
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <SidebarLink
-                          href={item.path}
-                          isActive={isActive}
-                          collapsed={collapsed}
-                          icon={<ItemIcon size={18} aria-hidden="true" />}
-                          label={item.label}
-                          badge={item.badge}
-                          notificationCount={item.notificationCount}
-                          prefetch={groupName === 'Principal' ? undefined : false}
-                        />
-                      )}
-
-                      {/* Tooltip for collapsed mode */}
-                      {collapsed && tooltipItem === item.path && (
-                        <div className="absolute start-full top-1/2 -translate-y-1/2 ms-2 z-50 pointer-events-none">
-                          <div className="px-2.5 py-1.5 rounded-lg bg-gray-900 border border-white/10 shadow-xl whitespace-nowrap flex items-center gap-2">
-                            <span className="text-xs font-medium text-white">{item.label}</span>
-                            {item.badge && (
-                              <span
-                                className={clsx(
-                                  'text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full',
-                                  BADGE_COLORS[item.badge] || 'bg-white/10 text-white/50'
-                                )}
-                              >
-                                {item.badge}
-                              </span>
-                            )}
-                            {item.notificationCount != null && item.notificationCount > 0 && (
-                              <span className="min-w-[16px] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-1">
-                                {item.notificationCount > 99 ? '99+' : item.notificationCount}
-                              </span>
+                                  />
+                                </>
+                              )}
+                            </button>
+                            {/* Children */}
+                            {!collapsed && expandedModules.has(item.path) && (
+                              <div className="ms-4 mt-0.5 space-y-0.5 ps-2 border-s border-[rgba(0,135,168,0.15)]">
+                                {item.children!.map(child => {
+                                  const childActive =
+                                    pathname === child.path || pathname.startsWith(child.path + '/')
+                                  return (
+                                    <Link
+                                      key={child.path}
+                                      href={child.path}
+                                      prefetch={groupName === 'Principal' ? undefined : false}
+                                      aria-current={childActive ? 'page' : undefined}
+                                      className={clsx(
+                                        'sidebar-nav-item flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] transition-all',
+                                        childActive
+                                          ? 'text-[var(--brand-primary)] font-medium bg-[var(--brand-primary)]/10'
+                                          : 'text-[var(--sidebar-text-muted)] hover:text-[var(--sidebar-text)] hover:bg-[var(--sidebar-item-hover)]'
+                                      )}
+                                    >
+                                      {child.label}
+                                    </Link>
+                                  )
+                                })}
+                              </div>
                             )}
                           </div>
-                        </div>
-                      )}
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-          ))}
-        </nav>
+                        ) : (
+                          <SidebarLink
+                            href={item.path}
+                            isActive={isActive}
+                            collapsed={collapsed}
+                            icon={<ItemIcon size={18} aria-hidden="true" />}
+                            label={item.label}
+                            badge={item.badge}
+                            notificationCount={item.notificationCount}
+                            prefetch={groupName === 'Principal' ? undefined : false}
+                          />
+                        )}
 
-        {/* ── Footer: User compact ── */}
-        <SidebarFooter collapsed={collapsed} userName={user?.name} onLogout={logout} />
-      </aside>
+                        {/* Tooltip for collapsed mode */}
+                        {collapsed && tooltipItem === item.path && (
+                          <div className="absolute start-full top-1/2 -translate-y-1/2 ms-2 z-50 pointer-events-none">
+                            <div className="px-2.5 py-1.5 rounded-lg bg-gray-900 border border-white/10 shadow-xl whitespace-nowrap flex items-center gap-2">
+                              <span className="text-xs font-medium text-white">{item.label}</span>
+                              {item.badge && (
+                                <span
+                                  className={clsx(
+                                    'text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full',
+                                    BADGE_COLORS[item.badge] || 'bg-white/10 text-white/50'
+                                  )}
+                                >
+                                  {item.badge}
+                                </span>
+                              )}
+                              {item.notificationCount != null && item.notificationCount > 0 && (
+                                <span className="min-w-[16px] h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-bold px-1">
+                                  {item.notificationCount > 99 ? '99+' : item.notificationCount}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            ))}
+          </nav>
+        </SidebarIsle>
+
+        {/* ── Footer isle: User + logout ── */}
+        <SidebarIsle variant="footer">
+          <SidebarFooter collapsed={collapsed} userName={user?.name} onLogout={logout} />
+        </SidebarIsle>
+      </FloatingSidebar>
     </>
   )
 }
