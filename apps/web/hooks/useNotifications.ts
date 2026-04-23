@@ -12,6 +12,11 @@ const STORAGE_KEY = 'notifications'
 const MAX_NOTIFICATIONS = 50
 
 function loadNotifications(): Notification[] {
+  // SSR-safe: return empty during server render AND first client hydration.
+  // Hydration mismatch (#418/#425/#423) ocorria porque `localStorage.getItem`
+  // retornava dados no client mas `undefined` no SSR — o badge de unreadCount
+  // divergia. Agora hidratamos vazio e carregamos via useEffect.
+  if (typeof window === 'undefined') return []
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (!stored) return []
@@ -23,6 +28,7 @@ function loadNotifications(): Notification[] {
 }
 
 function saveNotifications(notifications: Notification[]) {
+  if (typeof window === 'undefined') return
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications.slice(0, MAX_NOTIFICATIONS)))
   } catch {
@@ -32,7 +38,17 @@ function saveNotifications(notifications: Notification[]) {
 
 export function useNotifications() {
   const { user } = useAuth()
-  const [notifications, setNotifications] = useState<Notification[]>(loadNotifications)
+  // Start empty — both SSR and first client render agree. Populate via useEffect
+  // post-mount (ver loadFromStorage abaixo).
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [hydrated, setHydrated] = useState(false)
+
+  // Post-mount: restaura notificações persistidas (evita hydration mismatch).
+  useEffect(() => {
+    const restored = loadNotifications()
+    if (restored.length > 0) setNotifications(restored)
+    setHydrated(true)
+  }, [])
 
   const addNotification = useCallback(
     (title: string, message: string, severity: Notification['severity'] = 'info') => {
@@ -108,10 +124,12 @@ export function useNotifications() {
   // Supabase Realtime: escuta INSERT em notifications table → badge atualiza sem polling
   useRealtimeSub(user?.id || '', !!user?.id)
 
-  // Persist when notifications change
+  // Persist when notifications change — só depois da restauração inicial,
+  // para não sobrescrever localStorage com [] antes do load post-mount.
   useEffect(() => {
+    if (!hydrated) return
     saveNotifications(notifications)
-  }, [notifications])
+  }, [notifications, hydrated])
 
   return {
     notifications,
