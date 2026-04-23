@@ -4,6 +4,7 @@ import './globals.css'
 import { Providers } from './providers'
 import { IntlProvider } from '@/components/providers/IntlProvider'
 import { fontSans, fontMono } from './fonts'
+import { GlobalErrorTelemetry } from '@/components/common/GlobalErrorTelemetry'
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Template Platform'
 
@@ -67,6 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <IntlProvider locale={locale} messages={messages as Record<string, unknown>}>
           <Providers>{children}</Providers>
         </IntlProvider>
+        <GlobalErrorTelemetry />
       </body>
     </html>
   )

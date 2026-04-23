@@ -8,6 +8,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true, // Lint runs as separate CI step
   },
+  // Source maps em produção para diagnóstico de hydration errors (#418/#425).
+  // Custo: +bundle size (maps servidos via .map sidecar, não adicionam ao JS).
+  productionBrowserSourceMaps: true,
   transpilePackages: ['@template/design-system', '@template/shared', '@template/types', '@template/data'],
   images: {
     remotePatterns: [
