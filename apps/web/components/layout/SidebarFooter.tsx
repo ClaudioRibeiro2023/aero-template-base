@@ -44,9 +44,7 @@ export function SidebarFooter({ collapsed, userName, onLogout }: SidebarFooterPr
   const logoutLabel = t('logout')
 
   return (
-    <div
-      className={clsx('border-t border-[var(--sidebar-border)]', collapsed ? 'p-2' : 'px-3 py-2.5')}
-    >
+    <div className={clsx(collapsed ? 'p-1' : 'px-1 py-0.5')}>
       {collapsed ? (
         <div className="flex flex-col items-center gap-1.5">
           <div

@@ -1247,10 +1247,21 @@ textarea:focus-visible {
   padding: 10px 12px;
 }
 
+/* Light mode: reforça contraste das ilhas (senão as 2 ilhas "fundem" visualmente
+   sobre o bg-root quase-branco). Sombra mais densa e borda mais marcada. */
+.light .floating-sidebar .fs-isle {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
 /* Mobile: floating-sidebar vira drawer full-height, sem insets */
 @media (max-width: 767px) {
   .floating-sidebar {
-    inset: 0;
+    inset-block: 0;
+    inset-inline-start: 0;
     width: var(--sidebar-w-expanded);
     gap: 0;
     transform: translateX(-100%);
