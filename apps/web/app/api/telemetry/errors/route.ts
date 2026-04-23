@@ -17,6 +17,11 @@ interface ErrorPayload {
   message?: string
   digest?: string
   stack?: string
+  componentStack?: string
+  kind?: string
+  source?: string
+  line?: number
+  column?: number
   url?: string
   timestamp?: string
 }
@@ -25,11 +30,18 @@ export async function POST(request: Request) {
   try {
     const payload = (await request.json().catch(() => ({}))) as ErrorPayload
 
-    // Structured log — Vercel captura como JSON
+    // Structured log — Vercel captura como JSON.
+    // componentStack (desminificado pelo onRecoverableError) é o que precisamos
+    // para rastrear hydration errors #418/#423/#425.
     console.error('[client-error]', {
+      kind: payload.kind,
       message: payload.message?.slice(0, 500),
       digest: payload.digest,
       stack: payload.stack?.slice(0, 1500),
+      componentStack: payload.componentStack?.slice(0, 2000),
+      source: payload.source,
+      line: payload.line,
+      column: payload.column,
       url: payload.url,
       timestamp: payload.timestamp ?? new Date().toISOString(),
       userAgent: request.headers.get('user-agent')?.slice(0, 200),
