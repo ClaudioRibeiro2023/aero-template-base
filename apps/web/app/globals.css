@@ -1247,6 +1247,91 @@ textarea:focus-visible {
   padding: 10px 12px;
 }
 
+/* ============================================
+   Editorial Dashboard — Proposta C · Storytelling
+   ============================================ */
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.kicker-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--brand-primary);
+  box-shadow: 0 0 8px var(--glow-brand);
+  animation: activePulse 3s ease-in-out infinite;
+}
+
+.editorial-title {
+  font-family: Georgia, 'Times New Roman', 'Noto Serif', serif;
+  font-weight: 700;
+  font-size: clamp(28px, 3.2vw, 40px);
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  line-height: 1.12;
+}
+
+.editorial-lede {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-width: 56ch;
+}
+
+.big-num {
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: clamp(44px, 5.5vw, 60px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text-primary);
+  background: linear-gradient(
+    180deg,
+    var(--text-primary) 0%,
+    color-mix(in srgb, var(--text-primary) 70%, transparent) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.big-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  margin-bottom: 6px;
+}
+.big-delta.is-up {
+  color: #34d399;
+  background: color-mix(in srgb, #34d399 10%, transparent);
+  border-color: color-mix(in srgb, #34d399 25%, transparent);
+}
+.big-delta.is-down {
+  color: #fb7185;
+  background: color-mix(in srgb, #fb7185 10%, transparent);
+  border-color: color-mix(in srgb, #fb7185 25%, transparent);
+}
+
+.light .big-delta.is-up {
+  color: #059669;
+}
+.light .big-delta.is-down {
+  color: #dc2626;
+}
+
 /* Zen Footer */
 .zen-footer {
   height: var(--footer-h-zen);

@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react'
 
 export interface AmbientClock {
-  /** Ex.: "Qua, 22 abr" */
+  /** Ex.: "Qua, 22 abr" — placeholder "—" no primeiro render SSR */
   date: string
-  /** Ex.: "17:43" */
+  /** Ex.: "17:43" — placeholder "—:—" no primeiro render SSR */
   time: string
-  /** Date nativo sempre em tempo real */
-  now: Date
+  /** Date nativo, null antes do mount (evita hydration mismatch) */
+  now: Date | null
 }
 
 const DOW = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -32,28 +32,38 @@ function format(now: Date, locale: string): AmbientClock {
   return { date, time, now }
 }
 
+const PLACEHOLDER: AmbientClock = { date: '—', time: '—:—', now: null }
+
 /**
  * Relógio ambiente do Omnibar — atualiza a cada minuto.
- * Safe para SSR: retorna hora atual no primeiro render client-side.
+ *
+ * HYDRATION SAFETY: primeiro render (SSR + hidratação) retorna PLACEHOLDER
+ * fixo. Só após `useEffect` (pós-mount) o relógio real entra — isso evita
+ * hydration mismatch React #418 (server time ≠ client time).
+ *
+ * BUG FIX 2026-04-22: versão anterior tentava `(setTimeout as any)._interval = id`,
+ * mas `window.setTimeout` retorna `number` primitivo no browser — não aceita
+ * propriedades → `TypeError: Cannot create property '_interval' on number '72'`.
+ * Agora usamos duas refs locais (timeoutId + intervalId) separadas.
  */
 export function useAmbientClock(locale: string = 'pt-BR'): AmbientClock {
-  const [clock, setClock] = useState<AmbientClock>(() => format(new Date(), locale))
+  const [clock, setClock] = useState<AmbientClock>(PLACEHOLDER)
 
   useEffect(() => {
     setClock(format(new Date(), locale))
     const tick = () => setClock(format(new Date(), locale))
+
     // Alinha o próximo tick ao início do próximo minuto
     const msToNextMinute = 60_000 - (Date.now() % 60_000)
-    const firstTimeout = window.setTimeout(() => {
+    let intervalId: number | undefined
+    const timeoutId = window.setTimeout(() => {
       tick()
-      const interval = window.setInterval(tick, 60_000)
-      ;(firstTimeout as unknown as { _interval?: number })._interval = interval
+      intervalId = window.setInterval(tick, 60_000)
     }, msToNextMinute)
 
     return () => {
-      const ref = firstTimeout as unknown as { _interval?: number }
-      window.clearTimeout(firstTimeout)
-      if (ref._interval) window.clearInterval(ref._interval)
+      window.clearTimeout(timeoutId)
+      if (intervalId !== undefined) window.clearInterval(intervalId)
     }
   }, [locale])
 
