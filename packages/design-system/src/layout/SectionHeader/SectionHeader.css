@@ -1,0 +1,79 @@
+/**
+ * SectionHeader Styles (Regra 28 - R5)
+ * eyebrow (sobrescrita) + titulo grande (heading real) + subtitulo.
+ */
+
+.ds-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-4, 1rem);
+  flex-wrap: wrap;
+}
+
+.ds-section-header__text {
+  min-width: 0;
+}
+
+.ds-section-header__eyebrow {
+  margin: 0 0 var(--spacing-1, 0.25rem);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: var(--font-weight-semibold, 600);
+  letter-spacing: var(--letter-spacing-wider, 0.05em);
+  text-transform: uppercase;
+  color: var(--text-link, #00b4d8);
+}
+
+.ds-section-header__title {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-bold, 700);
+  line-height: var(--line-height-tight, 1.25);
+  letter-spacing: var(--letter-spacing-tight, -0.025em);
+  color: var(--text-primary, #0f172a);
+}
+
+.ds-section-header--md .ds-section-header__title {
+  font-size: var(--font-size-2xl, 1.5rem);
+}
+
+.ds-section-header--lg .ds-section-header__title {
+  font-size: var(--font-size-3xl, 1.875rem);
+}
+
+.ds-section-header--xl .ds-section-header__title {
+  font-size: var(--font-size-4xl, 2.25rem);
+}
+
+.ds-section-header__subtitle {
+  margin: var(--spacing-2, 0.5rem) 0 0;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base, 1rem);
+  line-height: var(--line-height-normal, 1.5);
+  color: var(--text-secondary, #64748b);
+  max-width: 60ch;
+}
+
+.ds-section-header__actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2, 0.5rem);
+}
+
+/* ===== Dark Mode ===== */
+.dark .ds-section-header__title,
+[data-theme='dark'] .ds-section-header__title {
+  color: var(--text-primary, #f8fafc);
+}
+
+.dark .ds-section-header__eyebrow,
+[data-theme='dark'] .ds-section-header__eyebrow {
+  color: var(--text-link, #33c1d6);
+}
+
+.dark .ds-section-header__subtitle,
+[data-theme='dark'] .ds-section-header__subtitle {
+  color: var(--text-secondary, #94a3b8);
+}
