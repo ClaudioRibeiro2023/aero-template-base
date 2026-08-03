@@ -124,7 +124,7 @@ export const GET = withModuleGuard(
   '${kebab}',
   withApiLog('${kebab}', async function GET(request: NextRequest) {
     const ip = getClientIp(request.headers)
-    const { success } = rateLimit(ip, { windowMs: 60_000, max: 120 })
+    const { success } = await rateLimit(ip, { windowMs: 60_000, max: 120 })
     if (!success) return tooManyRequests()
 
     const { user, error } = await getAuthGateway().getUser()
@@ -144,7 +144,7 @@ export const POST = withModuleGuard(
   '${kebab}',
   withApiLog('${kebab}', async function POST(request: NextRequest) {
     const ip = getClientIp(request.headers)
-    const { success } = rateLimit(ip, { windowMs: 60_000, max: 30 })
+    const { success } = await rateLimit(ip, { windowMs: 60_000, max: 30 })
     if (!success) return tooManyRequests()
 
     const { user, error } = await getAuthGateway().getUser()
@@ -264,7 +264,7 @@ const BASE = '/${kebab}'
 
 export const ${kebabCase(name).replace(/-/g, '')}Service = {
   async list(params?: Record<string, string>) {
-    const { data } = await apiClient.get(BASE, { params })
+    const { data } = await apiClient.get(BASE, params)
     return data
   },
 
@@ -450,8 +450,11 @@ function addToModulesIndex(name) {
   // Insert import before the empty line preceding ALL_MANIFESTS
   content = content.slice(0, allIdx) + importLine + content.slice(allIdx)
 
-  // Add to ALL_MANIFESTS array (before the closing bracket)
-  const closingBracket = content.indexOf(']', content.indexOf(allManifestsLine))
+  // Add to ALL_MANIFESTS array (before the closing bracket).
+  // Buscar a partir do FIM da declaracao — o ']' de 'ModuleManifest[]' fica
+  // dentro da propria linha e nao pode ser confundido com o fechamento do array.
+  const arrayStart = content.indexOf(allManifestsLine) + allManifestsLine.length
+  const closingBracket = content.indexOf(']', arrayStart)
   if (closingBracket === -1) {
     console.log(`  ⚠️  Formato inesperado de ALL_MANIFESTS`)
     return false
