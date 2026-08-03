@@ -153,3 +153,25 @@ export { Accordion, type AccordionProps, type AccordionItemData } from './Accord
 
 // ConfirmDialog
 export { ConfirmDialog, type ConfirmDialogProps, type ConfirmDialogVariant } from './ConfirmDialog'
+
+// InfoTooltip / InfoPopover (Regra 28 - R3)
+export {
+  InfoTooltip,
+  InfoPopover,
+  type InfoTooltipProps,
+  type InfoPopoverProps,
+  type InfoSide,
+  type InfoAlign,
+} from './InfoTooltip'
+
+// StatCard (Regra 28 - R2)
+export {
+  StatCard,
+  type StatCardProps,
+  type StatDelta,
+  type StatDeltaDirection,
+  type StatCardTone,
+} from './StatCard'
+
+// RankingPanel (Regra 28 - R2)
+export { RankingPanel, type RankingPanelProps, type RankingItem } from './RankingPanel'

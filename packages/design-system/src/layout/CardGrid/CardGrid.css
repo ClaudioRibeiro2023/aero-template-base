@@ -1,0 +1,27 @@
+/**
+ * CardGrid Styles (Regra 28 - R4)
+ * Altura igual entre irmaos + gaps so via escala de tokens.
+ */
+
+.ds-card-grid {
+  display: grid;
+  /* altura igual: cada item estica para a altura da linha (sem vazio morto) */
+  align-items: stretch;
+}
+
+/* evita overflow de conteudo longo dentro das celulas */
+.ds-card-grid > * {
+  min-width: 0;
+}
+
+.ds-card-grid--gap-sm {
+  gap: var(--spacing-3, 0.75rem);
+}
+
+.ds-card-grid--gap-md {
+  gap: var(--spacing-4, 1rem);
+}
+
+.ds-card-grid--gap-lg {
+  gap: var(--spacing-6, 1.5rem);
+}

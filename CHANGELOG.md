@@ -7,6 +7,28 @@ aderindo a [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [Unreleased]
+
+### Design System — Componentes canônicos REGRA #28 (Higiene de UI Cliente)
+
+Camada de BUILD da REGRA #28: componentes reutilizáveis que matam as famílias de defeito
+F2–F6 na origem. Import único `@template/design-system`.
+
+- **`<InfoTooltip>` / `<InfoPopover>`** (R3): divulgação de info sobre `radix-ui`, com portal +
+  `collisionPadding` — nunca estouram nem sobrepõem cards vizinhos.
+- **`<StatCard>`** (R2): card de KPI com anatomia fixa (título · valor · delta · sparkline +
+  "i" no canto inferior direito); sem linha de fonte técnica por card.
+- **`<RankingPanel>`** (R2): layout de ranking único (5 melhores × 5 que mais precisam, barras + realce).
+- **`<SectionHeader>`** (R5): eyebrow + heading real + subtítulo (nível configurável).
+- **`<CardGrid>`** (R4): grade com altura igual (`items-stretch`), gaps só por tokens (sem vazio morto).
+- **`<PageDataFreshness>`** (R6/R1): carimbo de atualização único por página, audience-aware —
+  em app `external` a proveniência técnica vai para o atributo `title`, nunca para texto visível.
+- **`<TopbarStatusBand>`** (R6): banda de status compacta (ciclo · nº munic. · LIVE).
+- Nova dependência: `radix-ui` ^1.6.0. Polyfills de teste (ResizeObserver/pointer) em `setup.ts`.
+- Tokens + dark mode + a11y; 46 testes (vitest) verdes; `tsc --noEmit` limpo; Gate 9 sem vazamento.
+
+---
+
 ## [3.0.0] — 2026-04-01
 
 ### Sprint A — Users CRUD Real
