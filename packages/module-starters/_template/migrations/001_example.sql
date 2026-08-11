@@ -1,0 +1,40 @@
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Migration: 001_example
+-- Module:    _template
+-- Created:   YYYY-MM-DD
+-- Author:    <nome>
+-- Purpose:   <descrição curta — por quê esta migration existe>
+-- ─────────────────────────────────────────────────────────────────────────────
+--
+-- CONVENÇÃO DE ARQUIVOS
+--   - Nome: NNN_<verbo>_<alvo>.sql  (ex.: 002_add_status_to_tasks.sql)
+--   - Prefixo numérico zero-padded e ÚNICO dentro do módulo.
+--   - Um arquivo = uma unidade lógica (idempotente sempre que possível).
+--
+-- DIRETRIZES AERO STUDIO
+--   1. SEMPRE habilitar RLS em tabelas com dados de usuário (Regra #12/#13).
+--   2. SEMPRE usar `IF NOT EXISTS` / `IF EXISTS` para re-runs seguros.
+--   3. NUNCA usar `uuid-ossp` — preferir `gen_random_uuid()` (pgcrypto).
+--   4. FK de profile → `auth.users(id) ON DELETE CASCADE` (nunca RESTRICT em dados do usuário).
+--   5. Comentar colunas não-triviais com `COMMENT ON COLUMN ...`.
+--
+-- ESQUELETO — descomente e preencha quando for criar DDL real:
+--
+-- CREATE TABLE IF NOT EXISTS public.<tabela> (
+--   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+--   owner_id    uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+--   created_at  timestamptz NOT NULL DEFAULT now(),
+--   updated_at  timestamptz NOT NULL DEFAULT now()
+-- );
+--
+-- ALTER TABLE public.<tabela> ENABLE ROW LEVEL SECURITY;
+--
+-- CREATE POLICY "<tabela>_select_own"
+--   ON public.<tabela> FOR SELECT
+--   USING (auth.uid() = owner_id);
+--
+-- CREATE INDEX IF NOT EXISTS idx_<tabela>_owner ON public.<tabela>(owner_id);
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Stub — nenhum DDL aplicado. Substitua pelo conteúdo real ao derivar o módulo.
+-- ─────────────────────────────────────────────────────────────────────────────

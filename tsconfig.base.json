@@ -25,10 +25,8 @@
       "@template/data": ["./packages/data/src/index.ts"],
       "@template/data/*": ["./packages/data/src/providers/*/index.ts"],
       "@template/schemas": ["./packages/schemas/src/index.ts"],
-      "@template/api": ["./packages/api/src/index.ts"],
       "@template/auth": ["./packages/auth/src/index.ts"],
       "@template/utils": ["./packages/utils/src/index.ts"],
-      "@template/cache": ["./packages/cache/src/index.ts"],
       "@template/modules": ["./packages/modules/src/index.ts"],
       "@template/agent": ["./packages/agent/src/index.ts"],
       "@template/agent/*": ["./packages/agent/src/*/index.ts"]

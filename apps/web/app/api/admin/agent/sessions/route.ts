@@ -10,6 +10,7 @@ import { getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 import { isDemoMode } from '@/lib/demo-data'
 import { isAdminRole } from '@/lib/admin-role'
+import type { SupaQuery } from '@/lib/supabase-query-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,14 +59,14 @@ export const GET = withApiLog('admin-agent-sessions', async function GET(request
   const toIdx = fromIdx + pageSize - 1
 
   try {
-    let q: any = client
+    let q: SupaQuery = client
       .from('agent_sessions')
       .select(
         'id, tenant_id, user_id, app_id, status, title, turn_count, metadata, started_at, last_active_at, created_at, domain_pack_id, domain_pack_version, domain_pack_fallback, domain_pack_strategy',
         { count: 'exact' }
       )
       .order('last_active_at', { ascending: false })
-      .range(fromIdx, toIdx)
+      .range(fromIdx, toIdx) as unknown as SupaQuery
 
     if (scopedTenantId) q = q.eq('tenant_id', scopedTenantId)
     if (userIdParam) q = q.eq('user_id', userIdParam)

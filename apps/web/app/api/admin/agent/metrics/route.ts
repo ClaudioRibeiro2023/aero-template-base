@@ -12,6 +12,7 @@ import { getAuthGateway } from '@/lib/data'
 import { withApiLog } from '@/lib/logger'
 import { isDemoMode } from '@/lib/demo-data'
 import { isAdminRole } from '@/lib/admin-role'
+import type { SupaQuery } from '@/lib/supabase-query-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,25 +73,25 @@ export const GET = withApiLog('admin-agent-metrics', async function GET(request:
     if (!tenantFilter) return forbidden('Tenant nao encontrado')
   }
 
-  const applyScope = (q: any): any => {
-    let out: any = q
+  const applyScope = (q: SupaQuery): SupaQuery => {
+    let out: SupaQuery = q
     if (fromIso) out = out.gte('created_at', fromIso)
     if (tenantFilter) out = out.eq('tenant_id', tenantFilter)
     return out
   }
 
   try {
-    const sessionsCountQ: any = applyScope(
-      client.from('agent_sessions').select('id', { count: 'exact', head: true })
+    const sessionsCountQ: SupaQuery = applyScope(
+      client.from('agent_sessions').select('id', { count: 'exact', head: true }) as unknown as SupaQuery
     )
-    const messagesCountQ: any = applyScope(
-      client.from('agent_messages').select('id', { count: 'exact', head: true })
+    const messagesCountQ: SupaQuery = applyScope(
+      client.from('agent_messages').select('id', { count: 'exact', head: true }) as unknown as SupaQuery
     )
-    const toolCallsCountQ: any = applyScope(
-      client.from('agent_tool_logs').select('id', { count: 'exact', head: true })
+    const toolCallsCountQ: SupaQuery = applyScope(
+      client.from('agent_tool_logs').select('id', { count: 'exact', head: true }) as unknown as SupaQuery
     )
-    const pendingCountQ: any = applyScope(
-      client.from('agent_pending_actions').select('id', { count: 'exact', head: true })
+    const pendingCountQ: SupaQuery = applyScope(
+      client.from('agent_pending_actions').select('id', { count: 'exact', head: true }) as unknown as SupaQuery
     )
 
     const [sessionsRes, messagesRes, toolCallsRes, pendingRes] = await Promise.all([
@@ -101,12 +102,12 @@ export const GET = withApiLog('admin-agent-metrics', async function GET(request:
     ])
 
     // Latencias: sample de tool_logs (ate 1000)
-    let latSampleQ: any = client
+    let latSampleQ: SupaQuery = client
       .from('agent_tool_logs')
       .select('latency_ms')
       .not('latency_ms', 'is', null)
       .order('created_at', { ascending: false })
-      .limit(1000)
+      .limit(1000) as unknown as SupaQuery
     if (fromIso) latSampleQ = latSampleQ.gte('created_at', fromIso)
     if (tenantFilter) latSampleQ = latSampleQ.eq('tenant_id', tenantFilter)
     const { data: latRows } = await latSampleQ
@@ -119,10 +120,10 @@ export const GET = withApiLog('admin-agent-metrics', async function GET(request:
     const p95 = lats.length ? lats[Math.min(lats.length - 1, Math.floor(lats.length * 0.95))] : 0
 
     // Degraded: tool_logs com success=false no periodo
-    let degQ: any = client
+    let degQ: SupaQuery = client
       .from('agent_tool_logs')
       .select('id', { count: 'exact', head: true })
-      .eq('success', false)
+      .eq('success', false) as unknown as SupaQuery
     if (fromIso) degQ = degQ.gte('created_at', fromIso)
     if (tenantFilter) degQ = degQ.eq('tenant_id', tenantFilter)
     const degRes = await degQ
@@ -131,11 +132,11 @@ export const GET = withApiLog('admin-agent-metrics', async function GET(request:
     // Pragmático: busca sessões do período (cap 5000) + tool_logs + messages,
     // agrupa em JS. Suficiente para painel admin; não é trace analítico.
     const PACK_CAP = 5000
-    let packSessQ: any = client
+    let packSessQ: SupaQuery = client
       .from('agent_sessions')
       .select('id, domain_pack_id, domain_pack_fallback')
       .order('last_active_at', { ascending: false })
-      .limit(PACK_CAP)
+      .limit(PACK_CAP) as unknown as SupaQuery
     if (fromIso) packSessQ = packSessQ.gte('created_at', fromIso)
     if (tenantFilter) packSessQ = packSessQ.eq('tenant_id', tenantFilter)
     const { data: packSessRows } = await packSessQ
@@ -180,11 +181,11 @@ export const GET = withApiLog('admin-agent-metrics', async function GET(request:
     if (packSessions.length > 0) {
       const sessionIds = packSessions.map(s => s.id)
       // Tool calls por session
-      let tlQ: any = client
+      let tlQ: SupaQuery = client
         .from('agent_tool_logs')
         .select('session_id')
         .in('session_id', sessionIds)
-        .limit(PACK_CAP * 4)
+        .limit(PACK_CAP * 4) as unknown as SupaQuery
       if (fromIso) tlQ = tlQ.gte('created_at', fromIso)
       const { data: tlRows } = await tlQ
       for (const r of (tlRows as Array<{ session_id: string | null }>) ?? []) {
@@ -197,12 +198,12 @@ export const GET = withApiLog('admin-agent-metrics', async function GET(request:
       }
 
       // Latência média por pack (agent_messages.latency_ms)
-      let mQ: any = client
+      let mQ: SupaQuery = client
         .from('agent_messages')
         .select('session_id, latency_ms')
         .in('session_id', sessionIds)
         .not('latency_ms', 'is', null)
-        .limit(PACK_CAP * 4)
+        .limit(PACK_CAP * 4) as unknown as SupaQuery
       if (fromIso) mQ = mQ.gte('created_at', fromIso)
       const { data: mRows } = await mQ
       for (const r of (mRows as Array<{ session_id: string; latency_ms: number | null }>) ?? []) {

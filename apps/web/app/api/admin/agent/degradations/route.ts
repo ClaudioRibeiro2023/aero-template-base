@@ -11,6 +11,7 @@ import { withApiLog } from '@/lib/logger'
 import { isDemoMode } from '@/lib/demo-data'
 import { sanitizeJsonPayload } from '@/lib/agent-admin-sanitize'
 import { isAdminRole } from '@/lib/admin-role'
+import type { SupaQuery } from '@/lib/supabase-query-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,12 +60,12 @@ export const GET = withApiLog('admin-agent-degradations', async function GET(req
   const toIdx = fromIdx + pageSize - 1
 
   try {
-    let q: any = client
+    let q: SupaQuery = client
       .from('agent_tool_logs')
       .select('*', { count: 'exact' })
       .eq('success', false)
       .order('created_at', { ascending: false })
-      .range(fromIdx, toIdx)
+      .range(fromIdx, toIdx) as unknown as SupaQuery
 
     if (scopedTenantId) q = q.eq('tenant_id', scopedTenantId)
     if (tool) q = q.eq('tool_name', tool)

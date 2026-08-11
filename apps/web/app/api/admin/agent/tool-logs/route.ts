@@ -12,6 +12,7 @@ import { withApiLog } from '@/lib/logger'
 import { isDemoMode } from '@/lib/demo-data'
 import { sanitizeJsonPayload } from '@/lib/agent-admin-sanitize'
 import { isAdminRole } from '@/lib/admin-role'
+import type { SupaQuery } from '@/lib/supabase-query-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,11 +62,11 @@ export const GET = withApiLog('admin-agent-tool-logs', async function GET(reques
     // Busca sessions matching o pack, depois filtra logs por session_id.
     let packSessionIds: string[] | null = null
     if (domainPackId) {
-      let ssQ: any = client
+      let ssQ: SupaQuery = client
         .from('agent_sessions')
         .select('id')
         .eq('domain_pack_id', domainPackId)
-        .limit(5000) // cap pragmático; o filtro no UI é por pack individual
+        .limit(5000) as unknown as SupaQuery // cap pragmático; o filtro no UI é por pack individual
       if (scopedTenantId) ssQ = ssQ.eq('tenant_id', scopedTenantId)
       const { data: ssRows, error: ssErr } = await ssQ
       if (ssErr) {
@@ -78,11 +79,11 @@ export const GET = withApiLog('admin-agent-tool-logs', async function GET(reques
       }
     }
 
-    let q: any = client
+    let q: SupaQuery = client
       .from('agent_tool_logs')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
-      .range(fromIdx, toIdx)
+      .range(fromIdx, toIdx) as unknown as SupaQuery
 
     if (scopedTenantId) q = q.eq('tenant_id', scopedTenantId)
     if (userIdParam) q = q.eq('user_id', userIdParam)

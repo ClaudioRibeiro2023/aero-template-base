@@ -170,43 +170,46 @@ export class SupabaseRepository<
 
   // ── Helpers internos ──
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected applyFilters(query: any, filters: FilterCondition[]): any {
+  // Supabase query builder é chainable; tipagem mínima para o método genérico de filtros.
+  // Generic <Q> preserva o tipo exato do builder no call-site (PostgrestFilterBuilder<...>).
+  protected applyFilters<Q>(query: Q, filters: FilterCondition[]): Q {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q: any = query
     for (const f of filters) {
       switch (f.operator) {
         case 'eq':
-          query = query.eq(f.field, f.value)
+          q = q.eq(f.field, f.value)
           break
         case 'neq':
-          query = query.neq(f.field, f.value)
+          q = q.neq(f.field, f.value)
           break
         case 'gt':
-          query = query.gt(f.field, f.value)
+          q = q.gt(f.field, f.value)
           break
         case 'gte':
-          query = query.gte(f.field, f.value)
+          q = q.gte(f.field, f.value)
           break
         case 'lt':
-          query = query.lt(f.field, f.value)
+          q = q.lt(f.field, f.value)
           break
         case 'lte':
-          query = query.lte(f.field, f.value)
+          q = q.lte(f.field, f.value)
           break
         case 'like':
-          query = query.like(f.field, f.value)
+          q = q.like(f.field, f.value)
           break
         case 'ilike':
-          query = query.ilike(f.field, f.value)
+          q = q.ilike(f.field, f.value)
           break
         case 'in':
-          query = query.in(f.field, f.value as unknown[])
+          q = q.in(f.field, f.value as unknown[])
           break
         case 'is':
-          query = query.is(f.field, f.value)
+          q = q.is(f.field, f.value)
           break
       }
     }
-    return query
+    return q as Q
   }
 }
 

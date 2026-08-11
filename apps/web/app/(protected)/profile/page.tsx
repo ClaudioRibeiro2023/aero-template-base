@@ -137,6 +137,7 @@ export default function ProfilePage() {
         <div className="flex items-center gap-5">
           <div className="relative">
             {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={avatarUrl}
                 alt={`Foto de ${displayName}`}

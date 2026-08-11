@@ -167,6 +167,7 @@ export function LoginForm({ appName, logoUrl }: LoginFormProps) {
       {/* Logo & Title */}
       <div className="text-center mb-8 animate-fade-in-up">
         <div className="inline-block mb-5 logo-glitch">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={logoUrl || '/aero-logo.png'}
             alt={appName}

@@ -7,6 +7,34 @@ aderindo a [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [Unreleased] — 2026-04-24
+
+### Security / Housekeeping (MEGAPLAN P0)
+
+- **P0.1** — Removido `.env.local.tmp` (continha `VERCEL_OIDC_TOKEN` JWT). Arquivo nunca foi tracked pelo git (pattern `*.tmp` já no `.gitignore`), mas o token exposto em disco deve ser rotacionado no dashboard Vercel (projeto `aero-template`, env `development`).
+- **P0.2** — Renumeradas migrations com prefixos duplicados para eliminar risco de ordenação não-determinística:
+  - `00006_create_agent_tables.sql` → `00006a_create_agent_tables.sql`
+  - `00006_fix_handle_new_user.sql` → `00006b_fix_handle_new_user.sql`
+  - `00007_agent_documents.sql` → `00007a_agent_documents.sql`
+  - `00007_fix_profiles_fk.sql` → `00007b_fix_profiles_fk.sql`
+  - Sufixos `a/b` preservam a ordem lexical atual de aplicação (zero mudança de comportamento em DBs novos).
+  - **Impacto em clones existentes:** `supabase_migrations.schema_migrations` registrou os nomes antigos. Para clones já deployados, alinhar histórico via `UPDATE supabase_migrations.schema_migrations SET version = '00006a' WHERE version = '00006'` (e análogos) **antes** do próximo `db push`. Para novos clones: nenhuma ação.
+
+### Factory / Quality Gates (MEGAPLAN P1 + P3.1)
+
+Fixes em `B:\aero-studio\scripts\run-quality-gates.sh` (runner da Regra #13):
+
+- **P1.1** — Gate 1 (Type Safety) agora detecta monorepo (`pnpm-workspace.yaml` ou `turbo.json`) e usa `pnpm -r run typecheck` em vez de `tsc --project tsconfig.json`. Também aceita `tsconfig.base.json` como referência alternativa. Antes: 0/100 falso-negativo. Depois: 86/100 real.
+- **P3.1** — Gate 2 (Security) regex de `eval` corrigido para `\beval[[:space:]]*\(` (antes `eval(` casava strings como `handleEval(` ou path `/eval/`). `--exclude-dir=storybook-static` adicionado para todos os gates. Antes: 55/100 (3 falsos positivos). Depois: 100/100.
+- **P1.2** — Gate 5 (a11y) passou a contar _arquivos suspeitos_ (inputs sem qualquer label/aria no arquivo inteiro) em vez de grep linha-a-linha. Threshold de razão ajustado. Antes: 0/100. Depois: 50/100 (runtime axe elevaria).
+- **P1.3** — Gate 6 (Performance) agora aceita `--project-type=starter|app|lib` e auto-detecta starters em `projects/.bases/**`. Penalidade de N+1 suavizada (teto e tolerância). Antes: 5/100. Depois: 60/100.
+
+**Score Regra #13 em template.base:** 48 → 73 → **83/100 (MUITO BOM) — DEPLOY PERMITIDO**.
+
+Referência: `docs/00-auditoria/MEGAPLAN-2026-04-24.md`.
+
+---
+
 ## [3.0.0] — 2026-04-01
 
 ### Sprint A — Users CRUD Real

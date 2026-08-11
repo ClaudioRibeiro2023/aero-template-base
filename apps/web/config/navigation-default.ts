@@ -289,7 +289,7 @@ export const DEFAULT_MODULES: ModuleConfig[] = [
 
   // ─────────────────────────────────────────────────────────────
   // ADMINISTRAÇÃO
-  // (Observability, Docs, LGPD modules removed — available in template-modules repo)
+  // (Observability, Docs, LGPD modules removed — available in packages/module-starters)
   // ─────────────────────────────────────────────────────────────
   {
     id: 'administracao',

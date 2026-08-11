@@ -115,6 +115,7 @@ export default function ETLCatalogPage() {
         <div className="relative mb-6">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
           <input
+            aria-label="Buscar no catálogo ETL"
             type="text"
             placeholder="Buscar tabelas, campos, tags..."
             value={search}

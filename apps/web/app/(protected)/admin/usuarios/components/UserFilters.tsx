@@ -28,6 +28,7 @@ export function UserFilters({
           aria-hidden="true"
         />
         <input
+          aria-label="Buscar usuários por nome ou email"
           type="text"
           placeholder="Buscar por nome ou email..."
           value={search}
@@ -48,6 +49,7 @@ export function UserFilters({
         />
       </div>
       <select
+        aria-label="Filtrar por perfil de usuário"
         value={roleFilter}
         onChange={e => onRoleFilterChange(e.target.value)}
         className="h-10 px-3 rounded-lg text-sm text-zinc-300 outline-none transition-all duration-150 appearance-none cursor-pointer"
@@ -71,6 +73,7 @@ export function UserFilters({
         <option value="VIEWER">Viewer</option>
       </select>
       <select
+        aria-label="Filtrar por status do usuário"
         value={statusFilter}
         onChange={e => onStatusFilterChange(e.target.value)}
         className="h-10 px-3 rounded-lg text-sm text-zinc-300 outline-none transition-all duration-150 appearance-none cursor-pointer"

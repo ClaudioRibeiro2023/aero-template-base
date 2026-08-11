@@ -71,8 +71,10 @@ export async function exportToPDF<T>(
   }
 }
 
+// jsPDF é uma classe com API ampla; usar construtor dinâmico.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type JsPDFModule = { jsPDF: any }
+type JsPDFConstructor = new (opts: Record<string, unknown>) => any
+type JsPDFModule = { jsPDF: JsPDFConstructor }
 
 /**
  * Try to dynamically load jspdf library

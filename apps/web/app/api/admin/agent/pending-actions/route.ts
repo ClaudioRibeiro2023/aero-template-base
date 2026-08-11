@@ -11,6 +11,7 @@ import { withApiLog } from '@/lib/logger'
 import { isDemoMode } from '@/lib/demo-data'
 import { sanitizeJsonPayload } from '@/lib/agent-admin-sanitize'
 import { isAdminRole } from '@/lib/admin-role'
+import type { SupaQuery } from '@/lib/supabase-query-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,11 +58,11 @@ export const GET = withApiLog(
     const toIdx = fromIdx + pageSize - 1
 
     try {
-      let q: any = client
+      let q: SupaQuery = client
         .from('agent_pending_actions')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
-        .range(fromIdx, toIdx)
+        .range(fromIdx, toIdx) as unknown as SupaQuery
 
       if (scopedTenantId) q = q.eq('tenant_id', scopedTenantId)
       if (userIdParam) q = q.eq('user_id', userIdParam)

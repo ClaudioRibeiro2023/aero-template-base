@@ -4,6 +4,9 @@ Biblioteca de módulos prontos para copiar em projetos instanciados a partir do 
 
 Cada módulo contém **tudo** que o module system precisa:
 
+- `index.ts` — **barrel obrigatório** exportando `manifest` (ponto de entrada do scaffold).
+  O gerador (`scripts/scaffold-module.mjs`) e o module registry importam daqui:
+  `export { manifest } from './manifest'` (opcionalmente re-exporta components/hooks/services).
 - `manifest.ts` — registro no module registry (dependências, rotas, tabelas, sidebar)
 - `app/` — páginas Next.js App Router
 - `api/route.ts` — API route com auth + rate-limit + logging
@@ -11,6 +14,7 @@ Cada módulo contém **tudo** que o module system precisa:
 - `hooks/` — React hooks
 - `services/` — API client functions
 - `types.ts` — tipos TypeScript
+- `migrations/` — SQL versionado (`NNN_<verbo>_<alvo>.sql`). Ver `_template/migrations/001_example.sql`.
 
 ## Módulos disponíveis
 
@@ -48,6 +52,7 @@ node scripts/scaffold-module.mjs <nome> --from etl
 
 ```
 meu-modulo/
+├── index.ts                 # Barrel OBRIGATÓRIO — exporta `manifest`
 ├── manifest.ts              # Registro no module system
 ├── app/
 │   └── page.tsx             # Página principal (App Router)

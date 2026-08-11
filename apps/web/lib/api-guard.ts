@@ -53,8 +53,8 @@ export function requireJson(req: NextRequest) {
  * Wrapper that applies CSRF validation to mutation handlers.
  * Use: export const POST = withCsrf(async (req) => { ... })
  */
-export function withCsrf(handler: (req: NextRequest, ctx?: any) => Promise<NextResponse>) {
-  return async (req: NextRequest, ctx?: any) => {
+export function withCsrf(handler: (req: NextRequest, ctx?: unknown) => Promise<NextResponse>) {
+  return async (req: NextRequest, ctx?: unknown) => {
     if (!validateApiRequest(req)) {
       return forbidden('Requisição de origem inválida')
     }

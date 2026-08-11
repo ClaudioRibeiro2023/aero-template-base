@@ -7,8 +7,12 @@
  * 3. Import and call initSentry() in providers.tsx
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let sentryModule: any = null
+type SentryModule = {
+  init: (config: Record<string, unknown>) => void
+  captureException: (err: unknown, ctx?: { extra?: Record<string, unknown> }) => void
+  captureMessage: (msg: string, level?: 'info' | 'warning' | 'error') => void
+}
+let sentryModule: SentryModule | null = null
 let initialized = false
 
 export async function initSentry() {
@@ -18,7 +22,7 @@ export async function initSentry() {
 
   try {
     const pkg = '@sentry/nextjs'
-    sentryModule = await import(/* @vite-ignore */ pkg)
+    sentryModule = (await import(/* @vite-ignore */ pkg)) as SentryModule
     sentryModule.init({
       dsn,
       environment: process.env.NODE_ENV,

@@ -86,18 +86,22 @@ export const GET = withApiLog(
           .limit(200),
       ])
 
-      const messages = (messagesRes.data ?? []).map((m: any) => ({
+      type MessageRow = Record<string, unknown> & { tool_calls?: unknown }
+      type ToolLogRow = Record<string, unknown> & { input?: unknown; output?: unknown }
+      type PendingRow = Record<string, unknown> & { proposed_input?: unknown; result?: unknown }
+
+      const messages = ((messagesRes.data as MessageRow[] | null) ?? []).map(m => ({
         ...m,
         tool_calls: m.tool_calls ? sanitizeJsonPayload(m.tool_calls) : null,
       }))
 
-      const toolLogs = (toolLogsRes.data ?? []).map((t: any) => ({
+      const toolLogs = ((toolLogsRes.data as ToolLogRow[] | null) ?? []).map(t => ({
         ...t,
         input: sanitizeJsonPayload(t.input),
         output: t.output ? sanitizeJsonPayload(t.output) : null,
       }))
 
-      const pendingActions = (pendingRes.data ?? []).map((p: any) => ({
+      const pendingActions = ((pendingRes.data as PendingRow[] | null) ?? []).map(p => ({
         ...p,
         proposed_input: sanitizeJsonPayload(p.proposed_input),
         result: p.result ? sanitizeJsonPayload(p.result) : null,

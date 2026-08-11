@@ -26,6 +26,7 @@ export function MessageInput({
   return (
     <form onSubmit={handleSubmit} className="glass-panel p-4 space-y-3">
       <textarea
+        aria-label="Mensagem de suporte"
         value={content}
         onChange={e => setContent(e.target.value)}
         placeholder="Escreva sua mensagem..."

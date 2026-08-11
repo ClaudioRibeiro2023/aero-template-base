@@ -379,6 +379,7 @@ export function ModuleFunctionsPanel({
           />
           <input
             id="functions-search"
+            aria-label="Buscar funções"
             type="text"
             placeholder="Buscar..."
             value={searchTerm}
