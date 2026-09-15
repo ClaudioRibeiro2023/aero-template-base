@@ -4,12 +4,19 @@
 # Usa a Admin API (service_role_key) para criar o usuario
 # com role super_admin, sem necessidade de confirmacao de email.
 #
-# Uso: bash scripts/setup-qa-user.sh <supabase_url> <service_role_key>
+# Uso: [QA_PASSWORD=<senha>] bash scripts/setup-qa-user.sh <supabase_url> <service_role_key>
 #
 # O usuario criado:
 #   Email: qa@aeroeng.tech
 #   Role: super_admin
 #   Metadata: { role: "super_admin", display_name: "QA Aero Studio" }
+#
+# SENHA — NUNCA hardcoded neste arquivo (incidente 2026-09-14: senha
+# commitada dava super_admin a qualquer leitor do repo). Ordem:
+#   1. variavel de ambiente QA_PASSWORD (exportar antes de rodar);
+#   2. senao, gerada aleatoriamente e exibida UMA unica vez ao final —
+#      registrar imediatamente em factory/quality/.qa-credentials.yaml
+#      (gitignored) ou no cofre do app.
 #
 # IMPORTANTE: Este script usa service_role_key que NUNCA deve ser
 # commitado ou exposto. Rode manualmente e descarte a key depois.
@@ -21,7 +28,11 @@ SUPABASE_URL="${1:?Uso: setup-qa-user.sh <supabase_url> <service_role_key>}"
 SERVICE_ROLE_KEY="${2:?SERVICE_ROLE_KEY obrigatorio}"
 
 QA_EMAIL="qa@aeroeng.tech"
-QA_PASSWORD="AeroQA!2026#Master"
+QA_PASSWORD_GENERATED=0
+if [ -z "${QA_PASSWORD:-}" ]; then
+  QA_PASSWORD="$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 20)"
+  QA_PASSWORD_GENERATED=1
+fi
 
 echo "═══════════════════════════════════════════════"
 echo "  SETUP QA USER — Aero Studio"
@@ -84,6 +95,12 @@ echo "  ✓ QA User configurado com sucesso"
 echo "    Email: $QA_EMAIL"
 echo "    Role: super_admin"
 echo "    Projeto: $SUPABASE_URL"
+if [ "$QA_PASSWORD_GENERATED" -eq 1 ]; then
+  echo ""
+  echo "  ⚠ SENHA GERADA (exibida UMA unica vez — registre AGORA no cofre):"
+  echo "    $QA_PASSWORD"
+  echo "    Destino: factory/quality/.qa-credentials.yaml (gitignored)"
+fi
 echo ""
 echo "  Para testar login:"
 echo "    curl -s '$SUPABASE_URL/auth/v1/token?grant_type=password' \\"
